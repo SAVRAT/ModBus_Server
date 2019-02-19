@@ -12,7 +12,7 @@ class ServerMain {
             Vertx vertx = Vertx.vertx();
 //            vertx.deployVerticle(new SomeVerticle(al1302, 80, controller));
             VertxWebClient vertxWebClient = new VertxWebClient(al1302, 80, controller);
-            vertxWebClient.start();
+//            vertxWebClient.start();
 //        m.start_OBEH(oven, 51); //OBEH DI ModBus
 //        m.start_OBEH_AI(oven, 4064, 4071);
 //        m.start(slaveAddress); //Siemens S7-1200 ModBus

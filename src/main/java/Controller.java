@@ -15,11 +15,12 @@ class Controller {
 
 
     double[][] data3 = {{25,8.5}, {15,14.2}, {10,20}, {7,25.7}, {11,33.8}, {15,42}, {32,51.7}, {34.6,50}, {46.3,53},
-            {51,51.1}, {57,42.7}, {60,34.6}, {63,26}, {55,20.4}, {50,14.7}, {46,9.2}};
+            {51,51.1}, {57,42.7}, {60,34.6}, {63,26}, {55,20.4}, {50,14.7}, {46,9.2}, {25, 8.5}};
 
     private final double[] sensorMatrix = {8.5, 14.2, 20, 25.7, 33.8, 42, 51.7, 34.6, 46.3, 51.1, 42.7, 34.6, 26, 20.4, 14.7, 9.2};
     private final int scannerHight = 89, scannerWight = 80, maxLength = 55, maxHight = 65;
-    final double EPS = 0.6, convStep = 10;
+    final double EPS = 1, convStep = 10;
+    boolean woodLog = false;
 
     Formul[] formulData = new Formul[20];
     ArrayList<double[][]> figure = new ArrayList<>();

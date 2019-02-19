@@ -86,48 +86,7 @@ public class ControllerFX {
 
     @FXML
     void testing(){
-        ArrayList<Integer> data = new ArrayList<>();
-        HashMap<String, Integer> tempData = new HashMap<>();
 
-        data.add(35);
-        data.add(null);
-        data.add(36);
-        data.add(null);
-        data.add(34);
-        data.add(35);
-        data.add(null);
-
-        data.add(45);
-        data.add(47);
-
-        data.add(null);
-        data.add(40);
-        data.add(null);
-        data.add(40);
-        data.add(null);
-        data.add(39);
-        data.add(41);
-
-//        for (int i=0; i<data.size(); i++){
-//            if (i<7)
-//                tempData.put("L_"+(i+1), data.get(i));
-//            else if (i<9)
-//                tempData.put("T_"+(i+1), data.get(i));
-//            else
-//                tempData.put("R_"+(i+1), data.get(i));
-//        }
-//        System.out.println("1: " + tempData);
-//        for (int i=6; i>=0; i--){
-//            if (data.get(i)==null)
-//                tempData.remove("L_"+(i+1));
-//            else break;
-//        }
-//        for (int i=9; i<16; i++){
-//            if (data.get(i)==null)
-//                tempData.remove("R_"+(i+1));
-//            else break;
-//        }
-//        System.out.println("2: " + tempData);
     }
 
     @FXML
@@ -253,11 +212,10 @@ public class ControllerFX {
     private void compute(double[][] sliceData) {
 
         long start = System.currentTimeMillis();
-        double radius = 5, step_r = 0.4, step_v = 0.3, count;
-//        double scale = 4.5;
+        double radius = 5, step_r = 0.8, step_v = 0.6, count;
+        double scale = getScale();
         geom.lineKoef(controller.formulData, sliceData);
         double[] centreDot = geom.geomCentre(sliceData);
-        System.out.println("Center: " + Arrays.toString(centreDot));
 
         Map<String, Integer> map = new HashMap<>();
         int maxC = 0;
@@ -272,7 +230,6 @@ public class ControllerFX {
             while (count < 1) {
                 radius += step_r;
                 dots = geom.dots(centreDot[0], centreDot[1], radius, ang);
-//                System.out.println("Data Length: " + sliceData.length);
                 for (int k = 0; k < sliceData.length-1; k++) {
                     ArrayList<Double> tempDots = new ArrayList<>();
                     double x, y;
@@ -280,8 +237,6 @@ public class ControllerFX {
                     Line2D testLine = new Line2D.Double(sliceData[k][0], sliceData[k][1],
                             sliceData[k + 1][0], sliceData[k + 1][1]);
 
-//                        System.out.print(testLine.getX1() + " :: " + testLine.getY1() + " ### ");
-//                        System.out.println(testLine.getX2() + " :: " + testLine.getY2());
                     for (double[] dot : dots) {
                         if (testLine.intersects(dot[0] - controller.EPS / 2,
                                 dot[1] - controller.EPS / 2, controller.EPS, controller.EPS)) {
@@ -311,7 +266,6 @@ public class ControllerFX {
                 }
             }
             radius = 5;
-
             Formul vector;
             double x_v, y_v;
             double[] angles = new double[controller.intersectDots.size() / 2];
@@ -345,23 +299,31 @@ public class ControllerFX {
                     }
                 }
             }
-            System.out.println("maxC: " + maxC);
-            if (maxC > 50 && maxR == controller.intersectRad.get(controller.intersectRad.size() - 1)) finish = true;
+            if (maxC > 40 && maxR == controller.intersectRad.get(controller.intersectRad.size() - 1)) finish = true;
 
             x_v = (controller.intersectDots.get(max1 * 2) + controller.intersectDots.get(max2 * 2)) / 2;
             y_v = (controller.intersectDots.get(max1 * 2 + 1) + controller.intersectDots.get(max2 * 2 + 1)) / 2;
             vector = geom.lineKoef(x_v, y_v, centreDot[0], centreDot[1]);
-
             if (!finish) {
                 switch (vector.getType()) {
                     case "->": {
-                        centreDot[0] += step_v;
-                        centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
+                        if (Math.abs(vector.getKoef())>10) {
+                            centreDot[0] += step_v/10;
+                            centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
+                        }else {
+                            centreDot[0] += step_v;
+                            centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
+                        }
                     }
                     break;
                     case "<-": {
-                        centreDot[0] -= step_v;
-                        centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
+                        if (Math.abs(vector.getKoef())>10) {
+                            centreDot[0] -= step_v/10;
+                            centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
+                        }else {
+                            centreDot[0] -= step_v;
+                            centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
+                        }
                     }
                     break;
                     case "vert":
@@ -371,19 +333,22 @@ public class ControllerFX {
                         centreDot[0] += step_v;
                         break;
                 }
-//                geom.drawDot(centreDot[0], centreDot[1], scale, canvas.getHeight(), gc, Color.YELLOWGREEN);
-                System.out.println(Arrays.toString(centreDot));
             }
         }
+//            drawDot(centreDot[0], centreDot[1], scale, canvas.getHeight(), gc, Color.YELLOWGREEN);
+//            gc.strokeOval(scale * (centreDot[0] - controller.intersectRad.get(controller.intersectRad.size() - 1)),
+//                    canvas.getHeight() - scale * (centreDot[1] + controller.intersectRad.get(controller.intersectRad.size() - 1)),
+//                    scale * 2 * controller.intersectRad.get(controller.intersectRad.size() - 1),
+//                    scale * 2 * controller.intersectRad.get(controller.intersectRad.size() - 1));
         double[][] mass = {{centreDot[0]}, {centreDot[1]}};
         controller.centres.add(mass);
         controller.rads.add(Collections.max(controller.intersectRad));
 
         System.out.println("Time: " + (System.currentTimeMillis() - start) + " ms");
 
-        System.out.println("Intersect Dots: " + controller.intersectDots);
-        System.out.println("Centre:" + Arrays.deepToString(controller.centres.get(controller.centres.size() - 1)));
-        System.out.println("Radius: " + controller.rads.get(controller.rads.size()-1));
+//        System.out.println("Intersect Dots: " + controller.intersectDots);
+//        System.out.println("Centre:" + Arrays.deepToString(controller.centres.get(controller.centres.size() - 1)));
+//        System.out.println("Radius: " + controller.rads.get(controller.rads.size()-1));
     }
 
     private double maxDist(Polygon polygon, double x_centre, double y_centre){
