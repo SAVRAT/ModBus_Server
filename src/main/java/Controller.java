@@ -5,7 +5,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 class Controller {
 
-    private Geometry geom = new Geometry();
     ArrayList<Double> rads = new ArrayList<>();
 
     double[][] data1 = {{30,70}, {40,90}, {60,95}, {65,125}, {70,140}, {100,130}, {120,120}, {140,105}, {160,100},
@@ -29,112 +28,6 @@ class Controller {
     ArrayList<Double> intersectRad = new ArrayList<>();
     CopyOnWriteArrayList<double[][]> outData = new CopyOnWriteArrayList<>();
 
-//    double[][] doSlice(ArrayList<Integer> data){
-//        HashMap<String, double[][]> out = new HashMap<>();
-//        HashMap<String, Integer> tempData = new HashMap<>();
-//        double[][] def = new double[16][2];
-//        int count = 0;
-//        for (Integer dat : data) {
-//            if (dat == null)
-//                count++;
-//        }
-//        if (count>6){
-//            System.out.println("STOP.");
-//            return def;
-//        }else
-//        if (data.size()==16) {
-//            for (int i = 0; i < data.size(); i++) {
-//                if (i < 7)
-//                    tempData.put("L_" + (i + 1), data.get(i));
-//                else if (i < 9)
-//                    tempData.put("T_" + (i + 1), data.get(i));
-//                else
-//                    tempData.put("R_" + (i + 1), data.get(i));
-//            }
-//            System.out.println("1: " + tempData);
-//            for (int i = 6; i >= 0; i--) {
-//                if (data.get(i) == null || data.get(i) > maxLength)
-//                    tempData.replace("L_" + (i + 1), 999);
-//                else break;
-//            }
-//            for (int i = 9; i < 16; i++) {
-//                if (data.get(i) == null || data.get(i) > maxLength)
-//                    tempData.replace("R_" + (i + 1), 999);
-//                else break;
-//            }
-//            System.out.println("2: " + tempData);
-//            for (int i = 0; i < 16; i++) {
-//                double[][] dot = new double[1][2];
-//                if (i == 0) {
-//                    if (tempData.get("L_" + (i + 1)) == null)
-//                        tempData.replace("L_" + (i + 1), tempData.get("L_" + (i + 2)));
-//                    dot[0][0] = tempData.get("L_" + (i + 1));
-//                    dot[0][1] = sensorMatrix[i];
-//                    out.put("L_" + (i + 1), dot);
-//                } else if (i < 7) {
-//                    if (tempData.get("L_" + (i + 1)) == null) {
-//                        int avg = (tempData.get("L_" + (i)) + tempData.get("L_" + (i + 2))) / 2;
-//                        tempData.replace("L_" + (i + 1), avg);
-//                    }
-//                    dot[0][0] = tempData.get("L_" + (i + 1));
-//                    dot[0][1] = sensorMatrix[i];
-//                    out.put("L_" + (i + 1), dot);
-//                } else if (i < 9) {
-//                    if ((tempData.get("T_" + (8)) == null || tempData.get("T_" + (8))>maxLength) &&
-//                            (tempData.get("T_" + (9)) == null || tempData.get("T_" + (9))>maxLength)) {
-//                        return def;
-//                    }else {
-//                        if (tempData.get("T_" + (8)) == null || tempData.get("T_" + (8))>maxLength)
-//                            tempData.replace("T_" + (8), tempData.get("T_" + (9)));
-//                        if (tempData.get("T_" + (9)) == null || tempData.get("T_" + (9))>maxLength)
-//                            tempData.replace("T_" + (9), tempData.get("T_" + (8)));
-//                    }
-//                    dot[0][0] = sensorMatrix[i];
-//                    dot[0][1] = scannerHight - tempData.get("T_" + (i + 1));
-//                    out.put("T_" + (i + 1), dot);
-//                } else {
-//                    if (i == 15) {
-//                        if (tempData.get("R_" + (i + 1)) == null)
-//                            tempData.replace("R_" + (i + 1), tempData.get("R_" + (i)));
-//                    } else if (tempData.get("R_" + (i + 1)) == null) {
-//                        int avg = (tempData.get("R_" + (i)) + tempData.get("R_" + (i + 2))) / 2;
-//                        tempData.replace("R_" + (i + 1), avg);
-//                    }
-//                    dot[0][0] = scannerWight - tempData.get("R_" + (i + 1));
-//                    dot[0][1] = sensorMatrix[i];
-//                    out.put("R_" + (i + 1), dot);
-//                }
-////                System.out.println("Dot: " + Arrays.deepToString(dot));
-//            }
-//        }
-//        System.out.println("Out: " + out);
-//        ArrayList<double[][]> res = new ArrayList<>();
-//        for (int i=0; i<out.size(); i++){
-//            double[][] temp = new double[1][2];
-//            if (i<7){
-//                if (out.get("L_" + (i + 1))[0][0] < 800 && out.get("L_" + (i + 1))[0][0] > 0) {
-//                    temp[0][0] = out.get("L_" + (i + 1))[0][0];
-//                    temp[0][1] = out.get("L_" + (i + 1))[0][1];
-//                    res.add(temp);
-//                }
-//            }else if (i<9){
-//                temp[0][0] = out.get("T_" + (i + 1))[0][0];
-//                temp[0][1] = out.get("T_" + (i + 1))[0][1];
-//                res.add(temp);
-//            }else if (out.get("R_" + (i + 1))[0][0] < 800 && out.get("R_" + (i + 1))[0][0] > 0){
-//                temp[0][0] = out.get("R_" + (i + 1))[0][0];
-//                temp[0][1] = out.get("R_" + (i + 1))[0][1];
-//                res.add(temp);
-//            }
-//        }
-//        double[][] ret = new double[res.size()][2];
-//        for (int i=0; i<res.size(); i++){
-//            ret[i][0] = res.get(i)[0][0];
-//            ret[i][1] = res.get(i)[0][1];
-//        }
-//        System.out.println("Ret: " + Arrays.deepToString(ret));
-//        return ret;
-//    }
 
     double[][] doSlice(ArrayList<Integer> data){
         ArrayList<double[][]> out = new ArrayList<>();
