@@ -21,7 +21,6 @@ public class ControllerFX {
     private Controller controller = new Controller();
     private Geometry geom = new Geometry();
     private ServerMain serverMain;
-    private double[] centreDot;
     @FXML
     private TextField input;
     @FXML
@@ -41,7 +40,6 @@ public class ControllerFX {
     @FXML
     void view_graph(){
 //        input.setText("10");
-
         graph(choose());
     }
 
@@ -133,7 +131,9 @@ public class ControllerFX {
     }
 
     @FXML
-    void doStep(){}
+    void doStep(){
+
+    }
 
     @FXML
     void doMatrix(){
@@ -256,7 +256,7 @@ public class ControllerFX {
         double radius = 5, step_r = 0.4, step_v = 0.3, count;
 //        double scale = 4.5;
         geom.lineKoef(controller.formulData, sliceData);
-        centreDot = geom.geomCentre(sliceData);
+        double[] centreDot = geom.geomCentre(sliceData);
         System.out.println("Center: " + Arrays.toString(centreDot));
 
         Map<String, Integer> map = new HashMap<>();

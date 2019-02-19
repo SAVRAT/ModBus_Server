@@ -16,7 +16,7 @@ class VertxWebClient {
     private final String[] host;
     private final int port;
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private ArrayList<double[][]> localList = new ArrayList<>();
+//    private ArrayList<double[][]> localList = new ArrayList<>();
 
     private Controller controller;
 
