@@ -40,20 +40,22 @@ class VertxWebClient {
             }
         }
         try {
-            Thread.sleep(10);
+            Thread.sleep(12);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        client.close();
+//        client.close();
         Collections.reverse(tempData.get(1));
         tempAll.addAll(tempData.get(0));
         tempAll.addAll(tempData.get(1));
 //        System.out.println("first: " + tempAll);
-        controller.outData.add(controller.doSlice(tempAll));
+//        double[][] mass = controller.doSlice(tempAll);
+//        if (mass!=null)
+//        controller.outData.add(mass);
         if (tempAll.isEmpty()){
             System.out.println("No data.");
         }
-        scheduler.schedule(this::start, 80, TimeUnit.MILLISECONDS);
+        scheduler.schedule(this::start, 1000, TimeUnit.MILLISECONDS);
     }
 
     private void requestAndResponse(io.vertx.ext.web.client.WebClient client, int dataID, String address,

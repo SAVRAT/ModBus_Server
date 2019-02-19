@@ -50,7 +50,6 @@ public class ControllerFX {
 
     @FXML
     void view_centre(){
-
     }
 
     @FXML
@@ -81,17 +80,16 @@ public class ControllerFX {
             if (controller.outData.size() > 0) {
                 graph(controller.outData.get(controller.outData.size() - 1));
             }
+        System.out.println("Присутствие бревна: " + controller.woodLog);
         scheduler.schedule(this::intersection, 100, TimeUnit.MILLISECONDS);
     }
 
     @FXML
     void testing(){
-
     }
 
     @FXML
     void doStep(){
-
     }
 
     @FXML
@@ -213,7 +211,6 @@ public class ControllerFX {
 
         long start = System.currentTimeMillis();
         double radius = 5, step_r = 0.8, step_v = 0.6, count;
-        double scale = getScale();
         geom.lineKoef(controller.formulData, sliceData);
         double[] centreDot = geom.geomCentre(sliceData);
 
@@ -393,6 +390,7 @@ public class ControllerFX {
                         scale * sliceData[i + 1][0], canvas.getHeight() - scale * sliceData[i + 1][1]);
         }
     }
+
     private void centre(double[][] sliceData) {
         double scale = getScale(), height = canvas.getHeight();
         double[] centreDot = geom.geomCentre(sliceData);

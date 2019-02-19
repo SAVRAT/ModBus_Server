@@ -30,51 +30,63 @@ class Controller {
     CopyOnWriteArrayList<double[][]> outData = new CopyOnWriteArrayList<>();
 
 
-    double[][] doSlice(ArrayList<Integer> data){
+    double[][] doSlice(ArrayList<Integer> data) {
         ArrayList<double[][]> out = new ArrayList<>();
         HashMap<String, double[][]> tempData = new HashMap<>();
-        if (data.size()==16) {
-            for (int i = 0; i < 16; i++) {
-                double[][] temp = new double[1][2];
-                if (i < 7) {
-                    if (data.get(i)!=null && data.get(i)<maxLength) {
-                        temp[0][0] = data.get(i);
-                        temp[0][1] = sensorMatrix[i];
-                        tempData.put("L" + i, temp);
-                    }
-                } else if (i < 9) {
-                    if (data.get(i)!=null && data.get(i)<maxHight) {
-                        temp[0][1] = scannerHight-data.get(i);
-                        temp[0][0] = sensorMatrix[i];
-                        tempData.put("P" + i, temp);
-                    }
-                } else {
-                    if (data.get(i)!=null && data.get(i)<maxLength) {
-                        temp[0][0] = scannerWight-data.get(i);
-                        temp[0][1] = sensorMatrix[i];
-                        tempData.put("R" + i, temp);
+        int count = 0;
+        for (int i = 0; i < data.size(); i++) {
+            if (data.get(i) == 0)
+                count++;
+        }
+        if (count > 11) {
+            woodLog = false;
+        } else {
+            woodLog = true;
+            if (data.size() == 16) {
+                for (int i = 0; i < 16; i++) {
+                    double[][] temp = new double[1][2];
+                    if (i < 7) {
+                        if (data.get(i) != null && data.get(i) < maxLength) {
+                            temp[0][0] = data.get(i);
+                            temp[0][1] = sensorMatrix[i];
+                            tempData.put("L" + i, temp);
+                        }
+                    } else if (i < 9) {
+                        if (data.get(i) != null && data.get(i) < maxHight) {
+                            temp[0][1] = scannerHight - data.get(i);
+                            temp[0][0] = sensorMatrix[i];
+                            tempData.put("P" + i, temp);
+                        }
+                    } else {
+                        if (data.get(i) != null && data.get(i) < maxLength) {
+                            temp[0][0] = scannerWight - data.get(i);
+                            temp[0][1] = sensorMatrix[i];
+                            tempData.put("R" + i, temp);
+                        }
                     }
                 }
             }
-        }
 
-        for (int i=0; i<16; i++){
-            if (i < 7) {
-                if (tempData.get("L" + i) != null)
-                    out.add(tempData.get("L" + i));
-            } else if (i < 9) {
-                if (tempData.get("T"+i)!=null)
-                    out.add(tempData.get("T" + i));
-        } else {
-                if (tempData.get("R"+i)!=null)
-                    out.add(tempData.get("R" + i));
+            for (int i = 0; i < 16; i++) {
+                if (i < 7) {
+                    if (tempData.get("L" + i) != null)
+                        out.add(tempData.get("L" + i));
+                } else if (i < 9) {
+                    if (tempData.get("T" + i) != null)
+                        out.add(tempData.get("T" + i));
+                } else {
+                    if (tempData.get("R" + i) != null)
+                        out.add(tempData.get("R" + i));
+                }
             }
+            double[][] mass = new double[out.size()][2];
+            for (int i = 0; i < out.size(); i++) {
+                mass[i] = out.get(i)[0];
+            }
+            System.out.println("Mass: " + Arrays.deepToString(mass));
+            return mass;
         }
-        double[][] mass = new double[out.size()][2];
-        for (int i=0; i<out.size(); i++){
-            mass[i] = out.get(i)[0];
-        }
-        System.out.println("Mass: " + Arrays.deepToString(mass));
-        return mass;
+        return null;
     }
+
 }
