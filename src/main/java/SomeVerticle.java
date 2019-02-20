@@ -1,20 +1,15 @@
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 
 class SomeVerticle extends AbstractVerticle {
     private Controller controller;
     private final String[] host;
     private final int port;
-    private ArrayList<double[][]> localList = new ArrayList<>();
     private int counter = 0;
 
     SomeVerticle(String[] host, int port, Controller controller) {
@@ -74,13 +69,13 @@ class SomeVerticle extends AbstractVerticle {
                             outMass.add(out);
                         }
                         counter--;
-                        if (counter == 0) handle(address);
+                        if (counter == 0) handle();
                         client.close();
                     }
                 });
     }
 
-    private void handle(String addr) {
+    private void handle() {
         ArrayList<Integer> tempAll = new ArrayList<>();
         Collections.reverse(tempData.get(1));
         tempAll.addAll(tempData.get(0));

@@ -34,6 +34,7 @@ class Controller {
         ArrayList<double[][]> out = new ArrayList<>();
         HashMap<String, double[][]> tempData = new HashMap<>();
         int count = 0;
+        //Цикл проверки наличия объекта в сканере
         for (int i = 0; i < data.size(); i++) {
             if (6 < i && i < 9) {
                 if (data.get(i) == null || data.get(i) > maxHight)
@@ -46,7 +47,9 @@ class Controller {
             woodLog = false;
         } else {
             woodLog = true;
+            // Цикл фильтриции точек
             if (data.size() == 16) {
+                // Занесение в HashMap с соответсвующиме стороне индексами
                 for (int i = 0; i < 16; i++) {
                     double[][] temp = new double[1][2];
                     if (i < 7) {
@@ -59,7 +62,7 @@ class Controller {
                         if (data.get(i) != null && data.get(i) < maxHight) {
                             temp[0][1] = scannerHight - data.get(i);
                             temp[0][0] = sensorMatrix[i];
-                            tempData.put("P" + i, temp);
+                            tempData.put("T" + i, temp);
                         }
                     } else {
                         if (data.get(i) != null && data.get(i) < maxLength) {
@@ -70,7 +73,7 @@ class Controller {
                     }
                 }
             }
-
+            // Отсеивание null значений
             for (int i = 0; i < 16; i++) {
                 if (i < 7) {
                     if (tempData.get("L" + i) != null)
@@ -83,15 +86,16 @@ class Controller {
                         out.add(tempData.get("R" + i));
                 }
             }
+            // Запись в выходной массив
             double[][] mass = new double[out.size()][2];
             for (int i = 0; i < out.size(); i++) {
                 mass[i] = out.get(i)[0];
             }
 //            System.out.println("Mass: " + Arrays.deepToString(mass));
-            System.out.println("Wood Check: " + woodLog);
+//            System.out.println("Wood Check: " + woodLog);
             return mass;
         }
-        System.out.println("Wood Check: " + woodLog);
+//        System.out.println("Wood Check: " + woodLog);
         return null;
     }
 

@@ -76,12 +76,16 @@ public class ControllerFX {
 
     @FXML
     void intersection(){
+        if (controller.woodLog) {
             gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
             if (controller.outData.size() > 0) {
                 graph(controller.outData.get(controller.outData.size() - 1));
             }
-        System.out.println("Wood check: " + controller.woodLog);
-        scheduler.schedule(this::intersection, 100, TimeUnit.MILLISECONDS);
+            System.out.println("Scanning...");
+        }else {
+            System.out.println("No wood!");
+        }
+        scheduler.schedule(this::intersection, 120, TimeUnit.MILLISECONDS);
     }
 
     @FXML
