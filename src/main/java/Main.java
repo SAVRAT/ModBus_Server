@@ -16,7 +16,7 @@ public class Main extends Application {
         primaryStage.setTitle("Laser Scanner");
         primaryStage.setScene(new Scene(root, primaryStage.getWidth(), primaryStage.getHeight()));
         primaryStage.setResizable(false);
-//        primaryStage.show();
+        primaryStage.show();
     }
 
     public static void main(String[] args) {

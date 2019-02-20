@@ -1,6 +1,8 @@
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.WebClient;
 
 import java.util.ArrayList;
@@ -25,91 +27,66 @@ class SomeVerticle extends AbstractVerticle {
 
     @Override
     public void start() {
-
-        vertx.setPeriodic(1000, event -> {
-//            WebClient client = WebClient.create(vertx);
-            System.out.println("TICK");
+        vertx.setPeriodic(100, event -> {
+//            System.out.println("TICK");
             if (counter == 0) {
                 tempData = new ArrayList<>();
                 tempData.add(new ArrayList<>());
                 tempData.add(new ArrayList<>());
                 for (int k = 0; k < host.length; k++) {
-//            System.out.println("HOST: " + h);
-                    for (int i = 1; i < 9; i++) {
-                        WebClient client = WebClient.create(vertx);
-                        requestAndResponse(client, i, host[k], tempData.get(k));
-                    }
-//                    for (int i = 5; i < 9; i++) {
-//                        requestAndResponse(client_2, i, host[k], tempData.get(k));
-//                    }
+                    WebClient client = WebClient.create(vertx);
+                    requestAndResponse(client, host[k], tempData.get(k));
                 }
-//                try {
-//                    Thread.sleep(10);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//                client_1.close();
             }
-//            client_1.close();
-//            client_2.close();
         });
-//        vertx.setPeriodic(700, event -> {
-//
-//        });
     }
 
-    private void requestAndResponse(WebClient client, int dataID, String address, ArrayList<Integer> outMass) {
+    private void requestAndResponse(WebClient client, String address, ArrayList<Integer> outMass) {
         counter++;
-        System.out.println("IncCounter: " + counter);
-        String adr = "/iolinkmaster/port[" + dataID + "]/iolinkdevice/pdin/getdata";
-        JsonObject json = new JsonObject().put("code", 10)
+        JsonObject object = new JsonObject().put("datatosend",
+                new JsonArray().add("iolinkmaster/port[1]/iolinkdevice/pdin")
+                .add("iolinkmaster/port[2]/iolinkdevice/pdin")
+                .add("iolinkmaster/port[3]/iolinkdevice/pdin")
+                .add("iolinkmaster/port[4]/iolinkdevice/pdin")
+                .add("iolinkmaster/port[5]/iolinkdevice/pdin")
+                .add("iolinkmaster/port[6]/iolinkdevice/pdin")
+                .add("iolinkmaster/port[7]/iolinkdevice/pdin")
+                .add("iolinkmaster/port[8]/iolinkdevice/pdin"));
+        JsonObject json_new = new JsonObject().put("code", 10)
                 .put("cid", 4711)
-                .put("adr", adr);
-        try {
-            Thread.sleep(150);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+                .put("adr", "/getdatamulti")
+                .put("data", object);
+
         client.post(port, address, "/")
                 .putHeader("content-type", "application/json")
                 .putHeader("cache-control", "no-cache")
-                .sendJsonObject(json, ar -> {
+                .sendJsonObject(json_new, ar -> {
                     if (ar.failed()) {
                         System.out.println(ar.cause().getMessage());
                     } else {
-                        try {
-                            String res = ar.result().body().toJsonObject().getJsonObject("data").getString("value");
-                            int output = Integer.parseInt(res.substring(0, 3), 16);
-//                            System.out.println("out: " + output);
-                            outMass.add(output);
-                            counter--;
-                            System.out.println("DecCount: " + counter);
-                        } catch (NullPointerException e) {
-                            System.out.println("Null ********");
-                            outMass.add(null);
+                        Integer out;
+                        for (int i=1; i<9; i++) {
+                            String res = ar.result().bodyAsJsonObject().getJsonObject("data")
+                                        .getJsonObject("iolinkmaster/port[" + i + "]/iolinkdevice/pdin").getString("data");
+                                if (res != null)
+                                    out = Integer.parseInt(res.substring(0, 3), 16);
+                                else out = null;
+                            outMass.add(out);
                         }
-                        if (counter == 4) handle(client);
+                        counter--;
+                        if (counter == 0) handle();
                         client.close();
                     }
                 });
     }
 
-    private void handle(WebClient client) {
+    private void handle() {
         ArrayList<Integer> tempAll = new ArrayList<>();
         Collections.reverse(tempData.get(1));
         tempAll.addAll(tempData.get(0));
         tempAll.addAll(tempData.get(1));
+        if (tempData.isEmpty())
+            System.out.println("No data...");
         controller.outData.add(controller.doSlice(tempAll));
-//        for (double[][] val : controller.outData) {
-//            System.out.println("Out: " + Arrays.deepToString(val));
-//        }
-        for (Integer val : tempAll) {
-            System.out.println("Temp: " + val);
-        }
-        for (double[][] val : localList) {
-            System.out.println("Local: " + Arrays.deepToString(val));
-        }
-        System.out.println("===");
-//        client.close();
     }
 }

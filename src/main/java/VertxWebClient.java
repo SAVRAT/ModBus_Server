@@ -40,22 +40,20 @@ class VertxWebClient {
             }
         }
         try {
-            Thread.sleep(12);
+            Thread.sleep(10);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-//        client.close();
+        client.close();
         Collections.reverse(tempData.get(1));
         tempAll.addAll(tempData.get(0));
         tempAll.addAll(tempData.get(1));
-//        System.out.println("first: " + tempAll);
-//        double[][] mass = controller.doSlice(tempAll);
-//        if (mass!=null)
-//        controller.outData.add(mass);
+        System.out.println("first: " + tempAll);
+        controller.outData.add(controller.doSlice(tempAll));
         if (tempAll.isEmpty()){
             System.out.println("No data.");
         }
-        scheduler.schedule(this::start, 1000, TimeUnit.MILLISECONDS);
+        scheduler.schedule(this::start, 500, TimeUnit.MILLISECONDS);
     }
 
     private void requestAndResponse(io.vertx.ext.web.client.WebClient client, int dataID, String address,
@@ -83,7 +81,7 @@ class VertxWebClient {
 //                            System.out.println("out: " + output);
                             outMass.add(output);
                         }catch (NullPointerException e){
-//                            System.out.println("Null *******");
+                            System.out.println("Null *");
                             outMass.add(null);
                         }
 

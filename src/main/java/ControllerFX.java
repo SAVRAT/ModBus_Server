@@ -80,7 +80,7 @@ public class ControllerFX {
             if (controller.outData.size() > 0) {
                 graph(controller.outData.get(controller.outData.size() - 1));
             }
-        System.out.println("Присутствие бревна: " + controller.woodLog);
+        System.out.println("Wood check: " + controller.woodLog);
         scheduler.schedule(this::intersection, 100, TimeUnit.MILLISECONDS);
     }
 

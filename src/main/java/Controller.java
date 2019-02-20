@@ -35,7 +35,7 @@ class Controller {
         HashMap<String, double[][]> tempData = new HashMap<>();
         int count = 0;
         for (int i = 0; i < data.size(); i++) {
-            if (data.get(i) == 0)
+            if (data.get(i) == null)
                 count++;
         }
         if (count > 11) {
@@ -83,7 +83,7 @@ class Controller {
             for (int i = 0; i < out.size(); i++) {
                 mass[i] = out.get(i)[0];
             }
-            System.out.println("Mass: " + Arrays.deepToString(mass));
+//            System.out.println("Mass: " + Arrays.deepToString(mass));
             return mass;
         }
         return null;
