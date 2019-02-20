@@ -74,13 +74,13 @@ class SomeVerticle extends AbstractVerticle {
                             outMass.add(out);
                         }
                         counter--;
-                        if (counter == 0) handle();
+                        if (counter == 0) handle(address);
                         client.close();
                     }
                 });
     }
 
-    private void handle() {
+    private void handle(String addr) {
         ArrayList<Integer> tempAll = new ArrayList<>();
         Collections.reverse(tempData.get(1));
         tempAll.addAll(tempData.get(0));
@@ -88,5 +88,6 @@ class SomeVerticle extends AbstractVerticle {
         if (tempData.isEmpty())
             System.out.println("No data...");
         controller.outData.add(controller.doSlice(tempAll));
+//        System.out.println("Data: " + tempAll);
     }
 }
