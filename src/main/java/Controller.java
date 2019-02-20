@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -13,21 +12,21 @@ class Controller {
             {155,75}, {155,55}, {140,40}, {125,35}, {110,25}, {95,20}, {80,15}, {65,25}, {50,30}, {35,35}, {20,40}};
     double[][] data2 = {{60,20}, {40,40}, {50,60}, {70,80}, {110,80}, {124,60}, {124,40}, {90,20}};
 
-
     double[][] data3 = {{25,8.5}, {15,14.2}, {10,20}, {7,25.7}, {11,33.8}, {15,42}, {32,51.7}, {34.6,50}, {46.3,53},
             {51,51.1}, {57,42.7}, {60,34.6}, {63,26}, {55,20.4}, {50,14.7}, {46,9.2}, {25, 8.5}};
 
     private final double[] sensorMatrix = {8.5, 14.2, 20, 25.7, 33.8, 42, 51.7, 34.6, 46.3, 51.1, 42.7, 34.6, 26, 20.4, 14.7, 9.2};
-    private final int scannerHight = 89, scannerWight = 80, maxLength = 55, maxHight = 80;
+    final int scannerHight = 89, scannerWight = 80, maxLength = 55, maxHight = 80;
     final double EPS = 1, convStep = 10;
     boolean woodLog = false;
 
     Formul[] formulData = new Formul[20];
-    ArrayList<double[][]> figure = new ArrayList<>();
+    ArrayList<ArrayList<double[][]>> figure = new ArrayList<>();
     ArrayList<double[][]> centres = new ArrayList<>();
     ArrayList<Double> intersectDots = new ArrayList<>();
     ArrayList<Double> intersectRad = new ArrayList<>();
     CopyOnWriteArrayList<double[][]> outData = new CopyOnWriteArrayList<>();
+
 
 
     double[][] doSlice(ArrayList<Integer> data) {

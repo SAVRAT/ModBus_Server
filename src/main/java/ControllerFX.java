@@ -10,6 +10,7 @@ import javafx.scene.paint.Paint;
 
 import java.awt.*;
 import java.awt.geom.*;
+import java.awt.image.AreaAveragingScaleFilter;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -88,8 +89,46 @@ public class ControllerFX {
         scheduler.schedule(this::intersection, 120, TimeUnit.MILLISECONDS);
     }
 
+    boolean check = false;
     @FXML
     void testing(){
+        double scale = getScale();
+        if (controller.woodLog) {
+            check = true;
+//            gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+            if (controller.outData.size() > 0) {
+                graph(controller.outData.get(controller.outData.size() - 1));
+            }
+            Polygon fig = getPolygon(controller.outData.get(controller.outData.size() - 1));
+            controller.figure.add(matrix(0.7, controller.scannerWight, controller.scannerHight, fig));
+            System.out.println("Scanning...");
+        }else {
+            if (check){
+                controller.figure.remove(0);
+                controller.figure.remove(controller.figure.size()-1);
+                ArrayList<double[][]> matrix;
+                matrix = matrixIntersection(controller.figure.get(0), controller.figure.get(1));
+                for (ArrayList<double[][]> val : controller.figure){
+                    matrix = matrixIntersection(matrix, val);
+                }
+                for (double[][] m : matrix) {
+                    for (int k=0; k<m.length-1; k++)
+                        if (m[k][0]!=0 && m[k][1]!=0)
+                            drawDot(m[k][0], m[k][1], scale, canvas.getHeight(), gc, Color.BROWN, 1);
+                }
+
+
+//                gc.setStroke(Color.RED);
+                double[][] test = matrixToSlice(matrix);
+                System.out.println(Arrays.deepToString(test));
+//                graph(test);
+//                gc.setStroke(Color.BLACK);
+                controller.figure.clear();
+            }
+            check = false;
+            System.out.println("No wood!");
+        }
+        scheduler.schedule(this::testing, 500, TimeUnit.MILLISECONDS);
     }
 
     @FXML
@@ -159,6 +198,25 @@ public class ControllerFX {
             case "data_4": return (controller.data3);
             default: return controller.data;
         }
+    }
+
+    private double[][] matrixToSlice(ArrayList<double[][]> matrix){
+        ArrayList<double[]> temp = new ArrayList<>();
+        double[][] slice;
+        for (double[][] val : matrix){
+            for (int i=0; i<val.length; i++){
+                if (val[i][0]!=0 && val[i-1][0]==0)
+                    temp.add(val[i]);
+                if (val[i][0]!=0 && val[i+1][0]==0)
+                    temp.add(val[i]);
+            }
+        }
+        slice = new double[temp.size()][2];
+        for (int i=0; i<temp.size(); i++){
+            slice[i][0] = temp.get(i)[0];
+            slice[i][1] = temp.get(i)[1];
+        }
+        return slice;
     }
 
     private ArrayList<double[][]> matrixIntersection(ArrayList<double[][]> first, ArrayList<double[][]> second){
@@ -380,7 +438,7 @@ public class ControllerFX {
     }
 
     private void graph(double[][] sliceData) {
-        gc.setStroke(Color.BLACK);
+//        gc.setStroke(Color.BLACK);
         gc.setLineWidth(2);
 //        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
         double scale = getScale();
