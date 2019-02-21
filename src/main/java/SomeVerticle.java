@@ -22,6 +22,7 @@ class SomeVerticle extends AbstractVerticle {
 
     @Override
     public void start() {
+        System.out.println("hello");
         vertx.setPeriodic(100, event -> {
 //            System.out.println("TICK");
             if (counter == 0) {
