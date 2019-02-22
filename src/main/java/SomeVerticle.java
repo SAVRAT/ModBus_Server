@@ -8,9 +8,14 @@ import java.util.Collections;
 
 class SomeVerticle extends AbstractVerticle {
     private Controller controller;
+    private DataBaseConnect dbConnect = new DataBaseConnect("localhost", "root", "z1x2c3v4",
+            "wert");
     private final String[] host;
     private final int port;
     private int counter = 0;
+    private String query = "INSERT INTO WoodLog (dot_1, dot_2, dot_3, dot_4, dot_5, dot_6, dot_7, dot_8," +
+            " dot_9, dot_10, dot_11, dot_12, dot_13, dot_14, dot_15, dot_16)\n" +
+            "VALUE (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
 
     SomeVerticle(String[] host, int port, Controller controller) {
         this.host = host;
@@ -24,7 +29,7 @@ class SomeVerticle extends AbstractVerticle {
     public void start() {
         System.out.println("hello");
         vertx.setPeriodic(100, event -> {
-//            System.out.println("TICK");
+            System.out.println("TICK");
             if (counter == 0) {
                 tempData = new ArrayList<>();
                 tempData.add(new ArrayList<>());
@@ -84,6 +89,12 @@ class SomeVerticle extends AbstractVerticle {
         if (tempData.isEmpty())
             System.out.println("No data...");
         controller.outData.add(controller.doSlice(tempAll));
+        JsonArray jsonArray = new JsonArray();
+        for (Integer val : tempAll){
+            jsonArray.add(String.valueOf(val));
+        }
+        System.out.println(jsonArray);
+        dbConnect.databaseWrite(query, jsonArray);
 //        System.out.println("Data: " + tempAll);
     }
 }
