@@ -9,8 +9,8 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 
 import java.awt.*;
-import java.awt.geom.*;
-import java.awt.image.AreaAveragingScaleFilter;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -21,7 +21,6 @@ public class ControllerFX {
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private Controller controller = new Controller();
     private Geometry geom = new Geometry();
-    private ServerMain serverMain;
     @FXML
     private TextField input;
     @FXML
@@ -35,7 +34,7 @@ public class ControllerFX {
         gc = canvas.getGraphicsContext2D();
         choose.setItems(datas);
         choose.setValue(datas.get(3));
-        this.serverMain = new ServerMain(controller);
+        ServerMain serverMain = new ServerMain(controller);
     }
 
     @FXML
@@ -89,7 +88,7 @@ public class ControllerFX {
         scheduler.schedule(this::intersection, 120, TimeUnit.MILLISECONDS);
     }
 
-    boolean check = false;
+    private boolean check = false;
     @FXML
     void testing(){
         double scale = getScale();
