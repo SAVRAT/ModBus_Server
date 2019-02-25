@@ -26,6 +26,7 @@ class ModBus_Master {
     private final int quantity;
     private final int startAddress;
     private int counter = 0;
+    private Parsing parse = new Parsing();
 
     ModBus_Master(int startAddress, int quantity, int nRequests) {
         this.quantity = quantity;
@@ -113,7 +114,6 @@ class ModBus_Master {
             new Thread(() -> sendAndReceive_OBEH_AI(master, startAddr, endAddr)).start();
         }
     }
-    Parsing parse = new Parsing();
     private void sendAndReceive_OBEH_AI(ModbusTcpMaster master, int startAddr, int endAddr){
             for (int regAddr=startAddr; regAddr<=endAddr; regAddr++) {
                 final int addr = regAddr;
