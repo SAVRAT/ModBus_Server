@@ -94,7 +94,7 @@ class ModBus_Master {
         future.whenCompleteAsync((response, ex) -> {
             if (response != null){
                 ByteBuf out = response.getRegisters().readSlice(4);
-                System.out.println(Arrays.toString(parse.byteToBoolArray(out)));;
+                System.out.println(Arrays.toString(parse.byteToBoolArray(out)));
                 ReferenceCountUtil.release(response);
             }else {
                 System.out.println("ERROR");

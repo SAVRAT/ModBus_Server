@@ -8,26 +8,29 @@ import java.util.Collections;
 
 class SomeVerticle extends AbstractVerticle {
     private Controller controller;
-    private DataBaseConnect dbConnect = new DataBaseConnect("localhost", "root", "z1x2c3v4",
-            "wert");
+    private DataBaseConnect dbConnect;
     private final String[] host;
     private final int port;
     private int counter = 0;
     private String query = "INSERT INTO WoodLog (dot_1, dot_2, dot_3, dot_4, dot_5, dot_6, dot_7, dot_8," +
             " dot_9, dot_10, dot_11, dot_12, dot_13, dot_14, dot_15, dot_16)\n" +
             "VALUE (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    private String query_1 = "UPDATE WoodLog SET dot_1=?, dot_2=?, dot_3=?, dot_4=?, dot_5=?, dot_6=?, dot_7=?," +
+            " dot_8=?, dot_9=?, dot_10=?, dot_11=?, dot_12=?, dot_13=?, dot_14=?, dot_15=?, dot_16=? WHERE ID=1";
+    private String query_2 = "UPDATE WoodLog SET dot_1=?, dot_2=?, dot_3=?, dot_4=?, dot_5=?, dot_6=?, dot_7=?," +
+            " dot_8=?, dot_9=?, dot_10=?, dot_11=?, dot_12=?, dot_13=?, dot_14=?, dot_15=?, dot_16=? WHERE ID=";
 
-    SomeVerticle(String[] host, int port, Controller controller) {
+    SomeVerticle(String[] host, int port, Controller controller, DataBaseConnect dbConnect) {
         this.host = host;
         this.port = port;
         this.controller = controller;
+        this.dbConnect = dbConnect;
     }
 
     private ArrayList<ArrayList<Integer>> tempData;
 
     @Override
     public void start() {
-        System.out.println("hello");
         vertx.setPeriodic(100, event -> {
             System.out.println("TICK");
             if (counter == 0) {
@@ -44,6 +47,7 @@ class SomeVerticle extends AbstractVerticle {
 
     private void requestAndResponse(WebClient client, String address, ArrayList<Integer> outMass) {
         counter++;
+//        System.out.println("Increment: " + counter);
         JsonObject object = new JsonObject().put("datatosend",
                 new JsonArray().add("iolinkmaster/port[1]/iolinkdevice/pdin")
                 .add("iolinkmaster/port[2]/iolinkdevice/pdin")
@@ -95,7 +99,16 @@ class SomeVerticle extends AbstractVerticle {
             jsonArray.add(String.valueOf(val));
         }
         System.out.println(jsonArray);
-        dbConnect.databaseWrite(query, jsonArray);
+        dbConnect.databaseWrite(query_1, jsonArray);
+        dbConnect.databaseWrite(query_2+2, jsonArray);
+        dbConnect.databaseWrite(query_2+3, jsonArray);
+        dbConnect.databaseWrite(query_2+4, jsonArray);
+        dbConnect.databaseWrite(query_2+5, jsonArray);
+        dbConnect.databaseWrite(query_2+6, jsonArray);
+        dbConnect.databaseWrite(query_2+7, jsonArray);
+        dbConnect.databaseWrite(query_2+8, jsonArray);
+        dbConnect.databaseWrite(query_2+9, jsonArray);
+        dbConnect.databaseWrite(query_2+10, jsonArray);
 //        System.out.println("Data: " + tempAll);
     }
 }
