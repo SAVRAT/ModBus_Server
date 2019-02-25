@@ -68,7 +68,8 @@ class SomeVerticle extends AbstractVerticle {
                         Integer out;
                         for (int i=1; i<9; i++) {
                             String res = ar.result().bodyAsJsonObject().getJsonObject("data")
-                                        .getJsonObject("iolinkmaster/port[" + i + "]/iolinkdevice/pdin").getString("data");
+                                        .getJsonObject("iolinkmaster/port[" + i + "]/iolinkdevice/pdin")
+                                    .getString("data");
                                 if (res != null)
                                     out = Integer.parseInt(res.substring(0, 3), 16);
                                 else out = null;
