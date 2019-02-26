@@ -1,41 +1,95 @@
 import io.vertx.core.Vertx;
+import io.vertx.ext.sql.ResultSet;
+import io.vertx.ext.sql.SQLConnection;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class test {
-    private DataBaseConnect dataBase;
+
+    private DataBaseConnect dataBaseConnect;
     private Vertx vertx;
-    private ArrayList<String[]> oven_AI;
+    private boolean first = true;
+    private boolean second = false;
+    private boolean third = false;
+    private ArrayList<String[]> previous = new ArrayList<>();
+    private ArrayList<String[]> outData = new ArrayList<>();
 
-    test(DataBaseConnect dataBase, Vertx vertx){
-        this.dataBase = dataBase;
+    test(DataBaseConnect dataBaseConnect, Vertx vertx){
+        this.dataBaseConnect = dataBaseConnect;
         this.vertx = vertx;
-        oven_AI =  dataBase.getOven_AI();
-    }
-    ModBus_Master modBus_master = new ModBus_Master(0, 10, 1);
-    
-    public static void main(String[] args) {
-        doQuery("table");
     }
 
-    void start() {
-        vertx.setPeriodic(3000, res -> {
-            dataBase.getOven_AI();
-            modBus_master.oven_AI_IP = new String[dataBase.oven_AI.size()];
-            modBus_master.oven_AI_Tabl = new String[dataBase.oven_AI.size()];
-            modBus_master.oven_AI_ID = new String[dataBase.oven_AI.size()];
-            for (int i = 0; i < dataBase.oven_AI.size(); i++) {
-                modBus_master.oven_AI_IP[i] = dataBase.oven_AI.get(i)[0];
-                modBus_master.oven_AI_Tabl[i] = dataBase.oven_AI.get(i)[1];
-                modBus_master.oven_AI_ID[i] = dataBase.oven_AI.get(i)[2];
-            }
+    void start(){
+        vertx.setPeriodic(5000, qqq -> {
+            System.out.println("Refresh...");
+            dataBaseConnect.mySQLClient.getConnection(res -> {
+                if (res.succeeded()) {
+                    SQLConnection connection = res.result();
+                    connection.query("SELECT * FROM point_control", con -> {
+                        if (con.succeeded()) {
+                            ResultSet result = con.result();
+                            int size = result.getRows().size();
+                            outData.clear();
+                            for (int i = 0; i < size; i++) {
+                                String[] module = new String[3];
+                                if (result.getRows().get(i).getString("ip") != null) {
+                                    module[0] = result.getRows().get(i).getString("ip");
+                                    module[1] = result.getRows().get(i).getString("tablename");
+                                    module[2] = result.getRows().get(i).getString("adress");
+                                    outData.add(module);
+                                }
+                            }
+                            if (first)
+                                handle(outData);
+                            if (second)
+                                check(outData);
+                        } else {
+                            System.out.println("ERROR...  " + con.cause());
+                        }
+                        connection.close();
+                    });
+                } else {
+                    System.out.println("Fault to connect!   " + res.cause());
+                }
+            });
         });
-        modBus_master.start_OBEH_AI();
+    }
+    private int count = 0;
+    private long timerID;
+
+    void handle(ArrayList<String[]> data){
+        first = false;
+        if (!third) {
+            previous = data;
+            third = true;
+        }
+        timerID = vertx.setPeriodic(1000, result -> {
+            count++;
+            System.out.println("        Count: " + count);
+            for (String[] val:previous){
+                System.out.println("        Array: " + Arrays.toString(val));
+            }
+            second = true;
+        });
     }
 
-    static void doQuery(String tableName){
-        double time = ((double) System.currentTimeMillis())/1000;
-        System.out.println((int) time);
-        String query = "INSERT INTO " + tableName + " (value, time) VALUES (?, ?)";
+    void check(ArrayList<String[]> data){
+        boolean qwerty = false;
+        if (data.size() == previous.size())
+            for (int i=0; i<data.size(); i++){
+                for (int n=0; n<3; n++){
+                    if (!data.get(i)[n].equals(previous.get(i)[n]))
+                        qwerty = true;
+                }
+            }
+        else
+            qwerty = true;
+        if (qwerty){
+            vertx.cancelTimer(timerID);
+            previous=data;
+            handle(data);
+            System.out.println(previous);
+        }
     }
 }

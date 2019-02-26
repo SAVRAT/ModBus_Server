@@ -1,18 +1,21 @@
 import io.vertx.core.Vertx;
 
-import java.util.Arrays;
-
 class ServerMain {
         private Controller controller;
         ServerMain(Controller controller) {
             this.controller = controller;
-            DataBaseConnect dataBase = new DataBaseConnect("192.168.6.21", "java", "z1x2c3v4",
-                    "fanDOK");
+//            DataBaseConnect dataBase = new DataBaseConnect("192.168.6.21", "java", "z1x2c3v4",
+//                    "fanDOK");
+            DataBaseConnect dataBase = new DataBaseConnect("localhost", "server", "z1x2c3v4",
+                    "wert");
             Vertx vertx = Vertx.vertx();
             test test = new test(dataBase, vertx);
+//            test test = new test(dataBase, vertx);
             String[] slaveAddress = {"192.168.0.10", "192.168.0.1"};
             String[] al1302 = {"192.168.0.120", "192.168.0.130"};
-            System.out.println(dataBase.getOven_AI());
+
+            test.start();
+//            System.out.println(dataBase.getOven_AI());
 //            String[] oven_AI_IP = new String[dataBase.oven_AI.size()];
 //            String[] oven_AI_Tabl = new String[dataBase.oven_AI.size()];
 //            String[] oven_AI_ID = new String[dataBase.oven_AI.size()];
@@ -21,8 +24,8 @@ class ServerMain {
 //                oven_AI_Tabl[i] = dataBase.oven_AI.get(i)[1];
 //                oven_AI_ID[i] = dataBase.oven_AI.get(i)[2];
 //            }
-            test.start();
-            ModBus_Master m = new ModBus_Master(0, 10, 1);
+//            test.start();
+//            ModBus_Master m = new ModBus_Master(0, 10, 1);
 //            vertx.deployVerticle(new SomeVerticle(al1302, 80, controller, dataBase));
 //            m.start_OBEH(oven_AI, 51); //OBEH DI ModBus
 //            System.out.println(Arrays.toString(oven_AI_IP));

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 
 class DataBaseConnect {
     private Vertx vertx = Vertx.vertx();
-    private SQLClient mySQLClient;
+    SQLClient mySQLClient;
     ArrayList<String[]> oven_AI = new ArrayList<>();
 
     DataBaseConnect(String host, String username, String password, String dataBase){
@@ -47,10 +47,10 @@ class DataBaseConnect {
                       String[] module = new String[3];
                       for (int i=0; i<size; i++){
                           if (resultSet.getRows().get(i).getString("ip")!=null){
-                              module[0] = resultSet.getRows().get(i).getString("ip");
-                              module[1] = resultSet.getRows().get(i).getString("tablename");
-                              module[2] = resultSet.getRows().get(i).getString("adress");
-                              oven_AI.add(module);
+//                              module[0] = resultSet.getRows().get(i).getString("ip");
+//                              module[1] = resultSet.getRows().get(i).getString("tablename");
+//                              module[2] = resultSet.getRows().get(i).getString("adress");
+//                              oven_AI.add(module);
                           }
                       }
                   }else {
