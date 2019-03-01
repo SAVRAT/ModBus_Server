@@ -10,7 +10,7 @@ class ServerMain {
                     "wert");
             Vertx vertx = Vertx.vertx();
             OvenAI OvenAI = new OvenAI(dataBase, vertx);
-            ModBus_Master modBusMaster = new ModBus_Master(0, 10, 1, dataBase);
+            ModBus_Master modBusMaster = new ModBus_Master(0, 10, 1, dataBase, vertx);
 
             String[] slaveAddress = {"192.168.0.10", "192.168.0.1"};
             String[] al1302 = {"192.168.0.120", "192.168.0.130"};
