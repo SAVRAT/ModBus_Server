@@ -9,15 +9,17 @@ class OvenAI {
 
     private DataBaseConnect dataBaseConnect;
     private Vertx vertx;
+    private ModBus_Master modBusMaster;
     private boolean first = true;
     private boolean second = false;
     private boolean third = false;
     private ArrayList<String[]> previous = new ArrayList<>();
     private ArrayList<String[]> outData = new ArrayList<>();
 
-    OvenAI(DataBaseConnect dataBaseConnect, Vertx vertx){
+    OvenAI(DataBaseConnect dataBaseConnect, Vertx vertx, ModBus_Master modBusMaster){
         this.dataBaseConnect = dataBaseConnect;
         this.vertx = vertx;
+        this.modBusMaster = modBusMaster;
     }
 
     void start(){

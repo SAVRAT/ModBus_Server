@@ -23,9 +23,7 @@ class ModBus_Master {
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final List<ModbusTcpMaster> masters = new CopyOnWriteArrayList<>();
     private volatile boolean started = false;
-    private final int nRequests;
-    private final int quantity;
-    private final int startAddress;
+    private final int nRequests = 1;
     private int counter = 0;
     private Parsing parse = new Parsing();
     private DataBaseConnect dataBaseConnect;
@@ -34,10 +32,7 @@ class ModBus_Master {
     String[] oven_AI_Tabl;
     String[] oven_AI_ID;
 
-    ModBus_Master(int startAddress, int quantity, int nRequests, DataBaseConnect dataBaseConnect, Vertx vertx) {
-        this.quantity = quantity;
-        this.nRequests = nRequests;
-        this.startAddress = startAddress;
+    ModBus_Master(DataBaseConnect dataBaseConnect, Vertx vertx) {
         this.dataBaseConnect = dataBaseConnect;
         this.vertx = vertx;
     }
@@ -62,8 +57,10 @@ class ModBus_Master {
     private void sendAndReceive(ModbusTcpMaster master) {
         if (!started) return;
 
+        int quantity = 10;
+        int startAddress = 0;
         CompletableFuture<ReadHoldingRegistersResponse> future =
-                master.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity*2), 0);
+                master.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity *2), 0);
         Parsing parse = new Parsing();
 
         future.whenCompleteAsync((response, ex) -> {
