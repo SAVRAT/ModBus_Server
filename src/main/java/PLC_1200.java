@@ -1,2 +1,2 @@
-public class PLC_1200 {
+class PLC_1200 {
 }

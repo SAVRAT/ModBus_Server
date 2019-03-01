@@ -62,6 +62,7 @@ class OvenAI {
         });
     }
 
+    @SuppressWarnings("Duplicates")
     private void check(ArrayList<String[]> data){
         boolean qwerty = false;
         if (data.size() == previous.size())

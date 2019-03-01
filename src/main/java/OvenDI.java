@@ -5,7 +5,7 @@ import io.vertx.ext.sql.SQLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class OvenDI {
+class OvenDI {
     private Vertx vertx;
     private DataBaseConnect dataBaseConnect;
     private ModBus_Master modBusMaster;
@@ -38,6 +38,7 @@ public class OvenDI {
                             if (secondTime)
                                 check(currentData);
                         }else System.out.println("ERROR...  " + res.cause());
+                        connection.close();
                     });
                 }else System.out.println("Connection error: " + con.cause());
             });
