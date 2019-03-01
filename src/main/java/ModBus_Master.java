@@ -120,6 +120,7 @@ class ModBus_Master {
 //            new Thread(() -> sendAndReceive_OBEH_AI(master, table, analogID)).start();
 //        }
 //    }
+
     private void sendAndReceive_OBEH_AI(String address, String tableName, String ID){
         ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(address).setPort(502).build();
         ModbusTcpMaster master = new ModbusTcpMaster(config);

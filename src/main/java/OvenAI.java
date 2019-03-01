@@ -22,44 +22,32 @@ class OvenAI {
         this.modBusMaster = modBusMaster;
     }
 
+    @SuppressWarnings("Duplicates")
     void start(){
-        vertx.setPeriodic(5000, qqq -> {
-            System.out.println("Refresh...");
-            dataBaseConnect.mySQLClient.getConnection(res -> {
-                if (res.succeeded()) {
-                    SQLConnection connection = res.result();
-                    connection.query("SELECT * FROM point_control", con -> {
-                        if (con.succeeded()) {
-                            ResultSet result = con.result();
-                            int size = result.getRows().size();
+        vertx.setPeriodic(5000, event -> {
+            System.out.println("Refresh AI...");
+            dataBaseConnect.mySQLClient.getConnection(con -> {
+                if (con.succeeded()) {
+                    SQLConnection connection = con.result();
+                    connection.query("SELECT (ip, tablename, adress) FROM point_control", res -> {
+                        if (res.succeeded()) {
+                            ResultSet result = res.result();
                             outData.clear();
-                            for (int i = 0; i < size; i++) {
-                                String[] module = new String[3];
-                                if (result.getRows().get(i).getString("ip") != null) {
-                                    module[0] = result.getRows().get(i).getString("ip");
-                                    module[1] = result.getRows().get(i).getString("tablename");
-                                    module[2] = result.getRows().get(i).getString("adress");
-                                    outData.add(module);
-                                }
-                            }
+                            outData.addAll(dataBaseConnect.parseData(result));
                             if (first)
                                 handle(outData);
                             if (second)
                                 check(outData);
-                        } else {
-                            System.out.println("ERROR...  " + con.cause());
-                        }
+                        } else System.out.println("ERROR...  " + res.cause());
                         connection.close();
                     });
-                } else {
-                    System.out.println("Fault to connect!   " + res.cause());
-                }
+                } else System.out.println("Connection error: " + con.cause());
             });
         });
     }
-    private int count = 0;
-    private long timerID;
 
+    private long timerID;
+    @SuppressWarnings("Duplicates")
     private void handle(ArrayList<String[]> data){
         first = false;
         if (!third) {
@@ -67,8 +55,6 @@ class OvenAI {
             third = true;
         }
         timerID = vertx.setPeriodic(1000, result -> {
-            count++;
-            System.out.println("        Count: " + count);
             for (String[] val:previous){
                 System.out.println("        Array: " + Arrays.toString(val));
             }

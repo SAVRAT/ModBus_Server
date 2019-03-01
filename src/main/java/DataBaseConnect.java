@@ -80,5 +80,18 @@ class DataBaseConnect {
            }
         });
     }
-
+    ArrayList<String[]> parseData(ResultSet resultSet){
+        ArrayList<String[]> data = new ArrayList<>();
+        int size = resultSet.getRows().size();
+        for (int i=0; i<size; i++){
+            String[] row = new String[3];
+            if (resultSet.getRows().get(i).getString("ip")!=null){
+                row[0] = resultSet.getRows().get(i).getString("ip");
+                row[1] = resultSet.getRows().get(i).getString("tablename");
+                row[2] = resultSet.getRows().get(i).getString("adress");
+                data.add(row);
+            }
+        }
+        return data;
+    }
 }
