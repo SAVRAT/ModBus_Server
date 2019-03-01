@@ -110,13 +110,7 @@ public class ControllerFX {
                 for (ArrayList<double[][]> val : controller.figure){
                     matrix = matrixIntersection(matrix, val);
                 }
-                for (double[][] m : matrix) {
-                    for (int k=0; k<m.length-1; k++)
-                        if (m[k][0]!=0 && m[k][1]!=0)
-                            drawDot(m[k][0], m[k][1], scale, canvas.getHeight(), gc, Color.BROWN, 1);
-                }
-
-
+                printMatrix(matrix, Color.BROWN, scale);
 //                gc.setStroke(Color.RED);
                 double[][] test = matrixToSlice(matrix);
                 System.out.println(Arrays.deepToString(test));
@@ -165,21 +159,9 @@ public class ControllerFX {
         figs.add(getPolygon(controller.data2));
         ArrayList<double[][]> matrix_3 = matrix(0.8, (int)Math.round(canvas.getWidth()),
                 (int)Math.round(canvas.getHeight()), figs.get(figs.size()-1));
-        for (double[][] m : matrix_1) {
-            for (int k=0; k<m.length-1; k++)
-                if (m[k][0]!=0 && m[k][1]!=0)
-                    drawDot(m[k][0], m[k][1], scale, canvas.getHeight(), gc, Color.BROWN, 1);
-        }
-        for (double[][] m : matrix_2) {
-            for (int k=0; k<m.length-1; k++)
-                if (m[k][0]!=0 && m[k][1]!=0)
-                    drawDot(m[k][0], m[k][1], scale, canvas.getHeight(), gc, Color.CYAN, 1);
-        }
-        for (double[][] m : matrix_3) {
-            for (int k=0; k<m.length-1; k++)
-                if (m[k][0]!=0 && m[k][1]!=0)
-                    drawDot(m[k][0], m[k][1], scale, canvas.getHeight(), gc, Color.DARKGRAY, 1);
-        }
+        printMatrix(matrix_1, Color.LIGHTGREEN, scale);
+        printMatrix(matrix_2, Color.CYAN, scale);
+        printMatrix(matrix_3, Color.DARKGRAY, scale);
         ArrayList<double[][]> matrix_r = matrixIntersection(matrix_1, matrix_2);
         ArrayList<double[][]> matrix_res = matrixIntersection(matrix_3, matrix_r);
         for (double[][] m : matrix_res) {
@@ -256,6 +238,14 @@ public class ControllerFX {
             dotsMatrix.add(mass);
         }
         return dotsMatrix;
+    }
+
+    private void printMatrix(ArrayList<double[][]> matrix, Color color, double scale){
+        for (double[][] m : matrix) {
+            for (int k=0; k<m.length-1; k++)
+                if (m[k][0]!=0 && m[k][1]!=0)
+                    drawDot(m[k][0], m[k][1], scale, canvas.getHeight(), gc, color, 1);
+        }
     }
 
     private Polygon getPolygon(double[][] fig){
