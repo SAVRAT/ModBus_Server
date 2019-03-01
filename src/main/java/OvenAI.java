@@ -5,7 +5,7 @@ import io.vertx.ext.sql.SQLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-public class test {
+class OvenAI {
 
     private DataBaseConnect dataBaseConnect;
     private Vertx vertx;
@@ -15,7 +15,7 @@ public class test {
     private ArrayList<String[]> previous = new ArrayList<>();
     private ArrayList<String[]> outData = new ArrayList<>();
 
-    test(DataBaseConnect dataBaseConnect, Vertx vertx){
+    OvenAI(DataBaseConnect dataBaseConnect, Vertx vertx){
         this.dataBaseConnect = dataBaseConnect;
         this.vertx = vertx;
     }
@@ -58,7 +58,7 @@ public class test {
     private int count = 0;
     private long timerID;
 
-    void handle(ArrayList<String[]> data){
+    private void handle(ArrayList<String[]> data){
         first = false;
         if (!third) {
             previous = data;
@@ -74,7 +74,7 @@ public class test {
         });
     }
 
-    void check(ArrayList<String[]> data){
+    private void check(ArrayList<String[]> data){
         boolean qwerty = false;
         if (data.size() == previous.size())
             for (int i=0; i<data.size(); i++){

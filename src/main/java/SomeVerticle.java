@@ -99,16 +99,6 @@ class SomeVerticle extends AbstractVerticle {
             jsonArray.add(String.valueOf(val));
         }
         System.out.println(jsonArray);
-        dbConnect.databaseWrite(query_1, jsonArray);
-        dbConnect.databaseWrite(query_2+2, jsonArray);
-        dbConnect.databaseWrite(query_2+3, jsonArray);
-        dbConnect.databaseWrite(query_2+4, jsonArray);
-        dbConnect.databaseWrite(query_2+5, jsonArray);
-        dbConnect.databaseWrite(query_2+6, jsonArray);
-        dbConnect.databaseWrite(query_2+7, jsonArray);
-        dbConnect.databaseWrite(query_2+8, jsonArray);
-        dbConnect.databaseWrite(query_2+9, jsonArray);
-        dbConnect.databaseWrite(query_2+10, jsonArray);
 //        System.out.println("Data: " + tempAll);
     }
 }

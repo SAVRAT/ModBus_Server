@@ -120,7 +120,7 @@ public class ControllerFX {
 //                gc.setStroke(Color.RED);
                 double[][] test = matrixToSlice(matrix);
                 System.out.println(Arrays.deepToString(test));
-//                graph(test);
+//                graph(OvenAI);
 //                gc.setStroke(Color.BLACK);
                 controller.figure.clear();
             }

@@ -35,6 +35,24 @@ class DataBaseConnect {
             }
         });
     }
+
+    void dataBaseRead(String query){
+        mySQLClient.getConnection(res -> {
+            if (res.succeeded()){
+                SQLConnection connection = res.result();
+                connection.query(query, out -> {
+                    if (out.succeeded()){
+                        JsonObject output = out.result().toJson();
+                    }else {
+                        System.out.println("Error... " + res.cause());
+                    }
+                });
+            }else {
+                System.out.println("Fault to connect!   " + res.cause());
+            }
+        });
+    }
+
     void getVibro(){
         mySQLClient.getConnection(res -> {
             ArrayList<String[]> temp = new ArrayList<>();
@@ -63,18 +81,4 @@ class DataBaseConnect {
         });
     }
 
-    ArrayList<String[]> getOven_AI(){
-        getVibro();
-        for (int i=0; i<30; i++){
-            try {
-                Thread.sleep(15);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            if (!oven_AI.isEmpty()){
-                break;
-            }
-        }
-        return oven_AI;
-    }
 }
