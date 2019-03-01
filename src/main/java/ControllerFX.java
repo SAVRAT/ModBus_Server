@@ -120,7 +120,7 @@ public class ControllerFX {
 //                gc.setStroke(Color.RED);
                 double[][] test = matrixToSlice(matrix);
                 System.out.println(Arrays.deepToString(test));
-//                graph(OvenAI);
+//                graph(test);
 //                gc.setStroke(Color.BLACK);
                 controller.figure.clear();
             }
@@ -191,7 +191,7 @@ public class ControllerFX {
 
     private double[][] choose(){
         switch (String.valueOf(choose.getValue())){
-            case "data_1": return (controller.data);
+            case "data_1": return (controller.data4);
             case "data_2": return (controller.data1);
             case "data_3": return (controller.data2);
             case "data_4": return (controller.data3);
