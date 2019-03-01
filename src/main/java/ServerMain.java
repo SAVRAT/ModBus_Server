@@ -17,7 +17,6 @@ class ServerMain {
 
 //            vertx.deployVerticle(new SomeVerticle(al1302, 80, controller, dataBase));
 //            modBusMaster.start_OBEH(oven_AI, 51); //OBEH DI ModBus
-//            modBusMaster.start_OBEH_AI(oven_AI_IP, 4064, 4071);
 //            modBusMaster.start(slaveAddress); //Siemens S7-1200 ModBus
         }
 }
