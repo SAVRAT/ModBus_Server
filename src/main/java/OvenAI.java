@@ -57,6 +57,7 @@ class OvenAI {
         timerID = vertx.setPeriodic(1000, result -> {
             for (String[] val:previous){
                 System.out.println("        Array: " + Arrays.toString(val));
+//                modBusMaster.sendAndReceive_OBEH_AI(val[0], val[1], val[2]);
             }
             second = true;
         });

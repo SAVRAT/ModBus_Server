@@ -56,6 +56,7 @@ class OvenDI {
         timerID = vertx.setPeriodic(1000, result -> {
             for (String[] val:oldData){
                 System.out.println("        Array: " + Arrays.toString(val));
+                modBusMaster.sendAndReceive_OBEH_DI(val[0], val[1], val[2]);
             }
             secondTime = true;
         });

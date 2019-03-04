@@ -75,37 +75,46 @@ class ModBus_Master {
         }, Modbus.sharedExecutor());
     }
 
-    void start_OBEH(String[] slaveAddress, int regAddr) {
-        started = true;
-        for (String address : slaveAddress) {
-            ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(address)
-                    .setPort(502)
-                    .build();
-            ModbusTcpMaster master = new ModbusTcpMaster(config);
-            new Thread(() -> {
-                for (int j = 0; j < nRequests; j++) {
-                    System.out.println(master.getConfig().getAddress());
-                    sendAndReceive_OBEH(master, regAddr);
-                }
-                System.out.println("===================");
-            }).start();
-        }
-    }
+//    void start_OBEH(String[] slaveAddress, int regAddr) {
+//        started = true;
+//        for (String address : slaveAddress) {
+//            ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(address)
+//                    .setPort(502)
+//                    .build();
+//            ModbusTcpMaster master = new ModbusTcpMaster(config);
+//            new Thread(() -> {
+//                for (int j = 0; j < nRequests; j++) {
+//                    System.out.println(master.getConfig().getAddress());
+//                    sendAndReceive_OBEH(master, regAddr);
+//                }
+//                System.out.println("===================");
+//            }).start();
+//        }
+//    }
 
-    private void sendAndReceive_OBEH(ModbusTcpMaster master, int regAddr){
+    void sendAndReceive_OBEH_DI(String address, String tableName, String ID){
+        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(address).setPort(502).build();
+        ModbusTcpMaster master = new ModbusTcpMaster(config);
+
         Parsing parse = new Parsing();
+        final int regAddr = Integer.valueOf(ID);
+
         CompletableFuture<ReadHoldingRegistersResponse> future =
                 master.sendRequest(new ReadHoldingRegistersRequest(regAddr, 2), 1);
         future.whenCompleteAsync((response, ex) -> {
             if (response != null){
                 ByteBuf out = response.getRegisters().readSlice(4);
                 System.out.println(Arrays.toString(parse.byteToBoolArray(out)));
+                String query = "INSERT INTO " + tableName + " (value, time) VALUES (?, ?)";
+                JsonArray jsonArray = new JsonArray();
+                jsonArray.add("data");
+                jsonArray.add(String.valueOf(((double) System.currentTimeMillis())/1000));
+                dataBaseConnect.databaseWrite(query, jsonArray);
                 ReferenceCountUtil.release(response);
             }else {
                 System.out.println("ERROR");
                 logger.error("Completed exceptionally, message={}", ex.getMessage(), ex);
             }
-            scheduler.schedule(() -> sendAndReceive_OBEH(master, regAddr), 1000, TimeUnit.MILLISECONDS);
         }, Modbus.sharedExecutor());
     }
 
@@ -121,7 +130,7 @@ class ModBus_Master {
 //        }
 //    }
 
-    private void sendAndReceive_OBEH_AI(String address, String tableName, String ID){
+    void sendAndReceive_OBEH_AI(String address, String tableName, String ID){
         ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(address).setPort(502).build();
         ModbusTcpMaster master = new ModbusTcpMaster(config);
 
@@ -136,8 +145,8 @@ class ModBus_Master {
         CompletableFuture<ReadHoldingRegistersResponse> future =
                 master.sendRequest(new ReadHoldingRegistersRequest(addr, 1), 1);
         future.whenCompleteAsync((response, ex) -> {
-            counter++;
-            System.out.println("Increment: " + counter);
+//            counter++;
+//            System.out.println("Increment: " + counter);
             if (response != null) {
                 byte[] b = {response.getRegisters().getByte(1),
                         response.getRegisters().getByte(0)};
@@ -146,6 +155,7 @@ class ModBus_Master {
                 System.out.println(res);
                 String query = "INSERT INTO " + tableName + " (value, time) VALUES (?, ?)";
                 JsonArray jsonArray = new JsonArray();
+                jsonArray.add("data");
                 jsonArray.add(String.valueOf(((double) System.currentTimeMillis())/1000));
                 dataBaseConnect.databaseWrite(query, jsonArray);
                 ReferenceCountUtil.safeRelease(response);
