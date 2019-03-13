@@ -53,32 +53,18 @@ class DataBaseConnect {
         });
     }
 
-    void getVibro(){
-        mySQLClient.getConnection(res -> {
-            ArrayList<String[]> temp = new ArrayList<>();
-           if (res.succeeded()){
-               SQLConnection connection = res.result();
-               connection.query("SELECT tablename, ip, adress FROM point_control", out -> {
-                  if (out.succeeded()){
-                      ResultSet resultSet = out.result();
-                      int size = resultSet.getRows().size();
-                      String[] module = new String[3];
-                      for (int i=0; i<size; i++){
-                          if (resultSet.getRows().get(i).getString("ip")!=null){
-//                              module[0] = resultSet.getRows().get(i).getString("ip");
-//                              module[1] = resultSet.getRows().get(i).getString("tablename");
-//                              module[2] = resultSet.getRows().get(i).getString("adress");
-//                              oven_AI.add(module);
-                          }
-                      }
-                  }else {
-                      System.out.println("Error... " + res.cause());
-                  }
-               });
-           }else {
-               System.out.println("Fault to connect!   " + res.cause());
-           }
-        });
+    ArrayList<String[]> parseData(ResultSet resultSet){
+        ArrayList<String[]> data = new ArrayList<>();
+        int size = resultSet.getRows().size();
+        for (int i=0; i<size; i++){
+            String[] row = new String[3];
+            if (resultSet.getRows().get(i).getString("ip")!=null){
+                row[0] = resultSet.getRows().get(i).getString("ip");
+                row[1] = resultSet.getRows().get(i).getString("tablename");
+                row[2] = resultSet.getRows().get(i).getString("adress");
+                data.add(row);
+            }
+        }
+        return data;
     }
-
 }

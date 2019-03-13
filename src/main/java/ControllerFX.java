@@ -110,17 +110,11 @@ public class ControllerFX {
                 for (ArrayList<double[][]> val : controller.figure){
                     matrix = matrixIntersection(matrix, val);
                 }
-                for (double[][] m : matrix) {
-                    for (int k=0; k<m.length-1; k++)
-                        if (m[k][0]!=0 && m[k][1]!=0)
-                            drawDot(m[k][0], m[k][1], scale, canvas.getHeight(), gc, Color.BROWN, 1);
-                }
-
-
+                printMatrix(matrix, Color.BROWN, scale);
 //                gc.setStroke(Color.RED);
                 double[][] test = matrixToSlice(matrix);
                 System.out.println(Arrays.deepToString(test));
-//                graph(OvenAI);
+//                graph(test);
 //                gc.setStroke(Color.BLACK);
                 controller.figure.clear();
             }
@@ -132,6 +126,26 @@ public class ControllerFX {
 
     @FXML
     void doStep(){
+        double scale = getScale();
+//        graph(controller.forMatrix);
+        Polygon fig = getPolygon(controller.forMatrix);
+        ArrayList<double[][]> matrix = matrix(0.7, controller.scannerWight, controller.scannerHight, fig);
+        printMatrix(matrix, Color.LIGHTGREEN, scale);
+//        for (double[][] val:matrix) System.out.println(Arrays.deepToString(val));
+        double[][] output = matrixToSlice(matrix);
+        graph(output);
+        compute(output);
+        for (int h = 0; h < controller.intersectDots.size(); h += 2) {
+            drawDot(controller.intersectDots.get(h), controller.intersectDots.get(h + 1), scale, canvas.getHeight(), gc, Color.BLUE);
+        }
+        double[] tempDot = {controller.centres.get(controller.centres.size()-1)[0][0],
+                controller.centres.get(controller.centres.size()-1)[1][0]};
+        drawDot(tempDot[0], tempDot[1], scale, canvas.getHeight(), gc, Color.CYAN, 5);
+        gc.setStroke(Color.DARKCYAN);
+        gc.strokeOval(scale * (tempDot[0] - controller.intersectRad.get(controller.intersectRad.size() - 1)),
+                canvas.getHeight() - scale * (tempDot[1] + controller.intersectRad.get(controller.intersectRad.size() - 1)),
+                scale * 2 * controller.intersectRad.get(controller.intersectRad.size() - 1),
+                scale * 2 * controller.intersectRad.get(controller.intersectRad.size() - 1));
     }
 
     @FXML
@@ -165,27 +179,15 @@ public class ControllerFX {
         figs.add(getPolygon(controller.data2));
         ArrayList<double[][]> matrix_3 = matrix(0.8, (int)Math.round(canvas.getWidth()),
                 (int)Math.round(canvas.getHeight()), figs.get(figs.size()-1));
-        for (double[][] m : matrix_1) {
-            for (int k=0; k<m.length-1; k++)
-                if (m[k][0]!=0 && m[k][1]!=0)
-                    drawDot(m[k][0], m[k][1], scale, canvas.getHeight(), gc, Color.BROWN, 1);
-        }
-        for (double[][] m : matrix_2) {
-            for (int k=0; k<m.length-1; k++)
-                if (m[k][0]!=0 && m[k][1]!=0)
-                    drawDot(m[k][0], m[k][1], scale, canvas.getHeight(), gc, Color.CYAN, 1);
-        }
-        for (double[][] m : matrix_3) {
-            for (int k=0; k<m.length-1; k++)
-                if (m[k][0]!=0 && m[k][1]!=0)
-                    drawDot(m[k][0], m[k][1], scale, canvas.getHeight(), gc, Color.DARKGRAY, 1);
-        }
+        printMatrix(matrix_1, Color.LIGHTGREEN, scale);
+        printMatrix(matrix_2, Color.CYAN, scale);
+        printMatrix(matrix_3, Color.DARKGRAY, scale);
         ArrayList<double[][]> matrix_r = matrixIntersection(matrix_1, matrix_2);
         ArrayList<double[][]> matrix_res = matrixIntersection(matrix_3, matrix_r);
         for (double[][] m : matrix_res) {
             for (int k=0; k<m.length-1; k++)
                 if (m[k][0]!=0 && m[k][1]!=0)
-                    drawDot(m[k][0], m[k][1], scale, canvas.getHeight(), gc, Color.LIGHTGREEN, 1);
+                    drawDot(m[k][0], m[k][1], scale, canvas.getHeight(), gc, Color.PURPLE, 1);
         }
     }
 
@@ -195,27 +197,102 @@ public class ControllerFX {
             case "data_2": return (controller.data1);
             case "data_3": return (controller.data2);
             case "data_4": return (controller.data3);
-            default: return controller.data;
+            default: return controller.data4;
         }
     }
 
+    @SuppressWarnings("Duplicates")
     private double[][] matrixToSlice(ArrayList<double[][]> matrix){
-        ArrayList<double[]> temp = new ArrayList<>();
-        double[][] slice;
-        for (double[][] val : matrix){
-            for (int i=0; i<val.length; i++){
-                if (val[i][0]!=0 && val[i-1][0]==0)
-                    temp.add(val[i]);
-                if (val[i][0]!=0 && val[i+1][0]==0)
-                    temp.add(val[i]);
+        double scale = getScale(), step_y = 1, step_x = 1;;
+        ArrayList<double[][]> line = new ArrayList<>();
+        double[][] out;
+        int last = 0;
+        for (int i=0; i<matrix.size(); i++){
+            boolean check = false;
+            double step = 0;
+            while (!check && step<controller.scannerWight) {
+                step += step_x;
+                for (int x = 0; x < matrix.get(0).length; x++) {
+                    double[][] temp = new double[1][3];
+                    if (Math.abs(step - matrix.get(i)[x][0]) < step_x * 2 && matrix.get(i)[x][0] != 0) {
+                        temp[0][0] = matrix.get(i)[x][0];
+                        temp[0][1] = matrix.get(i)[x][1];
+                        temp[0][2] = x;
+                        drawDot(temp[0][0], temp[0][1], scale, canvas.getHeight(), gc, Color.RED);
+                        line.add(temp);
+                        check = true;
+                    }
+                    if (check) break;
+                }
             }
         }
-        slice = new double[temp.size()][2];
-        for (int i=0; i<temp.size(); i++){
-            slice[i][0] = temp.get(i)[0];
-            slice[i][1] = temp.get(i)[1];
+        last = (int) line.get(line.size()-1)[0][2];
+        for (int i=last+1; i<matrix.get(0).length; i++){
+            boolean check = false;
+            double step = controller.scannerHight;
+            while (!check && step>0) {
+                step -= step_y;
+                for (int y=matrix.size()-1; y>=0; y--){
+                    double[][] temp = new double[1][3];
+                    if (Math.abs(step - matrix.get(y)[i][0]) < step_x * 2 && matrix.get(y)[i][0] != 0) {
+                        temp[0][0] = matrix.get(y)[i][0];
+                        temp[0][1] = matrix.get(y)[i][1];
+                        temp[0][2] = y;
+                        drawDot(temp[0][0], temp[0][1], scale, canvas.getHeight(), gc, Color.BLUE);
+                        line.add(temp);
+                        check = true;
+                    }
+                    if (check) break;
+                }
+            }
         }
-        return slice;
+        last = (int) line.get(line.size()-1)[0][2];
+        for (int i=last-1; i>0; i--) {
+            boolean check = false;
+            double step = controller.scannerWight;
+            while (!check && step>0) {
+                step -= step_x;
+                for (int x = matrix.get(0).length-1; x > 0; x--) {
+                    double[][] temp = new double[1][3];
+                    if (Math.abs(step - matrix.get(i)[x][0]) < step_x * 2 && matrix.get(i)[x][0] != 0) {
+                        temp[0][0] = matrix.get(i)[x][0];
+                        temp[0][1] = matrix.get(i)[x][1];
+                        temp[0][2] = x;
+                        drawDot(temp[0][0], temp[0][1], scale, canvas.getHeight(), gc, Color.GOLD);
+                        line.add(temp);
+                        check = true;
+                    }
+                    if (check) break;
+                }
+            }
+        }
+        last = (int) line.get(line.size()-1)[0][2];
+        for (int i=last-1; i>line.get(0)[0][2]; i--){
+            boolean check = false;
+            double step = controller.scannerHight;
+            while (!check && step>0) {
+                step -= step_y;
+                for (int y=0; y<matrix.size(); y++){
+                    double[][] temp = new double[1][3];
+                    if (Math.abs(step - matrix.get(y)[i][0]) < step_x * 2 && matrix.get(y)[i][0] != 0) {
+                        temp[0][0] = matrix.get(y)[i][0];
+                        temp[0][1] = matrix.get(y)[i][1];
+                        temp[0][2] = y;
+                        drawDot(temp[0][0], temp[0][1], scale, canvas.getHeight(), gc, Color.PURPLE);
+                        line.add(temp);
+                        check = true;
+                    }
+                    if (check) break;
+                }
+            }
+        }
+        System.out.println("The End...");
+        out = new double[line.size()][2];
+        for (int i=0; i<out.length; i++){
+            out[i][0] = line.get(i)[0][0];
+            out[i][1] = line.get(i)[0][1];
+        }
+        return out;
     }
 
     private ArrayList<double[][]> matrixIntersection(ArrayList<double[][]> first, ArrayList<double[][]> second){
@@ -258,6 +335,14 @@ public class ControllerFX {
         return dotsMatrix;
     }
 
+    private void printMatrix(ArrayList<double[][]> matrix, Color color, double scale){
+        for (double[][] m : matrix) {
+            for (int k=0; k<m.length-1; k++)
+                if (m[k][0]!=0 && m[k][1]!=0)
+                    drawDot(m[k][0], m[k][1], scale, canvas.getHeight(), gc, color, 1);
+        }
+    }
+
     private Polygon getPolygon(double[][] fig){
         int[] x = new int[fig.length];
         int[] y = new int[fig.length];
@@ -271,7 +356,8 @@ public class ControllerFX {
     private void compute(double[][] sliceData) {
 
         long start = System.currentTimeMillis();
-        double radius = 5, step_r = 0.8, step_v = 0.6, count;
+        double radius = 5, step_r = 0.4, step_v = 0.3, count;
+        controller.formulData = new Formul[sliceData.length];
         geom.lineKoef(controller.formulData, sliceData);
         double[] centreDot = geom.geomCentre(sliceData);
 

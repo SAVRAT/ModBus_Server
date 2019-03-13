@@ -5,18 +5,17 @@ import io.vertx.ext.sql.SQLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-class OvenAI {
-
-    private DataBaseConnect dataBaseConnect;
+class OvenDI {
     private Vertx vertx;
+    private DataBaseConnect dataBaseConnect;
     private ModBus_Master modBusMaster;
-    private boolean first = true;
-    private boolean second = false;
+    private boolean firstTime = true;
+    private boolean secondTime = false;
     private boolean third = false;
-    private ArrayList<String[]> previous = new ArrayList<>();
-    private ArrayList<String[]> outData = new ArrayList<>();
+    private ArrayList<String[]> oldData = new ArrayList<>();
+    private ArrayList<String[]> currentData = new ArrayList<>();
 
-    OvenAI(DataBaseConnect dataBaseConnect, Vertx vertx, ModBus_Master modBusMaster){
+    OvenDI(DataBaseConnect dataBaseConnect, Vertx vertx, ModBus_Master modBusMaster){
         this.dataBaseConnect = dataBaseConnect;
         this.vertx = vertx;
         this.modBusMaster = modBusMaster;
@@ -25,23 +24,23 @@ class OvenAI {
     @SuppressWarnings("Duplicates")
     void start(){
         vertx.setPeriodic(5000, event -> {
-            System.out.println("Refresh AI...");
+            System.out.println("Refresh DI...");
             dataBaseConnect.mySQLClient.getConnection(con -> {
-                if (con.succeeded()) {
+                if (con.succeeded()){
                     SQLConnection connection = con.result();
-                    connection.query("SELECT (ip, tablename, adress) FROM point_control", res -> {
-                        if (res.succeeded()) {
+                    connection.query("SELECT (ip, tablename, adress) FROM someTable", res -> {
+                        if (res.succeeded()){
                             ResultSet result = res.result();
-                            outData.clear();
-                            outData.addAll(dataBaseConnect.parseData(result));
-                            if (first)
-                                handle(outData);
-                            if (second)
-                                check(outData);
-                        } else System.out.println("ERROR...  " + res.cause());
+                            currentData.clear();
+                            currentData.addAll(dataBaseConnect.parseData(result));
+                            if (firstTime)
+                                handle(currentData);
+                            if (secondTime)
+                                check(currentData);
+                        }else System.out.println("ERROR...  " + res.cause());
                         connection.close();
                     });
-                } else System.out.println("Connection error: " + con.cause());
+                }else System.out.println("Connection error: " + con.cause());
             });
         });
     }
@@ -49,27 +48,27 @@ class OvenAI {
     private long timerID;
     @SuppressWarnings("Duplicates")
     private void handle(ArrayList<String[]> data){
-        first = false;
+        firstTime = false;
         if (!third) {
-            previous = data;
+            oldData = data;
             third = true;
         }
         timerID = vertx.setPeriodic(1000, result -> {
-            for (String[] val:previous){
+            for (String[] val:oldData){
                 System.out.println("        Array: " + Arrays.toString(val));
-//                modBusMaster.sendAndReceive_OBEH_AI(val[0], val[1], val[2]);
+                modBusMaster.sendAndReceive_OBEH_DI(val[0], val[1], val[2]);
             }
-            second = true;
+            secondTime = true;
         });
     }
 
     @SuppressWarnings("Duplicates")
     private void check(ArrayList<String[]> data){
         boolean qwerty = false;
-        if (data.size() == previous.size())
+        if (data.size() == oldData.size())
             for (int i=0; i<data.size(); i++){
                 for (int n=0; n<3; n++){
-                    if (!data.get(i)[n].equals(previous.get(i)[n]))
+                    if (!data.get(i)[n].equals(oldData.get(i)[n]))
                         qwerty = true;
                 }
             }
@@ -77,9 +76,9 @@ class OvenAI {
             qwerty = true;
         if (qwerty){
             vertx.cancelTimer(timerID);
-            previous=data;
+            oldData=data;
             handle(data);
-            System.out.println(previous);
+            System.out.println(oldData);
         }
     }
 }
