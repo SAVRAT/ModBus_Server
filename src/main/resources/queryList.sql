@@ -28,6 +28,11 @@ SELECT * FROM WoodLog;
 
 SHOW TABLES;
 SELECT * FROM point_control;
+DELETE FROM point_control WHERE tablename = 'gidro';
 
 SELECT * FROM gidro;
 UPDATE point_control SET ip='192.168.0.100' WHERE id=11;
+
+SELECT * FROM shlif_p4;
+
+

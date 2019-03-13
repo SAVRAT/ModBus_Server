@@ -154,13 +154,15 @@ class ModBus_Master {
                 parse.data.put(String.valueOf(addr), res);
                 System.out.println(res);
                 String query = "INSERT INTO " + tableName + " (value, time) VALUES (?, ?)";
-                JsonArray jsonArray = new JsonArray();
-                jsonArray.add("data");
-                jsonArray.add(String.valueOf(((double) System.currentTimeMillis())/1000));
+                int time = (int) (((double) System.currentTimeMillis())/1000);
+                JsonArray jsonArray = new JsonArray().add(res).add(time);
+//                jsonArray.add("data");
+//                jsonArray.add(((double) System.currentTimeMillis())/1000);
+                System.out.println("DataBase writeData: " + jsonArray);
                 dataBaseConnect.databaseWrite(query, jsonArray);
                 ReferenceCountUtil.safeRelease(response);
             } else {
-                System.out.println("ERROR");
+                System.out.println("ERROR response");
                 parse.data.put(String.valueOf(addr), 0);
                 logger.error("Completed exceptionally, message={}", ex.getMessage(), ex);
             }

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="fanDOK@192.168.6.21" uuid="7c231490-58f2-4a4d-b5b3-8221a293ebd1">
+    <data-source source="LOCAL" name="MySQL - wert@localhost" uuid="0fd36db1-978f-4852-b59d-21ca17287c2e">
       <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
-      <jdbc-url>jdbc:mysql://192.168.6.21:3306/fanDOK</jdbc-url>
+      <jdbc-url>jdbc:mysql://localhost:3306/wert</jdbc-url>
       <driver-properties>
         <property name="autoReconnect" value="true" />
         <property name="zeroDateTimeBehavior" value="CONVERT_TO_NULL" />
@@ -15,11 +15,11 @@
         <property name="yearIsDateType" value="false" />
       </driver-properties>
     </data-source>
-    <data-source source="LOCAL" name="MySQL - wert@localhost" uuid="0fd36db1-978f-4852-b59d-21ca17287c2e">
+    <data-source source="LOCAL" name="fanDOK@192.168.49.53" uuid="12b98034-acc1-4ebd-94f1-011c16c24913">
       <driver-ref>mysql.8</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
-      <jdbc-url>jdbc:mysql://localhost:3306/wert</jdbc-url>
+      <jdbc-url>jdbc:mysql://192.168.49.53:3306/fanDOK</jdbc-url>
       <driver-properties>
         <property name="autoReconnect" value="true" />
         <property name="zeroDateTimeBehavior" value="CONVERT_TO_NULL" />

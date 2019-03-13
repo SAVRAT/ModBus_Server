@@ -1,4 +1,6 @@
 import io.vertx.core.Vertx;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.SQLConnection;
 
@@ -24,12 +26,12 @@ class OvenAI {
 
     @SuppressWarnings("Duplicates")
     void start(){
-        vertx.setPeriodic(5000, event -> {
+        vertx.setPeriodic(7000, event -> {
             System.out.println("Refresh AI...");
             dataBaseConnect.mySQLClient.getConnection(con -> {
                 if (con.succeeded()) {
                     SQLConnection connection = con.result();
-                    connection.query("SELECT (ip, tablename, adress) FROM point_control", res -> {
+                    connection.query("SELECT ip, tablename, adress FROM point_control", res -> {
                         if (res.succeeded()) {
                             ResultSet result = res.result();
                             outData.clear();
@@ -38,7 +40,7 @@ class OvenAI {
                                 handle(outData);
                             if (second)
                                 check(outData);
-                        } else System.out.println("ERROR...  " + res.cause());
+                        } else System.out.println("error: database read query  " + res.cause());
                         connection.close();
                     });
                 } else System.out.println("Connection error: " + con.cause());
@@ -54,10 +56,10 @@ class OvenAI {
             previous = data;
             third = true;
         }
-        timerID = vertx.setPeriodic(1000, result -> {
+        timerID = vertx.setPeriodic(4000, result -> {
             for (String[] val:previous){
                 System.out.println("        Array: " + Arrays.toString(val));
-//                modBusMaster.sendAndReceive_OBEH_AI(val[0], val[1], val[2]);
+                modBusMaster.sendAndReceive_OBEH_AI(val[0], val[1], val[2]);
             }
             second = true;
         });
