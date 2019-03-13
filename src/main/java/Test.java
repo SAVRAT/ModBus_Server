@@ -5,56 +5,109 @@ import com.digitalpetri.modbus.requests.ReadHoldingRegistersRequest;
 import com.digitalpetri.modbus.responses.ReadHoldingRegistersResponse;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
-public class Test {
+class Test {
     Parsing parse = new Parsing();
+    int[] buffer;
 
-    void testing(String address){
-        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(address).setPort(502).build();
-        ModbusTcpMaster master = new ModbusTcpMaster(config);
+    void testing(){
+        ArrayList<String[]> data = new ArrayList<>();
+        ArrayList<ArrayList<String[]>> forWrite = new ArrayList<>();
+        String[] row = new String[3];
+        row[0] = "192.168.49.245";
+        row[1] = "table_1";
+        row[2] = "1";
+        data.add(row);
+        row = new String[3];
+        row[0] = "192.168.49.250";
+        row[1] = "table_1";
+        row[2] = "1";
+        data.add(row);
+        row = new String[3];
+        row[0] = "192.168.49.251";
+        row[1] = "table_2";
+        row[2] = "6";
+        data.add(row);
+        row = new String[3];
+        row[0] = "192.168.49.251";
+        row[1] = "table_2";
+        row[2] = "4";
+        data.add(row);
 
-        for (int i=1; i<4; i++){
-            //try {
-            //    Thread.sleep(100);
-            //} catch (InterruptedException e) {
-            //    e.printStackTrace();
-            //}
-            int ID = i;
-            new Thread(() -> sendAndReceive_OBEH_AI(address, String.valueOf(ID), master)).start();
-            //sendAndReceive_OBEH_AI(address, String.valueOf(i), master);
+        for (String[] val:data)
+            System.out.println(Arrays.toString(val));
+
+        ArrayList<String> ipAddr = new ArrayList<>();
+        for (String[] datum : data) {
+            boolean check = false;
+            for (String str : ipAddr)
+                if (str.equals(datum[0]))
+                    check = true;
+            if (!check)
+                ipAddr.add(datum[0]);
+        }
+        buffer = new int[ipAddr.size()];
+        for (String ip : ipAddr) {
+            ArrayList<String[]> temp = new ArrayList<>();
+            for (String[] item : data) if (ip.equals(item[0])) temp.add(item);
+            forWrite.add(temp);
+        }
+
+        System.out.println("IP Addresses: " + ipAddr);
+        for (int i = 0; i < forWrite.size(); i++) {
+            System.out.println("Number: " + (i+1));
+            for (String[] stroke:forWrite.get(i))
+                System.out.print(Arrays.toString(stroke) + " :: ");
+            System.out.println("");
+        }
+
+        for (int i=0; i<ipAddr.size(); i++){
+            int lamI = i;
+            ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(data.get(i)[0]).setPort(502).build();
+            ModbusTcpMaster master = new ModbusTcpMaster(config);
+            new Thread(() -> {
+                buffer[lamI] = 0;
+                int count = 0;
+
+                for (int m = 0; m < forWrite.get(lamI).size(); m++){
+                    buffer[lamI]++;
+                    if (buffer[lamI] < 3)
+                        sendAndReceive_OBEH_AI(master, forWrite.get(lamI).get(m)[2], lamI);
+
+                }
+
+                while (forWrite.get(lamI).size() >= count){
+//                    if (buffer[lamI] < 3)
+//                        sendAndReceive_OBEH_AI(master, forWrite.get(lamI));
+                }
+
+            }).start();
         }
     }
 
-    void sendAndReceive_OBEH_AI(String address, String ID, ModbusTcpMaster master){
-
-        final int addr = 4063 + Integer.valueOf(ID);
-
-//        try {
-//            Thread.sleep(25);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-
+    private void sendAndReceive_OBEH_AI(ModbusTcpMaster master, String id, int bufId){
+        final int port = 4063 + Integer.valueOf(id);
         CompletableFuture<ReadHoldingRegistersResponse> future =
-                master.sendRequest(new ReadHoldingRegistersRequest(addr, 1), 1);
+                master.sendRequest(new ReadHoldingRegistersRequest(port, 1), 1);
         future.whenCompleteAsync((response, ex) -> {
-//            counter++;
-//            System.out.println("Increment: " + counter);
             if (response != null) {
                 byte[] b = {response.getRegisters().getByte(1),
                         response.getRegisters().getByte(0)};
                 int res = (int) ByteBuffer.wrap(b).getShort();
-                parse.data.put(String.valueOf(addr), res);
+                parse.data.put(String.valueOf(port), res);
                 System.out.println("Result: " + res);
             } else {
                 System.out.println("ERROR response");
-                parse.data.put(String.valueOf(addr), 0);
+                parse.data.put(String.valueOf(port), 0);
             }
-//                    if (counter==1)
-//                        handle();
+            decBuffer(bufId);
         }, Modbus.sharedExecutor());
-//        scheduler.schedule(this::start_OBEH_AI, 1000, TimeUnit.MILLISECONDS);
     }
 
+    void decBuffer(int id){
+        buffer[id]--;
+    }
 }

@@ -14,7 +14,7 @@ class ServerMain {
         String[] slaveAddress = {"192.168.0.10", "192.168.0.1"};
         String[] al1302 = {"192.168.0.120", "192.168.0.130"};
         Test test = new Test();
-        test.testing("192.168.49.254");
+        test.testing();
 //        ovenAI.start();
 //        ovenDI.start();
 
