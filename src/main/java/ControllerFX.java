@@ -39,7 +39,6 @@ public class ControllerFX {
 
     @FXML
     void view_graph(){
-//        input.setText("10");
         graph(choose());
     }
 
@@ -201,7 +200,6 @@ public class ControllerFX {
         }
     }
 
-    @SuppressWarnings("Duplicates")
     private double[][] matrixToSlice(ArrayList<double[][]> matrix){
         double scale = getScale(), step_y = 1, step_x = 1;;
         ArrayList<double[][]> line = new ArrayList<>();
@@ -286,7 +284,6 @@ public class ControllerFX {
                 }
             }
         }
-        System.out.println("The End...");
         out = new double[line.size()][2];
         for (int i=0; i<out.length; i++){
             out[i][0] = line.get(i)[0][0];
