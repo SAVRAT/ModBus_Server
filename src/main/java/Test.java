@@ -70,20 +70,15 @@ class Test {
             ModbusTcpMaster master = new ModbusTcpMaster(config);
             new Thread(() -> {
                 buffer[lamI] = 0;
-                int count = 0;
-
-                for (int m = 0; m < forWrite.get(lamI).size(); m++){
-                    buffer[lamI]++;
-                    if (buffer[lamI] < 3)
-                        sendAndReceive_OBEH_AI(master, forWrite.get(lamI).get(m)[2], lamI);
-
-                }
+                int count = 0, num = 0;
 
                 while (forWrite.get(lamI).size() >= count){
-//                    if (buffer[lamI] < 3)
-//                        sendAndReceive_OBEH_AI(master, forWrite.get(lamI));
+                    if (buffer[lamI] < 3) {
+                        buffer[lamI]++;
+                        sendAndReceive_OBEH_AI(master, forWrite.get(lamI).get(num)[2], lamI);
+                        num++;
+                    }
                 }
-
             }).start();
         }
     }
