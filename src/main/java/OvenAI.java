@@ -56,11 +56,18 @@ class OvenAI {
             }
             modBusMaster.buffer = new int[ipAddr.size()];
             modBusMaster.aiCount = new int[ipAddr.size()];
+            forWrite.clear();
             for (String ip : ipAddr) {
                 ArrayList<String[]> temp = new ArrayList<>();
                 for (String[] item : data) if (ip.equals(item[0])) temp.add(item);
                 forWrite.add(temp);
             }
+
+//            for (ArrayList<String[]> val:forWrite) {
+//                System.out.println("================");
+//                for (String[] row1:val) System.out.println(Arrays.toString(row1));
+//            }
+
             for (int i=0; i<ipAddr.size(); i++){
                 int lamI = i;
                 new Thread(() -> {
