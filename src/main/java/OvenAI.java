@@ -1,3 +1,5 @@
+import com.digitalpetri.modbus.master.ModbusTcpMaster;
+import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
@@ -17,6 +19,7 @@ class OvenAI {
     private boolean third = false;
     private ArrayList<String[]> previous = new ArrayList<>();
     private ArrayList<String[]> outData = new ArrayList<>();
+    private ArrayList<ArrayList<String[]>> forWrite = new ArrayList<>();
 
     OvenAI(DataBaseConnect dataBaseConnect, Vertx vertx, ModBus_Master modBusMaster){
         this.dataBaseConnect = dataBaseConnect;
@@ -26,25 +29,9 @@ class OvenAI {
 
     @SuppressWarnings("Duplicates")
     void start(){
-        vertx.setPeriodic(7000, event -> {
-            System.out.println("Refresh AI...");
-            dataBaseConnect.mySQLClient.getConnection(con -> {
-                if (con.succeeded()) {
-                    SQLConnection connection = con.result();
-                    connection.query("SELECT ip, tablename, adress FROM point_control", res -> {
-                        if (res.succeeded()) {
-                            ResultSet result = res.result();
-                            outData.clear();
-                            outData.addAll(dataBaseConnect.parseData(result));
-                            if (first)
-                                handle(outData);
-                            if (second)
-                                check(outData);
-                        } else System.out.println("error: database read query  " + res.cause());
-                        connection.close();
-                    });
-                } else System.out.println("Connection error: " + con.cause());
-            });
+        refreshData();
+        vertx.setPeriodic(60000, event -> {
+            refreshData();
         });
     }
 
@@ -56,10 +43,45 @@ class OvenAI {
             previous = data;
             third = true;
         }
-        timerID = vertx.setPeriodic(4000, result -> {
-            for (String[] val:previous){
-                System.out.println("        Array: " + Arrays.toString(val));
-                modBusMaster.sendAndReceive_OBEH_AI(val[0], val[1], val[2]);
+        timerID = vertx.setPeriodic(20000, result -> {
+
+            ArrayList<String> ipAddr = new ArrayList<>();
+            for (String[] datum : data) {
+                boolean check = false;
+                for (String str : ipAddr)
+                    if (str.equals(datum[0]))
+                        check = true;
+                if (!check)
+                    ipAddr.add(datum[0]);
+            }
+            modBusMaster.buffer = new int[ipAddr.size()];
+            modBusMaster.aiCount = new int[ipAddr.size()];
+            for (String ip : ipAddr) {
+                ArrayList<String[]> temp = new ArrayList<>();
+                for (String[] item : data) if (ip.equals(item[0])) temp.add(item);
+                forWrite.add(temp);
+            }
+            for (int i=0; i<ipAddr.size(); i++){
+                int lamI = i;
+                new Thread(() -> {
+                    ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(ipAddr.get(lamI)).setPort(502).build();
+                    ModbusTcpMaster master = new ModbusTcpMaster(config);
+                    System.out.println("Thread " + (lamI+1) + " started. IP: " + master.getConfig().getAddress());
+                    modBusMaster.buffer[lamI] = 0;
+                    modBusMaster.aiCount[lamI] = forWrite.get(lamI).size();
+                    int count = 0, num = 0;
+
+                    while (count < forWrite.get(lamI).size()){
+                        System.out.print("");
+                        if (modBusMaster.buffer[lamI] < 1) {
+                            count++;
+                            modBusMaster.buffer[lamI]++;
+                            modBusMaster.sendAndReceive_OBEH_AI(master, forWrite.get(lamI).get(num)[2],
+                                    forWrite.get(lamI).get(num)[1], lamI);
+                            num++;
+                        }
+                    }
+                }).start();
             }
             second = true;
         });
@@ -83,5 +105,26 @@ class OvenAI {
             handle(data);
             System.out.println(previous);
         }
+    }
+
+    private void refreshData(){
+        System.out.println("Refresh AI...");
+        dataBaseConnect.mySQLClient.getConnection(con -> {
+            if (con.succeeded()) {
+                SQLConnection connection = con.result();
+                connection.query("SELECT ip, tablename, adress FROM point_control", res -> {
+                    if (res.succeeded()) {
+                        ResultSet result = res.result();
+                        outData.clear();
+                        outData.addAll(dataBaseConnect.parseData(result));
+                        if (first)
+                            handle(outData);
+                        if (second)
+                            check(outData);
+                    } else System.out.println("error: database read query  " + res.cause());
+                    connection.close();
+                });
+            } else System.out.println("Connection error: " + con.cause());
+        });
     }
 }

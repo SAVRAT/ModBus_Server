@@ -28,9 +28,8 @@ class ModBus_Master {
     private Parsing parse = new Parsing();
     private DataBaseConnect dataBaseConnect;
     private Vertx vertx;
-    String[] oven_AI_IP;
-    String[] oven_AI_Tabl;
-    String[] oven_AI_ID;
+    int[] buffer;
+    int[] aiCount;
 
     ModBus_Master(DataBaseConnect dataBaseConnect, Vertx vertx) {
         this.dataBaseConnect = dataBaseConnect;
@@ -130,46 +129,41 @@ class ModBus_Master {
 //        }
 //    }
 
-    void sendAndReceive_OBEH_AI(String address, String tableName, String ID){
-        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(address).setPort(502).build();
-        ModbusTcpMaster master = new ModbusTcpMaster(config);
+    void sendAndReceive_OBEH_AI(ModbusTcpMaster master, String ID, String tableName, int bufId){
 
         final int addr = 4063 + Integer.valueOf(ID);
-
-        try {
-            Thread.sleep(18);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
         CompletableFuture<ReadHoldingRegistersResponse> future =
                 master.sendRequest(new ReadHoldingRegistersRequest(addr, 1), 1);
         future.whenCompleteAsync((response, ex) -> {
-//            counter++;
-//            System.out.println("Increment: " + counter);
             if (response != null) {
                 byte[] b = {response.getRegisters().getByte(1),
                         response.getRegisters().getByte(0)};
                 int res = (int) ByteBuffer.wrap(b).getShort();
                 parse.data.put(String.valueOf(addr), res);
-                System.out.println(res);
                 String query = "INSERT INTO " + tableName + " (value, time) VALUES (?, ?)";
                 int time = (int) (((double) System.currentTimeMillis())/1000);
                 JsonArray jsonArray = new JsonArray().add(res).add(time);
-//                jsonArray.add("data");
-//                jsonArray.add(((double) System.currentTimeMillis())/1000);
-                System.out.println("DataBase writeData: " + jsonArray);
+                //System.out.println("DataBase writeData: " + jsonArray);
                 dataBaseConnect.databaseWrite(query, jsonArray);
                 ReferenceCountUtil.safeRelease(response);
             } else {
-                System.out.println("ERROR response");
+                System.out.println("ERROR response from ip: " + master.getConfig().getAddress());
                 parse.data.put(String.valueOf(addr), 0);
                 logger.error("Completed exceptionally, message={}", ex.getMessage(), ex);
             }
-//                    if (counter==1)
-//                        handle();
+            decBuffer(bufId);
+            if (aiCount[bufId] == 0){
+                master.disconnect();
+            }
         }, Modbus.sharedExecutor());
-//        scheduler.schedule(this::start_OBEH_AI, 1000, TimeUnit.MILLISECONDS);
+
+    }
+
+
+    private void decBuffer(int bufId){
+        buffer[bufId]--;
+        aiCount[bufId]--;
     }
 
     private void handle(){

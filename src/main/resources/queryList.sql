@@ -33,6 +33,30 @@ DELETE FROM point_control WHERE tablename = 'gidro';
 SELECT * FROM gidro;
 UPDATE point_control SET ip='192.168.0.100' WHERE id=11;
 
+DELETE FROM shlif_p1;
+DELETE FROM shlif_p2;
+DELETE FROM shlif_p3;
+DELETE FROM shlif_p4;
+DELETE FROM shlif_p5;
+DELETE FROM shlif_p6;
+DELETE FROM shlif_p7;
+DELETE FROM shlif_p8;
+DELETE FROM shlif_p9;
+DELETE FROM shlif_p10;
+DELETE FROM shlif_p11;
+DELETE FROM shlif_p12;
+DELETE FROM shlif_p13;
+DELETE FROM shlif_p14;
+DELETE FROM shlif_p15;
+DELETE FROM shlif_p16;
+
+DELETE FROM lu_1_p1;
+DELETE FROM lu_1_p2;
+DELETE FROM lu_1_p3;
+DELETE FROM lu_1_p4;
+DELETE FROM lu_1_p5;
+
+
 SELECT * FROM shlif_p4;
 
 

@@ -22,17 +22,37 @@ class Test {
         row[2] = "1";
         data.add(row);
         row = new String[3];
-        row[0] = "192.168.49.250";
+        row[0] = "192.168.49.245";
+        row[1] = "table_1";
+        row[2] = "2";
+        data.add(row);
+        row = new String[3];
+        row[0] = "192.168.49.245";
+        row[1] = "table_1";
+        row[2] = "3";
+        data.add(row);
+        row = new String[3];
+        row[0] = "192.168.49.246";
         row[1] = "table_1";
         row[2] = "1";
         data.add(row);
         row = new String[3];
-        row[0] = "192.168.49.251";
+        row[0] = "192.168.49.246";
+        row[1] = "table_1";
+        row[2] = "2";
+        data.add(row);
+        row = new String[3];
+        row[0] = "192.168.49.246";
+        row[1] = "table_1";
+        row[2] = "3";
+        data.add(row);
+        row = new String[3];
+        row[0] = "192.168.49.246";
         row[1] = "table_2";
         row[2] = "6";
         data.add(row);
         row = new String[3];
-        row[0] = "192.168.49.251";
+        row[0] = "192.168.49.246";
         row[1] = "table_2";
         row[2] = "4";
         data.add(row);
@@ -66,14 +86,17 @@ class Test {
 
         for (int i=0; i<ipAddr.size(); i++){
             int lamI = i;
-            ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(data.get(i)[0]).setPort(502).build();
-            ModbusTcpMaster master = new ModbusTcpMaster(config);
             new Thread(() -> {
+                ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(ipAddr.get(lamI)).setPort(502).build();
+                ModbusTcpMaster master = new ModbusTcpMaster(config);
+                System.out.println("Thread " + (lamI+1) + " started. IP: " + master.getConfig().getAddress());
                 buffer[lamI] = 0;
                 int count = 0, num = 0;
 
-                while (forWrite.get(lamI).size() >= count){
-                    if (buffer[lamI] < 3) {
+                while (count < forWrite.get(lamI).size()){
+                    System.out.print("");
+                    if (buffer[lamI] < 1) {
+                        count++;
                         buffer[lamI]++;
                         sendAndReceive_OBEH_AI(master, forWrite.get(lamI).get(num)[2], lamI);
                         num++;
@@ -93,7 +116,7 @@ class Test {
                         response.getRegisters().getByte(0)};
                 int res = (int) ByteBuffer.wrap(b).getShort();
                 parse.data.put(String.valueOf(port), res);
-                System.out.println("Result: " + res);
+                System.out.println("Result " + master.getConfig().getAddress() + " :: " + id + ": " + res);
             } else {
                 System.out.println("ERROR response");
                 parse.data.put(String.valueOf(port), 0);
