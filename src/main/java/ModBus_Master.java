@@ -139,7 +139,7 @@ class ModBus_Master {
             if (response != null) {
                 byte[] b = {response.getRegisters().getByte(1),
                         response.getRegisters().getByte(0)};
-                int res = (int) ByteBuffer.wrap(b).getShort();
+                int res = Math.abs((int) ByteBuffer.wrap(b).getShort());
                 parse.data.put(String.valueOf(addr), res);
                 String query = "INSERT INTO " + tableName + " (value, time) VALUES (?, ?)";
                 int time = (int) (((double) System.currentTimeMillis())/1000);
