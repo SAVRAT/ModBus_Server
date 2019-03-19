@@ -43,7 +43,7 @@ class OvenAI {
             previous = data;
             third = true;
         }
-        timerID = vertx.setPeriodic(20000, result -> {
+        timerID = vertx.setPeriodic(8000, result -> {
 
             ArrayList<String> ipAddr = new ArrayList<>();
             for (String[] datum : data) {
@@ -67,13 +67,14 @@ class OvenAI {
 //                System.out.println("================");
 //                for (String[] row1:val) System.out.println(Arrays.toString(row1));
 //            }
-
+            ThreadGroup ovenAI = new ThreadGroup("OVEN AI READ");
             for (int i=0; i<ipAddr.size(); i++){
                 int lamI = i;
-                new Thread(() -> {
+                new Thread(ovenAI, () -> {
                     ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(ipAddr.get(lamI)).setPort(502).build();
                     ModbusTcpMaster master = new ModbusTcpMaster(config);
-                    System.out.println("Thread " + (lamI+1) + " started. IP: " + master.getConfig().getAddress());
+                    System.out.println("Thread " + (lamI+1) + " started. IP: " + master.getConfig().getAddress() +
+                            "  id: " + Thread.currentThread().getId());
                     modBusMaster.buffer[lamI] = 0;
                     modBusMaster.aiCount[lamI] = forWrite.get(lamI).size();
                     int count = 0, num = 0;
@@ -88,9 +89,11 @@ class OvenAI {
                             num++;
                         }
                     }
+                    System.out.println("Thread " + Thread.currentThread().getId() + " done.");
                 }).start();
             }
             second = true;
+//            System.out.println("Threads count: " + ovenAI.activeCount());
         });
     }
 
