@@ -83,4 +83,17 @@ class DataBaseConnect {
         }
         return data;
     }
+
+    ArrayList<String[]> parseDataOee(ResultSet resultSet){
+        ArrayList<String[]> data = new ArrayList<>();
+        int size = resultSet.getRows().size();
+        String[] row = new String[4];
+        for (int i=0; i<size; i++){
+            row[0] = resultSet.getRows().get(i).getString("ip");
+            row[0] = resultSet.getRows().get(i).getString("tablename");
+            row[0] = resultSet.getRows().get(i).getString("address");
+            row[0] = resultSet.getRows().get(i).getString("type");
+        }
+        return null;
+    }
 }
