@@ -61,3 +61,6 @@ SELECT * FROM shlif_p4;
 
 UPDATE status_connection SET status = 0 WHERE ip = '192.168.49.243';
 
+SELECT ip, tablename, address, type FROM oborudovanie;
+
+

@@ -87,13 +87,16 @@ class DataBaseConnect {
     ArrayList<String[]> parseDataOee(ResultSet resultSet){
         ArrayList<String[]> data = new ArrayList<>();
         int size = resultSet.getRows().size();
-        String[] row = new String[4];
         for (int i=0; i<size; i++){
-            row[0] = resultSet.getRows().get(i).getString("ip");
-            row[0] = resultSet.getRows().get(i).getString("tablename");
-            row[0] = resultSet.getRows().get(i).getString("address");
-            row[0] = resultSet.getRows().get(i).getString("type");
+            String[] row = new String[4];
+            if (resultSet.getRows().get(i).getString("ip")!=null) {
+                row[0] = resultSet.getRows().get(i).getString("ip");
+                row[1] = resultSet.getRows().get(i).getString("tablename");
+                row[2] = resultSet.getRows().get(i).getString("address");
+                row[3] = resultSet.getRows().get(i).getString("type");
+                data.add(row);
+            }
         }
-        return null;
+        return data;
     }
 }
