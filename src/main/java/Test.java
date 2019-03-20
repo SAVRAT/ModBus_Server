@@ -11,12 +11,12 @@ import java.util.concurrent.CompletableFuture;
 
 class Test{
     public static void main(String[] args) {
-        String address = "192.168.43.194";
-        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(address).setPort(50505).build();
+        String address = "192.168.49.247";
+        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(address).setPort(502).build();
         ModbusTcpMaster master = new ModbusTcpMaster(config);
 //        System.out.println(master);
         Parsing parse = new Parsing();
-        final int regAddr = 40001;
+        final int regAddr = 51;
 
         CompletableFuture<ReadHoldingRegistersResponse> future =
                 master.sendRequest(new ReadHoldingRegistersRequest(regAddr, 2), 1);
