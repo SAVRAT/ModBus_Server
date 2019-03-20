@@ -5,9 +5,11 @@ import com.digitalpetri.modbus.requests.ReadHoldingRegistersRequest;
 import com.digitalpetri.modbus.requests.ReadInputRegistersRequest;
 import com.digitalpetri.modbus.responses.ReadDiscreteInputsResponse;
 import com.digitalpetri.modbus.responses.ReadHoldingRegistersResponse;
+import com.sun.org.apache.xpath.internal.operations.Mod;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,23 +76,6 @@ class ModBus_Master {
         }, Modbus.sharedExecutor());
     }
 
-//    void start_OBEH(String[] slaveAddress, int regAddr) {
-//        started = true;
-//        for (String address : slaveAddress) {
-//            ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(address)
-//                    .setPort(502)
-//                    .build();
-//            ModbusTcpMaster master = new ModbusTcpMaster(config);
-//            new Thread(() -> {
-//                for (int j = 0; j < nRequests; j++) {
-//                    System.out.println(master.getConfig().getAddress());
-//                    sendAndReceive_OBEH(master, regAddr);
-//                }
-//                System.out.println("===================");
-//            }).start();
-//        }
-//    }
-
     void sendAndReceive_OBEH_DI(String address, String tableName, String ID){
         ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(address).setPort(502).build();
         ModbusTcpMaster master = new ModbusTcpMaster(config);
@@ -117,18 +102,6 @@ class ModBus_Master {
         }, Modbus.sharedExecutor());
     }
 
-//    void start_OBEH_AI() {
-//        if (counter==0)
-//        for (int i=0; i<oven_AI_IP.length; i++) {
-//            String table = oven_AI_Tabl[i], analogID = oven_AI_ID[i];
-//            ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(oven_AI_IP[i])
-//                    .setPort(502)
-//                    .build();
-//            ModbusTcpMaster master = new ModbusTcpMaster(config);
-//            new Thread(() -> sendAndReceive_OBEH_AI(master, table, analogID)).start();
-//        }
-//    }
-
     void sendAndReceive_OBEH_AI(ModbusTcpMaster master, String ID, String tableName, int bufId){
 
         final int addr = 4063 + Integer.valueOf(ID);
@@ -147,7 +120,9 @@ class ModBus_Master {
                 //System.out.println("DataBase writeData: " + jsonArray);
                 dataBaseConnect.databaseWrite(query, jsonArray);
                 ReferenceCountUtil.safeRelease(response);
+                moduleOk(master);
             } else {
+                moduleError(master);
                 System.out.println("ERROR response from ip: " + master.getConfig().getAddress());
                 parse.data.put(String.valueOf(addr), 0);
                 logger.error("Completed exceptionally, message={}", ex.getMessage(), ex);
@@ -160,21 +135,22 @@ class ModBus_Master {
 
     }
 
+    private void moduleError(ModbusTcpMaster master){
+        String checkQuery = "UPDATE status_connection SET status = 0 WHERE ip = ?;";
+        JsonArray jsonArray = new JsonArray().add(master.getConfig().getAddress());
+//                System.out.println("Else check: " + checkQuery);
+                dataBaseConnect.databaseWrite(checkQuery, jsonArray);
+    }
+
+    private void moduleOk(ModbusTcpMaster master){
+        String checkQuery = "UPDATE status_connection SET status = 1 WHERE ip = ?;";
+        JsonArray jsonArray = new JsonArray().add(master.getConfig().getAddress());
+//                System.out.println("Check: " + checkQuery);
+        dataBaseConnect.databaseUpdate(checkQuery, jsonArray);
+    }
 
     private void decBuffer(int bufId){
         buffer[bufId]--;
         aiCount[bufId]--;
-    }
-
-    private void handle(){
-        counter = 0;
-        System.out.println(parse.data);
-        System.out.println("---------------------------------------------");
-    }
-
-    void stop() {
-        started = false;
-        masters.forEach(ModbusTcpMaster::disconnect);
-        masters.clear();
     }
 }

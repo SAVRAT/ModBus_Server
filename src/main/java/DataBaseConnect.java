@@ -24,7 +24,7 @@ class DataBaseConnect {
                 SQLConnection connection = res.result();
                 connection.queryWithParams(query, jsonArray, out -> {
                     if (out.succeeded()){
-                        System.out.println("Done.");
+//                        System.out.println("Done.");
                     }else {
                         System.out.println("Error... " + res.cause());
                     }
@@ -35,7 +35,23 @@ class DataBaseConnect {
             }
         });
     }
-
+    void databaseUpdate(String query, JsonArray jsonArray){
+        mySQLClient.getConnection(res -> {
+            if (res.succeeded()) {
+                SQLConnection connection = res.result();
+                connection.updateWithParams(query, jsonArray, out -> {
+                    if (out.succeeded()){
+//                        System.out.println("Done.");
+                    }else {
+                        System.out.println("Update error... " + res.cause());
+                    }
+                    connection.close();
+                });
+            }else {
+                System.out.println("Fault to connect!   " + res.cause());
+            }
+        });
+    }
     void dataBaseRead(String query){
         mySQLClient.getConnection(res -> {
             if (res.succeeded()){
