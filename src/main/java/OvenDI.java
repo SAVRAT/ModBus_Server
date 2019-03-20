@@ -54,14 +54,14 @@ class OvenDI {
                 if (!check)
                     ipAddr.add(datum[0]);
             }
-            modBusMaster.buffer = new int[ipAddr.size()];
-            modBusMaster.aiCount = new int[ipAddr.size()];
-            forWrite.clear();
-            for (String ip : ipAddr) {
-                ArrayList<String[]> temp = new ArrayList<>();
-                for (String[] item : data) if (ip.equals(item[0])) temp.add(item);
-                forWrite.add(temp);
-            }
+//            modBusMaster.buffer = new int[ipAddr.size()];
+//            modBusMaster.aiCount = new int[ipAddr.size()];
+//            forWrite.clear();
+//            for (String ip : ipAddr) {
+//                ArrayList<String[]> temp = new ArrayList<>();
+//                for (String[] item : data) if (ip.equals(item[0])) temp.add(item);
+//                forWrite.add(temp);
+//            }
 
 //            for (ArrayList<String[]> val:forWrite) {
 //                System.out.println("================");
@@ -71,27 +71,28 @@ class OvenDI {
             ThreadGroup OEE = new ThreadGroup("OEE READ");
             for (int i=0; i<ipAddr.size(); i++){
                 int lamI = i;
-                new Thread(OEE, () -> {
-                    ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(ipAddr.get(lamI)).setPort(502).build();
-                    ModbusTcpMaster master = new ModbusTcpMaster(config);
-                    System.out.println("Thread " + (lamI+1) + " started. IP: " + master.getConfig().getAddress() +
-                            "  id: " + Thread.currentThread().getId());
-                    modBusMaster.buffer[lamI] = 0;
-                    modBusMaster.aiCount[lamI] = forWrite.get(lamI).size();
-                    int count = 0, num = 0;
+                System.out.println(ipAddr.get(i));
+//                new Thread(OEE, () -> {
+//                    ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(ipAddr.get(lamI)).setPort(502).build();
+//                    ModbusTcpMaster master = new ModbusTcpMaster(config);
+//                    System.out.println("Thread " + (lamI+1) + " started. IP: " + master.getConfig().getAddress() +
+//                            "  id: " + Thread.currentThread().getId());
+//                    modBusMaster.buffer[lamI] = 0;
+//                    modBusMaster.aiCount[lamI] = forWrite.get(lamI).size();
+//                    int count = 0, num = 0;
 
-                    while (count < forWrite.get(lamI).size()){
-                        System.out.print("");
-                        if (modBusMaster.buffer[lamI] < 1) {
-                            count++;
-                            modBusMaster.buffer[lamI]++;
+//                    while (count < forWrite.get(lamI).size()){
+//                        System.out.print("");
+//                        if (modBusMaster.buffer[lamI] < 1) {
+//                            count++;
+//                            modBusMaster.buffer[lamI]++;
 //                            modBusMaster.sendAndReceive_OBEH_AI(master, forWrite.get(lamI).get(num)[2],
 //                                    forWrite.get(lamI).get(num)[1], lamI);
-                            num++;
-                        }
-                    }
-                    System.out.println("Thread " + Thread.currentThread().getId() + " done.");
-                }).start();
+//                            num++;
+//                        }
+//                    }
+//                    System.out.println("Thread " + Thread.currentThread().getId() + " done.");
+//                }).start();
             }
             second = true;
         });

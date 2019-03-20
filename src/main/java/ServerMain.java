@@ -15,8 +15,8 @@ class ServerMain {
         String[] al1302 = {"192.168.0.120", "192.168.0.130"};
         Test test = new Test();
 //        test.testing();
-        ovenAI.start();
-//        ovenDI.start();
+//        ovenAI.start();
+        ovenDI.start();
 
 //            vertx.deployVerticle(new SomeVerticle(al1302, 80, controller, dataBase));
 //            modBusMaster.start(slaveAddress); //Siemens S7-1200 ModBus
