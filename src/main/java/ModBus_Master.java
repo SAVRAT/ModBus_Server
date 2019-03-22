@@ -38,41 +38,21 @@ class ModBus_Master {
         this.vertx = vertx;
     }
 
-    void start(String[] slaveAddress) {
-        started = true;
-        for (String address : slaveAddress) {
-            ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(address)
-                    .setPort(502)
-                    .build();
-            ModbusTcpMaster master = new ModbusTcpMaster(config);
-            new Thread(() -> {
-                for (int j = 0; j < nRequests; j++) {
-                    System.out.println(master.getConfig().getAddress());
-                    sendAndReceive(master);
-                }
-                System.out.println("===================");
-            }).start();
-        }
-    }
-
-    private void sendAndReceive(ModbusTcpMaster master) {
-        if (!started) return;
-
-        int quantity = 10;
+    private void sendAndReceive_PLC(ModbusTcpMaster master, int quantity, int address) {
         int startAddress = 0;
         CompletableFuture<ReadHoldingRegistersResponse> future =
-                master.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity *2), 0);
+                master.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity), 1);
+        System.out.println("Request done.");
         Parsing parse = new Parsing();
 
         future.whenCompleteAsync((response, ex) -> {
             if (response != null) {
-                ArrayList<Integer> data = parse.dInt(response.getRegisters(), 10);
+                ArrayList<Integer> data = parse.dInt(response.getRegisters(), quantity);
                 System.out.println("IpAddress:  " + master.getConfig().getAddress() + " :  " + data);
                 ReferenceCountUtil.release(response);
             } else {
-                logger.error("Completed exceptionally, message={}", ex.getMessage(), ex);
+                System.out.println("Error: " + ex.getMessage() + " :: " + ex);
             }
-            scheduler.schedule(() -> sendAndReceive(master), 10, TimeUnit.MILLISECONDS);
         }, Modbus.sharedExecutor());
     }
 
@@ -138,14 +118,12 @@ class ModBus_Master {
     private void moduleError(ModbusTcpMaster master){
         String checkQuery = "UPDATE status_connection SET status = 0 WHERE ip = ?;";
         JsonArray jsonArray = new JsonArray().add(master.getConfig().getAddress());
-//                System.out.println("Else check: " + checkQuery);
-                dataBaseConnect.databaseWrite(checkQuery, jsonArray);
+        dataBaseConnect.databaseWrite(checkQuery, jsonArray);
     }
 
     private void moduleOk(ModbusTcpMaster master){
         String checkQuery = "UPDATE status_connection SET status = 1 WHERE ip = ?;";
         JsonArray jsonArray = new JsonArray().add(master.getConfig().getAddress());
-//                System.out.println("Check: " + checkQuery);
         dataBaseConnect.databaseUpdate(checkQuery, jsonArray);
     }
 

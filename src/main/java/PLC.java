@@ -9,7 +9,7 @@ import io.vertx.ext.sql.SQLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-class OvenDI {
+class PLC {
 
     private DataBaseConnect dataBaseConnect;
     private Vertx vertx;
@@ -21,7 +21,7 @@ class OvenDI {
     private ArrayList<String[]> outData = new ArrayList<>();
     private ArrayList<ArrayList<String[]>> forWrite = new ArrayList<>();
 
-    OvenDI(DataBaseConnect dataBaseConnect, Vertx vertx, ModBus_Master modBusMaster){
+    PLC(DataBaseConnect dataBaseConnect, Vertx vertx, ModBus_Master modBusMaster){
         this.dataBaseConnect = dataBaseConnect;
         this.vertx = vertx;
         this.modBusMaster = modBusMaster;
@@ -45,22 +45,24 @@ class OvenDI {
         }
         timerID = vertx.setPeriodic(8000, result -> {
 
-            ArrayList<String> ipAddr = new ArrayList<>();
-            for (String[] datum : data) {
-                boolean check = false;
-                for (String str : ipAddr)
-                    if (str.equals(datum[0]))
-                        check = true;
-                if (!check)
-                    ipAddr.add(datum[0]);
-            }
-
-            ThreadGroup OEE = new ThreadGroup("OEE READ");
-            for (int i=0; i<ipAddr.size(); i++){
-                int lamI = i;
-                System.out.println(ipAddr.get(i));
-            }
-            second = true;
+//            ArrayList<String> ipAddr = new ArrayList<>();
+//            for (String[] datum : data) {
+//                boolean check = false;
+//                for (String str : ipAddr)
+//                    if (str.equals(datum[0]))
+//                        check = true;
+//                if (!check)
+//                    ipAddr.add(datum[0]);
+//            }
+//
+//            ThreadGroup OEE = new ThreadGroup("OEE READ");
+//            for (int i=0; i<ipAddr.size(); i++){
+//                int lamI = i;
+//                System.out.println(ipAddr.get(i));
+//            }
+//            second = true;
+            for (String[] row:data)
+                System.out.println(Arrays.toString(row));
         });
     }
 
@@ -90,11 +92,13 @@ class OvenDI {
         dataBaseConnect.mySQLClient.getConnection(con -> {
             if (con.succeeded()) {
                 SQLConnection connection = con.result();
-                connection.query("SELECT ip, tablename, address, type FROM oborudovanie;", res -> {
+                connection.query("SELECT T.ip as IpList, T.type, T.length, O.ip, O.address, " +
+                        "O.tablename  FROM oborudovanie O, OeeIpTable T;", res -> {
                     if (res.succeeded()) {
                         ResultSet result = res.result();
                         outData.clear();
                         outData.addAll(dataBaseConnect.parseDataOee(result));
+                        System.out.println(outData);
                         if (first)
                             handle(outData);
                         if (second)

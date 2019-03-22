@@ -88,14 +88,19 @@ class DataBaseConnect {
         ArrayList<String[]> data = new ArrayList<>();
         int size = resultSet.getRows().size();
         for (int i=0; i<size; i++){
-            String[] row = new String[4];
-            if (resultSet.getRows().get(i).getString("ip")!=null) {
-                row[0] = resultSet.getRows().get(i).getString("ip");
-                row[1] = resultSet.getRows().get(i).getString("tablename");
-                row[2] = resultSet.getRows().get(i).getString("address");
-                row[3] = resultSet.getRows().get(i).getString("type");
+            String[] row = new String[6];
+            System.out.println("Parsing...");
+//            if (resultSet.getRows().get(i).getString("IpTable")!=null) {
+                row[0] = resultSet.getRows().get(i).getString("IpTable");
+            row[1] = resultSet.getRows().get(i).getString("type");
+            row[2] = resultSet.getRows().get(i).getString("length");
+            System.out.println("Here...");
+            row[3] = resultSet.getRows().get(i).getString("ip");
+                row[4] = resultSet.getRows().get(i).getString("address");
+                row[5] = resultSet.getRows().get(i).getString("tablename");
                 data.add(row);
-            }
+                System.out.println(data);
+//            }
         }
         return data;
     }

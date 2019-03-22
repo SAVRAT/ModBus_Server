@@ -9,16 +9,14 @@ class ServerMain {
         Vertx vertx = Vertx.vertx();
         ModBus_Master modBusMaster = new ModBus_Master(dataBase, vertx);
         OvenAI ovenAI = new OvenAI(dataBase, vertx, modBusMaster);
-        OvenDI ovenDI = new OvenDI(dataBase, vertx, modBusMaster);
+        PLC plc = new PLC(dataBase, vertx, modBusMaster);
 
-        String[] slaveAddress = {"192.168.0.10", "192.168.0.1"};
         String[] al1302 = {"192.168.0.120", "192.168.0.130"};
 //        Test test = new Test();
 //        test.testing();
 //        ovenAI.start();
-        ovenDI.start();
+        plc.start();
 
 //            vertx.deployVerticle(new SomeVerticle(al1302, 80, controller, dataBase));
-//            modBusMaster.start(slaveAddress); //Siemens S7-1200 ModBus
         }
 }

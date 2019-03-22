@@ -2,6 +2,7 @@ import io.netty.buffer.ByteBuf;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
 class Parsing {
@@ -9,15 +10,17 @@ class Parsing {
     ConcurrentHashMap<String, Integer> data = new ConcurrentHashMap<>();
 
     ArrayList<Integer> dInt(ByteBuf registers, int length){
-        ArrayList<Integer> data = new ArrayList<>();
-        for (int i=0; i<length*4; i+=4){
-            byte[] arr= {registers.getByte(i),registers.getByte(i+1),
-                    registers.getByte(i+2),registers.getByte(i+3)};
+        ArrayList<Integer> output = new ArrayList<>();
+        for (int i=0; i<length*2; i+=2){
+            byte[] arr= {registers.getByte(i),registers.getByte(i+1)};
             ByteBuffer buff = ByteBuffer.wrap(arr);
-            data.add(buff.getInt());
+            int res = buff.getShort();
+//            System.out.println((i/2 + 1) + ": " + Arrays.toString(arr) + " :: " + res);
+            output.add(res);
         }
-        return data;
+        return output;
     }
+
     boolean[] byteToBoolArray(ByteBuf buffer){
         boolean[] arr = new boolean[20];
         byte high = buffer.getByte(3);
