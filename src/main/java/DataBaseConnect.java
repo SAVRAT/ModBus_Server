@@ -7,6 +7,7 @@ import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.SQLConnection;
 
 import java.util.ArrayList;
+import java.util.List;
 
 class DataBaseConnect {
     private Vertx vertx = Vertx.vertx();
@@ -52,19 +53,39 @@ class DataBaseConnect {
             }
         });
     }
-    void dataBaseRead(String query){
+
+    void databaseUpdate(String query){
         mySQLClient.getConnection(res -> {
-            if (res.succeeded()){
+            if (res.succeeded()) {
                 SQLConnection connection = res.result();
-                connection.query(query, out -> {
-                    if (out.succeeded()){
-                        JsonObject output = out.result().toJson();
-                    }else {
-                        System.out.println("Error... " + res.cause());
+                connection.update(query, out -> {
+                    if (out.failed()){
+                        System.out.println("Update error... " + res.cause());
                     }
+                    connection.close();
                 });
             }else {
                 System.out.println("Fault to connect!   " + res.cause());
+            }
+        });
+    }
+
+    void databaseRedeOEE(String[] device, int currentState) {
+        mySQLClient.getConnection(con -> {
+            if (con.succeeded()) {
+                SQLConnection connection = con.result();
+                connection.query("SELECT status FROM " + device[4]
+                        + " ORDER BY id DESC LIMIT 1;", out -> {
+                    if (out.succeeded()) {
+                        List<JsonObject> output = out.result().getRows();
+                        statusCheck(output, currentState, device[4], device[5]);
+                    } else {
+                        System.out.println("Error... " + out.cause());
+                    }
+                    connection.close();
+                });
+            } else {
+                System.out.println("Fault to connect!   " + con.cause());
             }
         });
     }
@@ -84,24 +105,32 @@ class DataBaseConnect {
         return data;
     }
 
-    ArrayList<String[]> parseDataOee(ResultSet resultSet){
+    ArrayList<String[]> parseDataOee(List<JsonObject> resultSet){
         ArrayList<String[]> data = new ArrayList<>();
-        int size = resultSet.getRows().size();
-        for (int i=0; i<size; i++){
+        for (JsonObject entries : resultSet) {
             String[] row = new String[6];
-            System.out.println("Parsing...");
-//            if (resultSet.getRows().get(i).getString("IpTable")!=null) {
-                row[0] = resultSet.getRows().get(i).getString("IpTable");
-            row[1] = resultSet.getRows().get(i).getString("type");
-            row[2] = resultSet.getRows().get(i).getString("length");
-            System.out.println("Here...");
-            row[3] = resultSet.getRows().get(i).getString("ip");
-                row[4] = resultSet.getRows().get(i).getString("address");
-                row[5] = resultSet.getRows().get(i).getString("tablename");
+            if (entries.getString("ip").length() > 0) {
+                row[0] = entries.getString("ip");
+                row[1] = entries.getString("length");
+                row[2] = entries.getString("type");
+                row[3] = entries.getString("address");
+                row[4] = entries.getString("tablename");
+                row[5] = String.valueOf(entries.getInteger("id"));
                 data.add(row);
-                System.out.println(data);
-//            }
+            }
         }
         return data;
+    }
+
+    private void statusCheck(List<JsonObject> data, int currentState, String tableName, String parentId){
+        int oldStatus = data.get(0).getInteger("status");
+        databaseUpdate("UPDATE " + tableName +
+                " SET endperiod = UNIX_TIMESTAMP(SYSDATE()) ORDER BY id DESC LIMIT 1;");
+        if (oldStatus != currentState){
+            JsonArray toWrite = new JsonArray().add(currentState).add(parentId);
+            databaseWrite("INSERT INTO " + tableName +
+                    " (startperiod, endperiod, status, parentid) VALUE (UNIX_TIMESTAMP(SYSDATE()), " +
+                    "UNIX_TIMESTAMP(SYSDATE()), ?, ?);", toWrite);
+        }
     }
 }

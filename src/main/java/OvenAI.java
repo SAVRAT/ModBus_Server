@@ -73,7 +73,7 @@ class OvenAI {
                 new Thread(ovenAI, () -> {
                     ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(ipAddr.get(lamI)).setPort(502).build();
                     ModbusTcpMaster master = new ModbusTcpMaster(config);
-                    System.out.println("Thread " + (lamI+1) + " started. IP: " + master.getConfig().getAddress() +
+                    System.out.println("Vibro Thread " + (lamI+1) + " started. IP: " + master.getConfig().getAddress() +
                             "  id: " + Thread.currentThread().getId());
                     modBusMaster.buffer[lamI] = 0;
                     modBusMaster.aiCount[lamI] = forWrite.get(lamI).size();

@@ -11,6 +11,8 @@ import io.netty.util.ReferenceCountUtil;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.sql.SQLConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,11 +24,6 @@ import java.util.concurrent.*;
 
 class ModBus_Master {
     private final Logger logger = LoggerFactory.getLogger(getClass());
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private final List<ModbusTcpMaster> masters = new CopyOnWriteArrayList<>();
-    private volatile boolean started = false;
-    private final int nRequests = 1;
-    private int counter = 0;
     private Parsing parse = new Parsing();
     private DataBaseConnect dataBaseConnect;
     private Vertx vertx;
@@ -38,47 +35,61 @@ class ModBus_Master {
         this.vertx = vertx;
     }
 
-    private void sendAndReceive_PLC(ModbusTcpMaster master, int quantity, int address) {
+    void sendAndReceive_PLC(ModbusTcpMaster master, int quantity, ArrayList<String[]> writeData) {
+        Parsing parse = new Parsing();
         int startAddress = 0;
+
         CompletableFuture<ReadHoldingRegistersResponse> future =
                 master.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity), 1);
-        System.out.println("Request done.");
-        Parsing parse = new Parsing();
+//        System.out.println("Request done.");
 
         future.whenCompleteAsync((response, ex) -> {
             if (response != null) {
                 ArrayList<Integer> data = parse.dInt(response.getRegisters(), quantity);
-                System.out.println("IpAddress:  " + master.getConfig().getAddress() + " :  " + data);
+//                System.out.println("IpAddress:  " + master.getConfig().getAddress() + " :  " + data);
+                for (String[] device:writeData){
+                    if (device[0].equals(master.getConfig().getAddress())){
+                        int startId = Integer.valueOf(device[3])-1;
+                        int currentState = deviceState(data.get(startId));
+//                        System.out.println(device[0] + " :: " + currentState);
+                        dataBaseConnect.databaseRedeOEE(device, currentState);
+                    }
+                }
                 ReferenceCountUtil.release(response);
             } else {
                 System.out.println("Error: " + ex.getMessage() + " :: " + ex);
             }
+            master.disconnect();
         }, Modbus.sharedExecutor());
     }
 
-    void sendAndReceive_OBEH_DI(String address, String tableName, String ID){
-        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(address).setPort(502).build();
-        ModbusTcpMaster master = new ModbusTcpMaster(config);
+    void sendAndReceive_OBEH_DI(ModbusTcpMaster master, int quantity, ArrayList<String[]> writeData){
 
         Parsing parse = new Parsing();
-        final int regAddr = Integer.valueOf(ID);
+        final int startAddress = 51;
 
         CompletableFuture<ReadHoldingRegistersResponse> future =
-                master.sendRequest(new ReadHoldingRegistersRequest(regAddr, 2), 1);
+                master.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity), 1);
         future.whenCompleteAsync((response, ex) -> {
             if (response != null){
                 ByteBuf out = response.getRegisters().readSlice(4);
-                System.out.println(Arrays.toString(parse.byteToBoolArray(out)));
-                String query = "INSERT INTO " + tableName + " (value, time) VALUES (?, ?)";
-                JsonArray jsonArray = new JsonArray();
-                jsonArray.add("data");
-                jsonArray.add(String.valueOf(((double) System.currentTimeMillis())/1000));
-                dataBaseConnect.databaseWrite(query, jsonArray);
+                boolean[] data = parse.byteToBoolArray(out);
+//                System.out.println(Arrays.toString(data));
+
+                for (String[] device:writeData){
+                    if (device[0].equals(master.getConfig().getAddress())){
+                        int startId = Integer.valueOf(device[3])-1;
+                        int currentState = deviceStateOven(data, startId);
+//                        System.out.println(device[0] + " :: " + currentState);
+                        dataBaseConnect.databaseRedeOEE(device, currentState);
+                    }
+                }
+
                 ReferenceCountUtil.release(response);
             }else {
-                System.out.println("ERROR");
-                logger.error("Completed exceptionally, message={}", ex.getMessage(), ex);
+                System.out.println("ERROR: " + ex.getMessage() + " :: " + ex);
             }
+            master.disconnect();
         }, Modbus.sharedExecutor());
     }
 
@@ -130,5 +141,23 @@ class ModBus_Master {
     private void decBuffer(int bufId){
         buffer[bufId]--;
         aiCount[bufId]--;
+    }
+
+    private int deviceState(int status){
+        int stat = 0;
+        if (status == 1280 || status == 1792) stat = 2;
+        else if (status == 768) stat = 1;
+        else if (status == 256) stat = 3;
+        return stat;
+    }
+
+    private int deviceStateOven(boolean[] statusWord, int startId){
+        int outStat = 0;
+        if (statusWord[startId]) {
+            if (statusWord[startId + 2]) outStat = 2;
+            else if (statusWord[startId + 1]) outStat = 1;
+            else outStat = 3;
+        }
+        return outStat;
     }
 }

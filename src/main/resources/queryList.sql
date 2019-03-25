@@ -61,6 +61,6 @@ SELECT * FROM shlif_p4;
 
 UPDATE status_connection SET status = 0 WHERE ip = '192.168.49.243';
 
-SELECT T.ip as IpList, T.type, T.length, O.ip, O.address, O.tablename  FROM oborudovanie O, OeeIpTable T;
+SELECT tablename, address, ip, length, type, id FROM oborudovanie;
 
 
