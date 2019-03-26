@@ -14,7 +14,7 @@ class ServerMain {
         String[] al1302 = {"192.168.0.120", "192.168.0.130"};
 //        Test test = new Test();
 //        test.testing();
-//        ovenAI.start();
+        ovenAI.start();
         plc.start();
 
 //            vertx.deployVerticle(new SomeVerticle(al1302, 80, controller, dataBase));

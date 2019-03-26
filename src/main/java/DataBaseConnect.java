@@ -27,12 +27,12 @@ class DataBaseConnect {
                     if (out.succeeded()){
 //                        System.out.println("Done.");
                     }else {
-                        System.out.println("Error... " + res.cause());
+                        System.out.println("\u001B[33m" + "Write Query ERROR" + "\u001B[0m" + " " + res.cause());
                     }
                     connection.close();
                 });
             }else {
-                System.out.println("Fault to connect!   " + res.cause());
+                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + res.cause());
             }
         });
     }
@@ -44,33 +44,33 @@ class DataBaseConnect {
                     if (out.succeeded()){
 //                        System.out.println("Done.");
                     }else {
-                        System.out.println("Update error... " + res.cause());
+                        System.out.println("\u001B[33m" + "Update Query ERROR" + "\u001B[0m" + " " + res.cause());
                     }
                     connection.close();
                 });
             }else {
-                System.out.println("Fault to connect!   " + res.cause());
+                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + res.cause());
             }
         });
     }
 
-    void databaseUpdate(String query){
+    private void databaseUpdate(String query){
         mySQLClient.getConnection(res -> {
             if (res.succeeded()) {
                 SQLConnection connection = res.result();
                 connection.update(query, out -> {
                     if (out.failed()){
-                        System.out.println("Update error... " + res.cause());
+                        System.out.println("\u001B[33m" + "Update Query ERROR" + "\u001B[0m" + " " + res.cause());
                     }
                     connection.close();
                 });
             }else {
-                System.out.println("Fault to connect!   " + res.cause());
+                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + res.cause());
             }
         });
     }
 
-    void databaseRedeOEE(String[] device, int currentState) {
+    void databaseReadOEE(String[] device, int currentState) {
         mySQLClient.getConnection(con -> {
             if (con.succeeded()) {
                 SQLConnection connection = con.result();
@@ -80,12 +80,12 @@ class DataBaseConnect {
                         List<JsonObject> output = out.result().getRows();
                         statusCheck(output, currentState, device[4], device[5]);
                     } else {
-                        System.out.println("Error... " + out.cause());
+                        System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + out.cause());
                     }
                     connection.close();
                 });
             } else {
-                System.out.println("Fault to connect!   " + con.cause());
+                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
             }
         });
     }
@@ -109,7 +109,7 @@ class DataBaseConnect {
         ArrayList<String[]> data = new ArrayList<>();
         for (JsonObject entries : resultSet) {
             String[] row = new String[6];
-            if (entries.getString("ip").length() > 0) {
+            if (entries.getString("ip") != null && entries.getString("ip").length() > 0) {
                 row[0] = entries.getString("ip");
                 row[1] = entries.getString("length");
                 row[2] = entries.getString("type");

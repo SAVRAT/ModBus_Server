@@ -43,8 +43,9 @@ class OvenAI {
             previous = data;
             third = true;
         }
-        timerID = vertx.setPeriodic(8000, result -> {
+        timerID = vertx.setPeriodic(9000, result -> {
 
+            System.out.println("Vibro write...");
             ArrayList<String> ipAddr = new ArrayList<>();
             for (String[] datum : data) {
                 boolean check = false;
@@ -73,8 +74,8 @@ class OvenAI {
                 new Thread(ovenAI, () -> {
                     ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(ipAddr.get(lamI)).setPort(502).build();
                     ModbusTcpMaster master = new ModbusTcpMaster(config);
-                    System.out.println("Vibro Thread " + (lamI+1) + " started. IP: " + master.getConfig().getAddress() +
-                            "  id: " + Thread.currentThread().getId());
+//                    System.out.println("Vibro Thread " + (lamI+1) + " started. IP: " + master.getConfig().getAddress() +
+//                            "  id: " + Thread.currentThread().getId());
                     modBusMaster.buffer[lamI] = 0;
                     modBusMaster.aiCount[lamI] = forWrite.get(lamI).size();
                     int count = 0, num = 0;
@@ -89,11 +90,10 @@ class OvenAI {
                             num++;
                         }
                     }
-                    System.out.println("Thread " + Thread.currentThread().getId() + " done.");
+//                    System.out.println("Thread " + Thread.currentThread().getId() + " done.");
                 }).start();
             }
             second = true;
-//            System.out.println("Threads count: " + ovenAI.activeCount());
         });
     }
 
@@ -131,10 +131,10 @@ class OvenAI {
                             handle(outData);
                         if (second)
                             check(outData);
-                    } else System.out.println("error: database read query  " + res.cause());
+                    } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
                     connection.close();
                 });
-            } else System.out.println("Connection error: " + con.cause());
+            } else System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
         });
     }
 }

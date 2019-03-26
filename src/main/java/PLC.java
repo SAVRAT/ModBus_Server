@@ -47,8 +47,7 @@ class PLC {
             third = true;
         }
         timerID = vertx.setPeriodic(2000, result -> {
-
-
+            System.out.println("OEE write...");
             ArrayList<String[]> modBusDevice = new ArrayList<>();
             for (String[] datum : data) {
                 boolean check = false;
@@ -70,21 +69,29 @@ class PLC {
             ThreadGroup OEE = new ThreadGroup("OEE READ");
             for (String[] device:modBusDevice){
                 new Thread(OEE, () -> {
-                    ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(device[0]).setPort(502)
-                            .build();
-                    ModbusTcpMaster master = new ModbusTcpMaster(config);
-                    System.out.println("OEE Thread started. IP: " + master.getConfig().getAddress() +
-                            "  id: " + Thread.currentThread().getId());
+
+//                    System.out.println("OEE Thread started. IP: " + device[0] +
+//                            "  id: " + Thread.currentThread().getId());
                     if (device[2].equals("plc")){
+                        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(device[0]).setPort(502)
+                                .build();
+                        ModbusTcpMaster master = new ModbusTcpMaster(config);
                         modBusMaster.sendAndReceive_PLC(master, Integer.valueOf(device[1]), data);
                     }else if (device[2].equals("owen")){
+                        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(device[0]).setPort(502)
+                                .build();
+                        ModbusTcpMaster master = new ModbusTcpMaster(config);
                         modBusMaster.sendAndReceive_OBEH_DI(master, Integer.valueOf(device[1]), data);
+                    }else if (device[2].equals("plc_5000")){
+                        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(device[0]).setPort(5000)
+                                .build();
+                        ModbusTcpMaster master = new ModbusTcpMaster(config);
+                        modBusMaster.sendAndReceive_PLC(master, Integer.valueOf(device[1]), data);
                     }
 
                 }).start();
             }
             second = true;
-            System.out.println("===============================================");
         });
     }
 
@@ -93,7 +100,7 @@ class PLC {
         boolean qwerty = false;
         if (data.size() == previous.size())
             for (int i=0; i<data.size(); i++){
-                for (int n=0; n<3; n++){
+                for (int n=0; n<6; n++){
                     if (!data.get(i)[n].equals(previous.get(i)[n]))
                         qwerty = true;
                 }
@@ -123,10 +130,10 @@ class PLC {
                             handle(outData);
                         if (second)
                             check(outData);
-                    } else System.out.println("error: database read query  " + res.cause());
+                    } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
                     connection.close();
                 });
-            } else System.out.println("Connection error: " + con.cause());
+            } else System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
         });
     }
 }
