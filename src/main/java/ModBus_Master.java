@@ -4,7 +4,6 @@ import com.digitalpetri.modbus.requests.ReadHoldingRegistersRequest;
 import com.digitalpetri.modbus.responses.ReadHoldingRegistersResponse;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
-import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,13 +16,11 @@ class ModBus_Master {
     private final Logger logger = LoggerFactory.getLogger(getClass());
     private Parsing parse = new Parsing();
     private DataBaseConnect dataBaseConnect;
-    private Vertx vertx;
     int[] buffer;
     int[] aiCount;
 
-    ModBus_Master(DataBaseConnect dataBaseConnect, Vertx vertx) {
+    ModBus_Master(DataBaseConnect dataBaseConnect) {
         this.dataBaseConnect = dataBaseConnect;
-        this.vertx = vertx;
     }
 
     void sendAndReceive_PLC(ModbusTcpMaster master, int quantity, ArrayList<String[]> writeData) {
@@ -47,8 +44,10 @@ class ModBus_Master {
                     }
                 }
                 ReferenceCountUtil.release(response);
+                moduleOk(master);
             } else {
                 System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
+                moduleError(master);
             }
             master.disconnect();
         }, Modbus.sharedExecutor());
@@ -74,10 +73,11 @@ class ModBus_Master {
                         dataBaseConnect.databaseReadOEE(device, currentState);
                     }
                 }
-
                 ReferenceCountUtil.release(response);
+                moduleOk(master);
             }else {
                 System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
+                moduleError(master);
             }
             master.disconnect();
         }, Modbus.sharedExecutor());
@@ -107,7 +107,7 @@ class ModBus_Master {
                 parse.data.put(String.valueOf(addr), 0);
                 logger.error("Completed exceptionally, message={}", ex.getMessage(), ex);
             }
-            decBuffer(bufId, master);
+            decBuffer(bufId);
             if (aiCount[bufId] == 0){
                 master.disconnect();
             }
@@ -127,7 +127,7 @@ class ModBus_Master {
         dataBaseConnect.databaseUpdate(checkQuery, jsonArray);
     }
 
-    private void decBuffer(int bufId, ModbusTcpMaster master){
+    private void decBuffer(int bufId){
         buffer[bufId]--;
         aiCount[bufId]--;
     }

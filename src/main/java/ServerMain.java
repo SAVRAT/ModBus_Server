@@ -7,11 +7,10 @@ class ServerMain {
 //        DataBaseConnect dataBase = new DataBaseConnect("localhost", "server", "z1x2c3v4",
 //                "wert");
         Vertx vertx = Vertx.vertx();
-        ModBus_Master modBusMaster = new ModBus_Master(dataBase, vertx);
+        ModBus_Master modBusMaster = new ModBus_Master(dataBase);
         OvenAI ovenAI = new OvenAI(dataBase, vertx, modBusMaster);
         PLC plc = new PLC(dataBase, vertx, modBusMaster);
 
-        String[] al1302 = {"192.168.0.120", "192.168.0.130"};
 //        Test test = new Test();
 //        test.testing();
         ovenAI.start();

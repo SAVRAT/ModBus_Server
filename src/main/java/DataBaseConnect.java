@@ -10,13 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 class DataBaseConnect {
-    private Vertx vertx = Vertx.vertx();
     SQLClient mySQLClient;
-    ArrayList<String[]> oven_AI = new ArrayList<>();
 
     DataBaseConnect(String host, String username, String password, String dataBase){
         JsonObject mySQLClientConfig = new JsonObject().put("host", host).put("username", username)
                 .put("password", password).put("database", dataBase);
+        Vertx vertx = Vertx.vertx();
         mySQLClient = MySQLClient.createNonShared(vertx, mySQLClientConfig);
     }
     void databaseWrite(String query, JsonArray jsonArray){
@@ -24,11 +23,8 @@ class DataBaseConnect {
             if (res.succeeded()) {
                 SQLConnection connection = res.result();
                 connection.queryWithParams(query, jsonArray, out -> {
-                    if (out.succeeded()){
-//                        System.out.println("Done.");
-                    }else {
+                    if (out.failed())
                         System.out.println("\u001B[33m" + "Write Query ERROR" + "\u001B[0m" + " " + res.cause());
-                    }
                     connection.close();
                 });
             }else {
@@ -41,11 +37,8 @@ class DataBaseConnect {
             if (res.succeeded()) {
                 SQLConnection connection = res.result();
                 connection.updateWithParams(query, jsonArray, out -> {
-                    if (out.succeeded()){
-//                        System.out.println("Done.");
-                    }else {
+                    if (out.failed())
                         System.out.println("\u001B[33m" + "Update Query ERROR" + "\u001B[0m" + " " + res.cause());
-                    }
                     connection.close();
                 });
             }else {
@@ -124,13 +117,13 @@ class DataBaseConnect {
 
     private void statusCheck(List<JsonObject> data, int currentState, String tableName, String parentId){
         int oldStatus = data.get(0).getInteger("status");
+        String currentTime = String.valueOf((System.currentTimeMillis())/1000);
         databaseUpdate("UPDATE " + tableName +
-                " SET endperiod = UNIX_TIMESTAMP(SYSDATE()) ORDER BY id DESC LIMIT 1;");
+                " SET endperiod = " + currentTime + " ORDER BY id DESC LIMIT 1;");
         if (oldStatus != currentState){
-            JsonArray toWrite = new JsonArray().add(currentState).add(parentId);
+            JsonArray toWrite = new JsonArray().add(currentTime).add(currentTime).add(currentState).add(parentId);
             databaseWrite("INSERT INTO " + tableName +
-                    " (startperiod, endperiod, status, parentid) VALUE (UNIX_TIMESTAMP(SYSDATE()), " +
-                    "UNIX_TIMESTAMP(SYSDATE()), ?, ?);", toWrite);
+                    " (startperiod, endperiod, status, parentid) VALUE (?, ?, ?, ?);", toWrite);
         }
     }
 }

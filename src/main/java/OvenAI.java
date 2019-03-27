@@ -1,13 +1,10 @@
 import com.digitalpetri.modbus.master.ModbusTcpMaster;
 import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.SQLConnection;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 class OvenAI {
 
@@ -30,9 +27,7 @@ class OvenAI {
     @SuppressWarnings("Duplicates")
     void start(){
         refreshData();
-        vertx.setPeriodic(60000, event -> {
-            refreshData();
-        });
+        vertx.setPeriodic(60000, event -> refreshData());
     }
 
     private long timerID;

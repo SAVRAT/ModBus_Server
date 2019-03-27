@@ -1,15 +1,10 @@
 import com.digitalpetri.modbus.master.ModbusTcpMaster;
 import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.SQLConnection;
 
-import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 class PLC {
@@ -22,7 +17,6 @@ class PLC {
     private boolean third = false;
     private ArrayList<String[]> previous = new ArrayList<>();
     private ArrayList<String[]> outData = new ArrayList<>();
-    private ArrayList<ArrayList<String[]>> forWrite = new ArrayList<>();
 
     PLC(DataBaseConnect dataBaseConnect, Vertx vertx, ModBus_Master modBusMaster){
         this.dataBaseConnect = dataBaseConnect;
@@ -33,9 +27,7 @@ class PLC {
     @SuppressWarnings("Duplicates")
     void start(){
         refreshData();
-        vertx.setPeriodic(60000, event -> {
-            refreshData();
-        });
+        vertx.setPeriodic(60000, event -> refreshData());
     }
 
     private long timerID;
@@ -72,21 +64,28 @@ class PLC {
 
 //                    System.out.println("OEE Thread started. IP: " + device[0] +
 //                            "  id: " + Thread.currentThread().getId());
-                    if (device[2].equals("plc")){
-                        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(device[0]).setPort(502)
-                                .build();
-                        ModbusTcpMaster master = new ModbusTcpMaster(config);
-                        modBusMaster.sendAndReceive_PLC(master, Integer.valueOf(device[1]), data);
-                    }else if (device[2].equals("owen")){
-                        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(device[0]).setPort(502)
-                                .build();
-                        ModbusTcpMaster master = new ModbusTcpMaster(config);
-                        modBusMaster.sendAndReceive_OBEH_DI(master, Integer.valueOf(device[1]), data);
-                    }else if (device[2].equals("plc_5000")){
-                        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(device[0]).setPort(5000)
-                                .build();
-                        ModbusTcpMaster master = new ModbusTcpMaster(config);
-                        modBusMaster.sendAndReceive_PLC(master, Integer.valueOf(device[1]), data);
+                    switch (device[2]) {
+                        case "plc": {
+                            ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(device[0]).setPort(502)
+                                    .build();
+                            ModbusTcpMaster master = new ModbusTcpMaster(config);
+                            modBusMaster.sendAndReceive_PLC(master, Integer.valueOf(device[1]), data);
+                            break;
+                        }
+                        case "owen": {
+                            ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(device[0]).setPort(502)
+                                    .build();
+                            ModbusTcpMaster master = new ModbusTcpMaster(config);
+                            modBusMaster.sendAndReceive_OBEH_DI(master, Integer.valueOf(device[1]), data);
+                            break;
+                        }
+                        case "plc_5000": {
+                            ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(device[0]).setPort(5000)
+                                    .build();
+                            ModbusTcpMaster master = new ModbusTcpMaster(config);
+                            modBusMaster.sendAndReceive_PLC(master, Integer.valueOf(device[1]), data);
+                            break;
+                        }
                     }
 
                 }).start();
