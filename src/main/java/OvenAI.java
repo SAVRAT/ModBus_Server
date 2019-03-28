@@ -38,7 +38,7 @@ class OvenAI {
             previous = data;
             third = true;
         }
-        timerID = vertx.setPeriodic(9000, result -> {
+        timerID = vertx.setPeriodic(5000, result -> {
 
             System.out.println("Vibro write...");
             ArrayList<String> ipAddr = new ArrayList<>();

@@ -2,7 +2,8 @@ import io.vertx.core.Vertx;
 
 class ServerMain {
     ServerMain(Controller controller) {
-            DataBaseConnect dataBase = new DataBaseConnect("192.168.49.53", "java", "z1x2c3v4",
+        String[] alAddress = {"192.168.49.239", "192.168.49.238"};
+        DataBaseConnect dataBase = new DataBaseConnect("192.168.49.53", "java", "z1x2c3v4",
                     "fanDOK");
 //        DataBaseConnect dataBase = new DataBaseConnect("localhost", "server", "z1x2c3v4",
 //                "wert");
@@ -13,9 +14,10 @@ class ServerMain {
 
 //        Test test = new Test();
 //        test.testing();
-        ovenAI.start();
-        plc.start();
 
-//            vertx.deployVerticle(new SomeVerticle(al1302, 80, controller, dataBase));
+//        ovenAI.start();
+//        plc.start();
+
+            vertx.deployVerticle(new SomeVerticle(alAddress, 80, controller));
         }
 }

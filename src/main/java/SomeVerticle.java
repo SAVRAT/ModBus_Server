@@ -8,7 +8,6 @@ import java.util.Collections;
 
 class SomeVerticle extends AbstractVerticle {
     private Controller controller;
-    private DataBaseConnect dbConnect;
     private final String[] host;
     private final int port;
     private int counter = 0;
@@ -20,11 +19,10 @@ class SomeVerticle extends AbstractVerticle {
     private String query_2 = "UPDATE WoodLog SET dot_1=?, dot_2=?, dot_3=?, dot_4=?, dot_5=?, dot_6=?, dot_7=?," +
             " dot_8=?, dot_9=?, dot_10=?, dot_11=?, dot_12=?, dot_13=?, dot_14=?, dot_15=?, dot_16=? WHERE ID=";
 
-    SomeVerticle(String[] host, int port, Controller controller, DataBaseConnect dbConnect) {
+    SomeVerticle(String[] host, int port, Controller controller) {
         this.host = host;
         this.port = port;
         this.controller = controller;
-        this.dbConnect = dbConnect;
     }
 
     private ArrayList<ArrayList<Integer>> tempData;
@@ -47,7 +45,7 @@ class SomeVerticle extends AbstractVerticle {
 
     private void requestAndResponse(WebClient client, String address, ArrayList<Integer> outMass) {
         counter++;
-//        System.out.println("Increment: " + counter);
+        System.out.println("Increment: " + counter);
         JsonObject object = new JsonObject().put("datatosend",
                 new JsonArray().add("iolinkmaster/port[1]/iolinkdevice/pdin")
                 .add("iolinkmaster/port[2]/iolinkdevice/pdin")
@@ -67,7 +65,7 @@ class SomeVerticle extends AbstractVerticle {
                 .putHeader("cache-control", "no-cache")
                 .sendJsonObject(json_new, ar -> {
                     if (ar.failed()) {
-                        System.out.println(ar.cause().getMessage());
+                        System.out.println("\u001B[33m" + "AL ERROR" + "\u001B[0m" + " " + ar.cause().getMessage());
                     } else {
                         Integer out;
                         for (int i=1; i<9; i++) {
@@ -80,7 +78,9 @@ class SomeVerticle extends AbstractVerticle {
                             outMass.add(out);
                         }
                         counter--;
-                        if (counter == 0) handle();
+                        System.out.println("Decrement: " + counter);
+                        if (counter == 0)
+                            handle();
                         client.close();
                     }
                 });
@@ -93,6 +93,7 @@ class SomeVerticle extends AbstractVerticle {
         tempAll.addAll(tempData.get(1));
         if (tempData.isEmpty())
             System.out.println("No data...");
+        System.out.println("Handle...");
         controller.outData.add(controller.doSlice(tempAll));
         JsonArray jsonArray = new JsonArray();
         for (Integer val : tempAll){

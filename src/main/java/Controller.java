@@ -46,6 +46,7 @@ class Controller {
                 count++;
         }
         if (count > 11) {
+            System.out.println("Count of null: " + count);
             woodLog = false;
         } else {
             woodLog = true;

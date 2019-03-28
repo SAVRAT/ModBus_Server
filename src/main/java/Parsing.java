@@ -6,9 +6,6 @@ import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 
 class Parsing {
-    private ArrayList<Integer> global = new ArrayList<>();
-    ConcurrentHashMap<String, Integer> data = new ConcurrentHashMap<>();
-
     ArrayList<Integer> dInt(ByteBuf registers, int length){
         ArrayList<Integer> output = new ArrayList<>();
         for (int i=0; i<length*2; i+=2){
@@ -39,10 +36,5 @@ class Parsing {
             }
         }
         return arr;
-    }
-    void toList(int val){
-        if (global.size()<8)
-        global.add(val);
-        System.out.println("Global: " + global);
     }
 }

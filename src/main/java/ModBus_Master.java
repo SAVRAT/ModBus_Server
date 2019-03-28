@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.*;
 
 class ModBus_Master {
@@ -90,21 +91,18 @@ class ModBus_Master {
                 master.sendRequest(new ReadHoldingRegistersRequest(addr, 1), 1);
         future.whenCompleteAsync((response, ex) -> {
             if (response != null) {
-                byte[] b = {response.getRegisters().getByte(1),
-                        response.getRegisters().getByte(0)};
-                int res = Math.abs((int) ByteBuffer.wrap(b).getShort());
-                parse.data.put(String.valueOf(addr), res);
+                short[] tempValue = {response.getRegisters().getUnsignedByte(1),
+                        response.getRegisters().getUnsignedByte(0)};
+                int res = byteToInt(tempValue);
                 String query = "INSERT INTO " + tableName + " (value, time) VALUES (?, ?)";
                 int time = (int) (((double) System.currentTimeMillis())/1000);
                 JsonArray jsonArray = new JsonArray().add(res).add(time);
-                //System.out.println("DataBase writeData: " + jsonArray);
                 dataBaseConnect.databaseWrite(query, jsonArray);
                 ReferenceCountUtil.safeRelease(response);
                 moduleOk(master);
             } else {
                 moduleError(master);
                 System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
-                parse.data.put(String.valueOf(addr), 0);
                 logger.error("Completed exceptionally, message={}", ex.getMessage(), ex);
             }
             decBuffer(bufId);
@@ -148,5 +146,19 @@ class ModBus_Master {
             else outStat = 3;
         }
         return outStat;
+    }
+
+    private int byteToInt(short[] data){
+        StringBuilder temp = new StringBuilder();
+        for (int n=0; n<2; n++) {
+            StringBuilder str = new StringBuilder(Integer.toBinaryString(0xFFFF & data[n]));
+            int length = str.length();
+            for (int i = 0; i < (8 - length); i++)
+                str.insert(0, "0");
+            temp.append(str.toString());
+        }
+        int result = Integer.parseInt(temp.toString(), 2);
+
+        return (int) Math.round(((double)result)/65535*50);
     }
 }
