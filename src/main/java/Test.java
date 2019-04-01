@@ -18,15 +18,15 @@ class Test{
                         .add("iolinkmaster/port[4]/iolinkdevice/pdin")
                         .add("iolinkmaster/port[5]/iolinkdevice/pdin")
                         .add("iolinkmaster/port[6]/iolinkdevice/pdin")
-                        .add("iolinkmaster/port[7]/iolinkdevice/pdin"));
-//                        .add("iolinkmaster/port[8]/iolinkdevice/pdin"));
+                        .add("iolinkmaster/port[7]/iolinkdevice/pdin")
+                        .add("iolinkmaster/port[8]/iolinkdevice/pdin"));
         JsonObject json_new = new JsonObject().put("code", "request")
                 .put("cid", 4711)
                 .put("adr", "/getdatamulti")
                 .put("data", object);
 //        System.out.println(json_new);
         String address = "192.168.49.239";
-        vertx.setPeriodic(200, run -> {
+        vertx.setPeriodic(100, run -> {
             client.post(80, address, "/")
                     .putHeader("content-type", "application/json")
                     .putHeader("cache-control", "no-cache")
