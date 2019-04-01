@@ -15,9 +15,9 @@ class ServerMain {
 //        Test test = new Test();
 //        test.testing();
 
-//        ovenAI.start();
-//        plc.start();
+        ovenAI.start();
+        plc.start();
 
-            vertx.deployVerticle(new SomeVerticle(alAddress, 80, controller));
+//            vertx.deployVerticle(new SomeVerticle(alAddress, 80, controller));
         }
 }
