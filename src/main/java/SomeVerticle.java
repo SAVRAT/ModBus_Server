@@ -13,6 +13,7 @@ class SomeVerticle extends AbstractVerticle {
     private final String[] host;
     private int counter = 0;
     private int[] partCounter = new int[2];
+    private boolean check = false;
 
     SomeVerticle(String[] host, Controller controller) {
         this.host = host;
@@ -23,7 +24,7 @@ class SomeVerticle extends AbstractVerticle {
 
     @Override
     public void start() {
-        vertx.setPeriodic(300, event -> {
+        vertx.setPeriodic(250, event -> {
             System.out.println("TICK");
             if (counter == 0) {
                 tempData = new ArrayList<>();
@@ -146,11 +147,20 @@ class SomeVerticle extends AbstractVerticle {
             System.out.println("No data...");
         System.out.println("Handle...");
         controller.outData.add(controller.doSlice(tempAll));
-        JsonArray jsonArray = new JsonArray();
-        for (Integer val : tempAll){
-            jsonArray.add(String.valueOf(val));
+        double[][] tempVal = controller.doSlice(tempAll);
+        if (controller.woodLog && !check){
+            controller.figure.add(tempVal);
+            check = true;
+        }else {
+            if (check){
+                controller.figure.remove(0);
+
+            }
+
         }
-        System.out.println(jsonArray);
+
+
+//        System.out.println(jsonArray);
 //        System.out.println("Data: " + tempAll);
     }
 }

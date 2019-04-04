@@ -19,11 +19,12 @@ class Controller {
 
 
     private final double[] sensorMatrix = {8.5, 14.2, 20, 25.7, 33.8, 42, 51.7, 34.6, 46.3, 51.1, 42.7, 34.6, 26, 20.4, 14.7, 9.2};
-    final int scannerHight = 89, scannerWight = 80, maxLength = 70, maxHight = 72;
-    final double EPS = 0.4, convStep = 10;
+    final int scannerHight = 89, scannerWight = 112, maxLength = 72, maxHight = 72;
+    final double EPS = 0.4;
     boolean woodLog = false;
 
-    ArrayList<ArrayList<double[][]>> figure = new ArrayList<>();
+    ArrayList<ArrayList<double[][]>> matrixFigure = new ArrayList<>();
+    ArrayList<double[][]> figure = new ArrayList<>();
     Formul[] formulData;
     ArrayList<double[][]> centres = new ArrayList<>();
     ArrayList<Double> intersectDots = new ArrayList<>();
@@ -89,6 +90,7 @@ class Controller {
                         out.add(tempData.get("R" + i));
                 }
             }
+
             // Запись в выходной массив
             double[][] mass = new double[out.size()][2];
             for (int i = 0; i < out.size(); i++) {

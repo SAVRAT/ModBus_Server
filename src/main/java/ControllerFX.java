@@ -91,22 +91,25 @@ public class ControllerFX {
     @FXML
     void testing(){
         double scale = getScale();
+        if (!check)
+            gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
         if (controller.woodLog) {
             check = true;
 //            gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
             if (controller.outData.size() > 0) {
                 graph(controller.outData.get(controller.outData.size() - 1));
+                controller.figure.add(controller.outData.get(controller.outData.size()-1));
             }
             Polygon fig = getPolygon(controller.outData.get(controller.outData.size() - 1));
-            controller.figure.add(matrix(0.7, controller.scannerWight, controller.scannerHight, fig));
-            System.out.println("Scanning...");
+            controller.matrixFigure.add(matrix(0.7, controller.scannerWight, controller.scannerHight, fig));
+            System.out.println("Scan...");
         }else {
             if (check){
-                controller.figure.remove(0);
-                controller.figure.remove(controller.figure.size()-1);
+                controller.matrixFigure.remove(0);
+                controller.matrixFigure.remove(controller.matrixFigure.size()-1);
                 ArrayList<double[][]> matrix;
-                matrix = matrixIntersection(controller.figure.get(0), controller.figure.get(1));
-                for (ArrayList<double[][]> val : controller.figure){
+                matrix = matrixIntersection(controller.matrixFigure.get(0), controller.matrixFigure.get(1));
+                for (ArrayList<double[][]> val : controller.matrixFigure){
                     matrix = matrixIntersection(matrix, val);
                 }
                 printMatrix(matrix, Color.BROWN, scale);
@@ -115,12 +118,12 @@ public class ControllerFX {
                 System.out.println(Arrays.deepToString(test));
 //                graph(test);
 //                gc.setStroke(Color.BLACK);
-                controller.figure.clear();
+                controller.matrixFigure.clear();
             }
             check = false;
-            System.out.println("No wood!");
+//            System.out.println("No wood!");
         }
-        scheduler.schedule(this::testing, 500, TimeUnit.MILLISECONDS);
+        scheduler.schedule(this::testing, 250, TimeUnit.MILLISECONDS);
     }
 
     @FXML
