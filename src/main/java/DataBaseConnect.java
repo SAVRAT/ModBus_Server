@@ -83,6 +83,22 @@ class DataBaseConnect {
         });
     }
 
+    void databaseQuery(String query){
+        mySQLClient.getConnection(con -> {
+            if (con.succeeded()) {
+                SQLConnection connection = con.result();
+                connection.query(query, out -> {
+                    if (out.failed()) {
+                        System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + out.cause());
+                    }
+                    connection.close();
+                });
+            } else {
+                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
+            }
+        });
+    }
+
     ArrayList<String[]> parseData(ResultSet resultSet){
         ArrayList<String[]> data = new ArrayList<>();
         int size = resultSet.getRows().size();

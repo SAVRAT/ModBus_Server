@@ -17,6 +17,6 @@ class ServerMain {
 
         ovenAI.start();
         plc.start();
-//        vertx.deployVerticle(new SomeVerticle(alAddress, controller));
+        vertx.deployVerticle(new SomeVerticle(alAddress, controller, dataBase));
         }
 }

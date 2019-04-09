@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -18,8 +19,8 @@ class Controller {
     double[][] forMatrix = {{13,35}, {16,45}, {23,47}, {34,45}, {40,37}, {38,30}, {36,20}, {30,19}, {17,19}, {15,25}};
 
 
-    private final double[] sensorMatrix = {8.5, 14.2, 20, 25.7, 33.8, 42, 51.7, 34.6, 46.3, 51.1, 42.7, 34.6, 26, 20.4, 14.7, 9.2};
-    final int scannerHight = 89, scannerWight = 112, maxLength = 72, maxHight = 72;
+    private final double[] sensorMatrix = {6.5, 12.5, 19, 25.5, 33.5, 44, 50, 48, 62, 50, 45.9, 32.5, 25, 18.5, 12, 6.5};
+    final int scannerHight = 82, scannerWight = 116, maxLength = 60, maxHight = 65;
     final double EPS = 0.4;
     boolean woodLog = false;
 
@@ -90,7 +91,8 @@ class Controller {
                         out.add(tempData.get("R" + i));
                 }
             }
-
+//            for (double[][] val:out)
+//                System.out.print(Arrays.deepToString(val) + " : ");
             // Запись в выходной массив
             double[][] mass = new double[out.size()][2];
             for (int i = 0; i < out.size(); i++) {

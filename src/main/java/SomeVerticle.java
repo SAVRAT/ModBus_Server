@@ -1,7 +1,9 @@
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.client.WebClient;
 
 import java.util.ArrayList;
@@ -10,21 +12,23 @@ import java.util.Collections;
 
 class SomeVerticle extends AbstractVerticle {
     private Controller controller;
+    private DataBaseConnect dataBaseConnect;
     private final String[] host;
-    private int counter = 0;
+    private int counter = 0, writeCounter = 0;
     private int[] partCounter = new int[2];
     private boolean check = false;
 
-    SomeVerticle(String[] host, Controller controller) {
+    SomeVerticle(String[] host, Controller controller, DataBaseConnect dataBaseConnect) {
         this.host = host;
         this.controller = controller;
+        this.dataBaseConnect = dataBaseConnect;
     }
 
     private ArrayList<ArrayList<Integer>> tempData;
 
     @Override
     public void start() {
-        vertx.setPeriodic(250, event -> {
+        vertx.setPeriodic(180, event -> {
             System.out.println("TICK");
             if (counter == 0) {
                 tempData = new ArrayList<>();
@@ -146,21 +150,53 @@ class SomeVerticle extends AbstractVerticle {
         if (tempData.isEmpty())
             System.out.println("No data...");
         System.out.println("Handle...");
-        controller.outData.add(controller.doSlice(tempAll));
         double[][] tempVal = controller.doSlice(tempAll);
-        if (controller.woodLog && !check){
+        controller.outData.add(tempVal);
+        if (controller.woodLog) {
+            writeCounter++;
             controller.figure.add(tempVal);
             check = true;
-        }else {
-            if (check){
-                controller.figure.remove(0);
-
+            if (writeCounter > 1)
+                toDatabase(tempVal);
+        } else {
+            if (check) {
+                writeCounter = 0;
+                dataBaseConnect.mySQLClient.getConnection(con -> {
+                    if (con.succeeded()){
+                        SQLConnection connection = con.result();
+                        connection.query("truncate table woodData_2;", res -> {
+                            if (res.succeeded()){
+                                connection.query("INSERT INTO woodData_2 SELECT * FROM woodData;", res2 -> {
+                                    if (res2.succeeded()){
+                                        dataBaseConnect.databaseQuery("truncate table woodData;");
+                                    } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
+                                    connection.close();
+                                });
+                            } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
+                        });
+                    } else System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
+                });
+//                dataBaseConnect.databaseQuery("truncate table woodData_2;");
+//                dataBaseConnect.databaseQuery("INSERT INTO woodData_2 SELECT * FROM woodData;");
+//                dataBaseConnect.databaseQuery("truncate table woodData;");
+//                controller.figure.remove(0);
+//                controller.figure.remove(controller.figure.size()-1);
+                check = false;
             }
-
         }
-
 
 //        System.out.println(jsonArray);
 //        System.out.println("Data: " + tempAll);
+    }
+
+    private void toDatabase(double[][] data){
+        StringBuilder x_str = new StringBuilder();
+        StringBuilder y_str = new StringBuilder();
+        for (double[] datum : data) {
+            x_str.append(datum[0]).append(",");
+            y_str.append(datum[1]).append(",");
+        }
+        JsonArray dataArray = new JsonArray().add(x_str).add(y_str);
+        dataBaseConnect.databaseWrite("INSERT INTO woodData (xData, yData) VALUE (?, ?);", dataArray);
     }
 }
