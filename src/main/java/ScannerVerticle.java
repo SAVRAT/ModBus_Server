@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-class SomeVerticle extends AbstractVerticle {
+class ScannerVerticle extends AbstractVerticle {
     private Controller controller;
     private DataBaseConnect dataBaseConnect;
     private final String[] host;
@@ -18,7 +18,7 @@ class SomeVerticle extends AbstractVerticle {
     private int[] partCounter = new int[2];
     private boolean check = false;
 
-    SomeVerticle(String[] host, Controller controller, DataBaseConnect dataBaseConnect) {
+    ScannerVerticle(String[] host, Controller controller, DataBaseConnect dataBaseConnect) {
         this.host = host;
         this.controller = controller;
         this.dataBaseConnect = dataBaseConnect;
