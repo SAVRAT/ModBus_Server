@@ -218,6 +218,6 @@ class ScannerVerticle extends AbstractVerticle {
                         futureResultList.stream()
                                 .map(CompletableFuture::join)
                                 .collect(Collectors.toList()));
-        finalResults.thenAccept(System.out::println);
+        finalResults.thenAccept(res -> System.out.println("IN/OUT Rad's: " + res));
     }
 }
