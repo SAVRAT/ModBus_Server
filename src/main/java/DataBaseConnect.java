@@ -63,7 +63,7 @@ class DataBaseConnect {
         });
     }
 
-    void databaseReadOEE(String[] device, int currentState) {
+    void databaseReadOEE(String[] device, int newState) {
         mySQLClient.getConnection(con -> {
             if (con.succeeded()) {
                 SQLConnection connection = con.result();
@@ -71,7 +71,7 @@ class DataBaseConnect {
                         + " ORDER BY id DESC LIMIT 1;", out -> {
                     if (out.succeeded()) {
                         List<JsonObject> output = out.result().getRows();
-                        statusCheck(output, currentState, device[4], device[5]);
+                        statusCheck(output, newState, device[4], device[5]);
                     } else {
                         System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + out.cause());
                     }
@@ -83,8 +83,19 @@ class DataBaseConnect {
         });
     }
 
-    void databaseReadShift(String[] device, int currentValue){
-
+    void databaseReadShift(String[] device, float newValue){
+        mySQLClient.getConnection(con -> {
+            if (con.succeeded()){
+                SQLConnection connection = con.result();
+                connection.query("SELECT data FROM " + device[4] + "_Data " +
+                        "ORDER BY id DESK LIMIT 1;", out -> {
+                    if (out.succeeded()){
+                        JsonObject output = out.result().toJson();
+                        System.out.println("Old: " + output + " New: " + newValue);
+                    } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + out.cause());
+                });
+            } else System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
+        });
     }
 
     void databaseQuery(String query){

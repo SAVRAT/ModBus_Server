@@ -52,9 +52,10 @@ class ModBus_Master {
                                     .getUnsignedByte(startId*2 + 6), response.getRegisters()
                                     .getUnsignedByte(startId*2 + 7)});
                             System.out.println(f + "  Смена: " + workTime);
-                            JsonArray lushch = new JsonArray().add(f).add(workTime);
-                            dataBaseConnect.databaseWrite("INSERT INTO " +
-                                    device[4] + "_Data (data, shift) VALUES (?, ?)", lushch);
+                            dataBaseConnect.databaseReadShift(device, f);
+//                            JsonArray lushch = new JsonArray().add(f).add(workTime);
+//                            dataBaseConnect.databaseWrite("INSERT INTO " +
+//                                    device[4] + "_Data (data, shift) VALUES (?, ?)", lushch);
                         }
                         dataBaseConnect.databaseReadOEE(device, currentState);
                     }
