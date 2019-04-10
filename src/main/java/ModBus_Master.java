@@ -43,19 +43,14 @@ class ModBus_Master {
                         int currentState = deviceState(data.get(startId));
 //                        System.out.println(device[0] + " :: " + currentState);
                         if (device[4].contains("lu_N")){
-                            System.out.println(device[4]);
-                            float f = byteToFloat(new byte[]{response.getRegisters().getByte(startId*2 + 2),
+                            float f = (float) Math.round(byteToFloat(new byte[]{response.getRegisters().getByte(startId*2 + 2),
                                     response.getRegisters().getByte(startId*2 + 3),
                                     response.getRegisters().getByte(startId*2 + 4),
-                                    response.getRegisters().getByte(startId*2 + 5)});
-                            int workTime = uByteToInt(new short[]{response.getRegisters()
+                                    response.getRegisters().getByte(startId*2 + 5)})*1000)/1000;
+                            int shift = uByteToInt(new short[]{response.getRegisters()
                                     .getUnsignedByte(startId*2 + 6), response.getRegisters()
                                     .getUnsignedByte(startId*2 + 7)});
-                            System.out.println(f + "  Смена: " + workTime);
-                            dataBaseConnect.databaseReadShift(device, f);
-//                            JsonArray lushch = new JsonArray().add(f).add(workTime);
-//                            dataBaseConnect.databaseWrite("INSERT INTO " +
-//                                    device[4] + "_Data (data, shift) VALUES (?, ?)", lushch);
+                            dataBaseConnect.databaseReadShift(device, f, shift);
                         }
                         dataBaseConnect.databaseReadOEE(device, currentState);
                     }

@@ -72,29 +72,32 @@ class DataBaseConnect {
                     if (out.succeeded()) {
                         List<JsonObject> output = out.result().getRows();
                         statusCheck(output, newState, device[4], device[5]);
-                    } else {
+                    } else
                         System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + out.cause());
-                    }
                     connection.close();
                 });
-            } else {
+            } else
                 System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
-            }
         });
     }
 
-    void databaseReadShift(String[] device, float newValue){
+    void databaseReadShift(String[] device, float newValue, int shift){
         mySQLClient.getConnection(con -> {
             if (con.succeeded()){
                 SQLConnection connection = con.result();
-                connection.query("SELECT data FROM " + device[4] + "_Data " +
-                        "ORDER BY id DESK LIMIT 1;", out -> {
+                String tableName = device[4] + "_Data";
+                connection.query("SELECT data FROM " + tableName
+                        + " ORDER BY id DESC LIMIT 1;", out -> {
                     if (out.succeeded()){
                         JsonObject output = out.result().toJson();
-                        System.out.println("Old: " + output + " New: " + newValue);
-                    } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + out.cause());
+                        shiftStatusCheck(output, newValue, tableName, shift);
+//                        System.out.println("Old: " + output + " New: " + newValue);
+                    } else
+                        System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + out.cause());
+                    connection.close();
                 });
-            } else System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
+            } else
+                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
         });
     }
 
@@ -144,6 +147,18 @@ class DataBaseConnect {
             }
         }
         return data;
+    }
+
+    private void shiftStatusCheck(JsonObject data, float newValue, String tableName, int shift){
+        float oldValue = Float.valueOf(data.getJsonArray("rows").getJsonObject(0).getString("data"));
+        String currentTime = String.valueOf((System.currentTimeMillis())/1000);
+        if (oldValue != newValue){
+            JsonArray toWrite = new JsonArray().add(String.valueOf(newValue)).add(shift).add(currentTime);
+            databaseWrite("INSERT INTO " + tableName + " (data, shift, timeStamp) VALUE (?, ?, ?)", toWrite);
+        } else {
+            databaseUpdate("UPDATE " + tableName +
+                    " SET timeStamp = " + currentTime + " ORDER BY id DESC LIMIT 1;");
+        }
     }
 
     private void statusCheck(List<JsonObject> data, int currentState, String tableName, String parentId){
