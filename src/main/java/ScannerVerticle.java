@@ -13,12 +13,12 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 class ScannerVerticle extends AbstractVerticle {
     private Controller controller;
     private DataBaseConnect dataBaseConnect;
-    private ExecutorService service = Executors.newFixedThreadPool(4);
-    private List<Runnable> tasks = new ArrayList<>();
+    private ExecutorService executorService = Executors.newFixedThreadPool(4);
     private final String[] host;
     private int counter = 0, writeCounter = 0;
     private int[] partCounter = new int[2];
@@ -204,16 +204,20 @@ class ScannerVerticle extends AbstractVerticle {
     }
 
     private void compute (ArrayList<double[][]> figure){
-        double[] rads = new double[2];
-        tasks.add(() -> rads[0] = controller.computeRadius(figure.get(1)));
-        tasks.add(() -> rads[1] = controller.computeRadius(figure.get(figure.size()-2)));
-        CompletableFuture<?>[] futures = tasks.stream()
-                .map(task -> CompletableFuture.runAsync(task, service))
-                .toArray(CompletableFuture[]::new);
-        CompletableFuture.allOf(futures).join();
-        service.shutdown();
-        if (service.isShutdown()){
-            System.out.println("IN/OUT Rads: " + Arrays.toString(rads));
-        }
+        ArrayList<CompletableFuture<Double>> futureResultList = new ArrayList<>();
+        futureResultList.add(CompletableFuture.supplyAsync(() ->
+                controller.computeRadius(figure.get(1)), executorService));
+        futureResultList.add(CompletableFuture.supplyAsync(() ->
+                controller.computeRadius(figure.get(figure.size()-2)), executorService));
+        CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[futureResultList.size()]);
+
+        CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureResultArray);
+
+        CompletableFuture<List<Double>> finalResults = combinedFuture
+                .thenApply(val ->
+                        futureResultList.stream()
+                                .map(CompletableFuture::join)
+                                .collect(Collectors.toList()));
+        finalResults.thenAccept(System.out::println);
     }
 }
