@@ -209,13 +209,14 @@ class ScannerVerticle extends AbstractVerticle {
                 controller.computeRadius(figure.get(1)), executorService));
         futureResultList.add(CompletableFuture.supplyAsync(() ->
                 controller.computeRadius(figure.get(figure.size()-2)), executorService));
-        CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[futureResultList.size()]);
-
+        CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[2]);
         CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureResultArray);
-
         CompletableFuture<List<Double>> finalResults = combinedFuture
                 .thenApply(val ->
                         futureResultList.stream().map(CompletableFuture::join).collect(Collectors.toList()));
-        finalResults.thenAccept(res -> System.out.println("IN/OUT Rad's: " + res));
+        finalResults.thenAccept(res -> {
+            System.out.println("Input Rad: " + res.get(0));
+            System.out.println("Output Rad: " + res.get(1));
+        });
     }
 }
