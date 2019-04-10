@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.*;
@@ -41,6 +42,20 @@ class ModBus_Master {
                         int startId = Integer.valueOf(device[3])-1;
                         int currentState = deviceState(data.get(startId));
 //                        System.out.println(device[0] + " :: " + currentState);
+                        if (device[4].contains("lu_N")){
+                            System.out.println(device[4]);
+                            float f = byteToFloat(new byte[]{response.getRegisters().getByte(startId*2 + 2),
+                                    response.getRegisters().getByte(startId*2 + 3),
+                                    response.getRegisters().getByte(startId*2 + 4),
+                                    response.getRegisters().getByte(startId*2 + 5)});
+                            int workTime = uByteToInt(new short[]{response.getRegisters()
+                                    .getUnsignedByte(startId*2 + 6), response.getRegisters()
+                                    .getUnsignedByte(startId*2 + 7)});
+                            System.out.println(f + "  Смена: " + workTime);
+                            JsonArray lushch = new JsonArray().add(f).add(workTime);
+                            dataBaseConnect.databaseWrite("INSERT INTO " +
+                                    device[4] + "_Data (data, shift) VALUES (?, ?)", lushch);
+                        }
                         dataBaseConnect.databaseReadOEE(device, currentState);
                     }
                 }
@@ -93,7 +108,7 @@ class ModBus_Master {
             if (response != null) {
                 short[] tempValue = {response.getRegisters().getUnsignedByte(1),
                         response.getRegisters().getUnsignedByte(0)};
-                int res = byteToInt(tempValue);
+                int res = (int) Math.round(((double) uByteToInt(tempValue))/65535*50);
                 String query = "INSERT INTO " + tableName + " (value, time) VALUES (?, ?)";
                 int time = (int) (((double) System.currentTimeMillis())/1000);
                 JsonArray jsonArray = new JsonArray().add(res).add(time);
@@ -148,17 +163,21 @@ class ModBus_Master {
         return outStat;
     }
 
-    private int byteToInt(short[] data){
+    private int uByteToInt(short[] data){
         StringBuilder temp = new StringBuilder();
-        for (int n=0; n<2; n++) {
-            StringBuilder str = new StringBuilder(Integer.toBinaryString(0xFFFF & data[n]));
+        for (short datum : data) {
+            StringBuilder str = new StringBuilder(Integer.toBinaryString(0xFFFF & datum));
             int length = str.length();
             for (int i = 0; i < (8 - length); i++)
                 str.insert(0, "0");
             temp.append(str.toString());
         }
-        int result = Integer.parseInt(temp.toString(), 2);
 
-        return (int) Math.round(((double)result)/65535*50);
+        return Integer.parseInt(temp.toString(), 2);
+    }
+
+    private float byteToFloat(byte[] data){
+
+        return ByteBuffer.wrap(data).getFloat();
     }
 }

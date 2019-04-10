@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.SQLConnection;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 class PLC {
@@ -69,6 +70,8 @@ class PLC {
                             ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(device[0]).setPort(502)
                                     .build();
                             ModbusTcpMaster master = new ModbusTcpMaster(config);
+//                            for (String[] val:data)
+//                                System.out.println("Data: " + Arrays.toString(val));
                             modBusMaster.sendAndReceive_PLC(master, Integer.valueOf(device[1]), data);
                             break;
                         }

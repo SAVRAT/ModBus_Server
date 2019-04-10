@@ -83,6 +83,10 @@ class DataBaseConnect {
         });
     }
 
+    void databaseReadShift(String[] device, int currentValue){
+
+    }
+
     void databaseQuery(String query){
         mySQLClient.getConnection(con -> {
             if (con.succeeded()) {
