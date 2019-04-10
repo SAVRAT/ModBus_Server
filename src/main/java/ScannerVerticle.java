@@ -9,10 +9,16 @@ import io.vertx.ext.web.client.WebClient;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 class ScannerVerticle extends AbstractVerticle {
     private Controller controller;
     private DataBaseConnect dataBaseConnect;
+    private ExecutorService service = Executors.newFixedThreadPool(4);
+    private List<Runnable> tasks = new ArrayList<>();
     private final String[] host;
     private int counter = 0, writeCounter = 0;
     private int[] partCounter = new int[2];
@@ -161,6 +167,8 @@ class ScannerVerticle extends AbstractVerticle {
         } else {
             if (check) {
                 writeCounter = 0;
+                compute(controller.figure);
+                controller.figure.clear();
                 dataBaseConnect.mySQLClient.getConnection(con -> {
                     if (con.succeeded()){
                         SQLConnection connection = con.result();
@@ -176,11 +184,6 @@ class ScannerVerticle extends AbstractVerticle {
                         });
                     } else System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
                 });
-//                dataBaseConnect.databaseQuery("truncate table woodData_2;");
-//                dataBaseConnect.databaseQuery("INSERT INTO woodData_2 SELECT * FROM woodData;");
-//                dataBaseConnect.databaseQuery("truncate table woodData;");
-//                controller.figure.remove(0);
-//                controller.figure.remove(controller.figure.size()-1);
                 check = false;
             }
         }
@@ -198,5 +201,19 @@ class ScannerVerticle extends AbstractVerticle {
         }
         JsonArray dataArray = new JsonArray().add(x_str).add(y_str);
         dataBaseConnect.databaseWrite("INSERT INTO woodData (xData, yData) VALUE (?, ?);", dataArray);
+    }
+
+    private void compute (ArrayList<double[][]> figure){
+        double[] rads = new double[2];
+        tasks.add(() -> rads[0] = controller.computeRadius(figure.get(1)));
+        tasks.add(() -> rads[1] = controller.computeRadius(figure.get(figure.size()-2)));
+        CompletableFuture<?>[] futures = tasks.stream()
+                .map(task -> CompletableFuture.runAsync(task, service))
+                .toArray(CompletableFuture[]::new);
+        CompletableFuture.allOf(futures).join();
+        service.shutdown();
+        if (service.isShutdown()){
+            System.out.println("IN/OUT Rads: " + Arrays.toString(rads));
+        }
     }
 }
