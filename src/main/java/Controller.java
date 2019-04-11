@@ -406,7 +406,7 @@ class Controller {
         for (double[][] slice:figure){
             volume += polygonArea(slice) * step;
         }
-        return volume;
+        return (double) Math.round(volume);
     }
 
     double maxDist(Polygon polygon, double x_centre, double y_centre){
