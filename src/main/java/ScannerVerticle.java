@@ -236,7 +236,9 @@ class ScannerVerticle extends AbstractVerticle {
                 controller.computeRadius(tempFigure.get(1))));
         futureResultList.add(CompletableFuture.supplyAsync(() ->
                 controller.computeRadius(tempFigure.get(tempFigure.size()-3))));
-        CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[2]);
+        futureResultList.add(CompletableFuture.supplyAsync(() ->
+                controller.figureVolume(tempFigure, 1600/tempFigure.size())));
+        CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[3]);
 
         CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureResultArray);
 
@@ -247,6 +249,7 @@ class ScannerVerticle extends AbstractVerticle {
             System.out.println("SliceCount:" + tempFigure.size());
             System.out.println("Input Diameter: " + (double) Math.round(res.get(0)*2.2*10)/10);
             System.out.println("Output Diameter: " + (double) Math.round(res.get(1)*2.2*10)/10);
+            System.out.println("Figure Volume: " + (double) Math.round(res.get(2)*2.2*10)/10);
         });
     }
 }
