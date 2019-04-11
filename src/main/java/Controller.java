@@ -389,6 +389,26 @@ class Controller {
         return new Polygon(x, y, x.length);
     }
 
+    private double polygonArea(double[][] slice){
+        double area = 0.0;
+        int j = slice.length - 1;
+        for (int i = 0; i < slice.length; i++)
+        {
+            area += (slice[j][0] + slice[i][0]) * (slice[j][1] - slice[i][1]);
+            j = i;
+        }
+        return Math.abs(area / 2.0);
+    }
+
+    double figureVolume(ArrayList<double[][]> figure, double step){
+        double volume = 0.0;
+
+        for (double[][] slice:figure){
+            volume += polygonArea(slice) * step;
+        }
+        return volume;
+    }
+
     double maxDist(Polygon polygon, double x_centre, double y_centre){
         Geom geom = new Geom();
         double max = 0, x_m = 0, y_m = 0;
