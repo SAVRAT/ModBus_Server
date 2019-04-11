@@ -6,7 +6,7 @@ import io.vertx.ext.sql.SQLConnection;
 
 import java.util.ArrayList;
 
-class OvenAI {
+class Vibration {
 
     private DataBaseConnect dataBaseConnect;
     private Vertx vertx;
@@ -18,7 +18,7 @@ class OvenAI {
     private ArrayList<String[]> outData = new ArrayList<>();
     private ArrayList<ArrayList<String[]>> forWrite = new ArrayList<>();
 
-    OvenAI(DataBaseConnect dataBaseConnect, Vertx vertx, ModBus_Master modBusMaster){
+    Vibration(DataBaseConnect dataBaseConnect, Vertx vertx, ModBus_Master modBusMaster){
         this.dataBaseConnect = dataBaseConnect;
         this.vertx = vertx;
         this.modBusMaster = modBusMaster;
@@ -69,8 +69,6 @@ class OvenAI {
                 new Thread(ovenAI, () -> {
                     ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(ipAddr.get(lamI)).setPort(502).build();
                     ModbusTcpMaster master = new ModbusTcpMaster(config);
-//                    System.out.println("Vibro Thread " + (lamI+1) + " started. IP: " + master.getConfig().getAddress() +
-//                            "  id: " + Thread.currentThread().getId());
                     modBusMaster.buffer[lamI] = 0;
                     modBusMaster.aiCount[lamI] = forWrite.get(lamI).size();
                     int count = 0, num = 0;
@@ -85,7 +83,6 @@ class OvenAI {
                             num++;
                         }
                     }
-//                    System.out.println("Thread " + Thread.currentThread().getId() + " done.");
                 }).start();
             }
             second = true;

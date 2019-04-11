@@ -18,6 +18,7 @@ class DataBaseConnect {
         Vertx vertx = Vertx.vertx();
         mySQLClient = MySQLClient.createNonShared(vertx, mySQLClientConfig);
     }
+
     void databaseWrite(String query, JsonArray jsonArray){
         mySQLClient.getConnection(res -> {
             if (res.succeeded()) {
@@ -32,6 +33,7 @@ class DataBaseConnect {
             }
         });
     }
+
     void databaseUpdate(String query, JsonArray jsonArray){
         mySQLClient.getConnection(res -> {
             if (res.succeeded()) {
@@ -39,22 +41,6 @@ class DataBaseConnect {
                 connection.updateWithParams(query, jsonArray, out -> {
                     if (out.failed())
                         System.out.println("\u001B[33m" + "Update Query ERROR" + "\u001B[0m" + " " + res.cause());
-                    connection.close();
-                });
-            }else {
-                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + res.cause());
-            }
-        });
-    }
-
-    private void databaseUpdate(String query){
-        mySQLClient.getConnection(res -> {
-            if (res.succeeded()) {
-                SQLConnection connection = res.result();
-                connection.update(query, out -> {
-                    if (out.failed()){
-                        System.out.println("\u001B[33m" + "Update Query ERROR" + "\u001B[0m" + " " + res.cause());
-                    }
                     connection.close();
                 });
             }else {
@@ -147,6 +133,22 @@ class DataBaseConnect {
             }
         }
         return data;
+    }
+
+    private void databaseUpdate(String query){
+        mySQLClient.getConnection(res -> {
+            if (res.succeeded()) {
+                SQLConnection connection = res.result();
+                connection.update(query, out -> {
+                    if (out.failed()){
+                        System.out.println("\u001B[33m" + "Update Query ERROR" + "\u001B[0m" + " " + res.cause());
+                    }
+                    connection.close();
+                });
+            }else {
+                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + res.cause());
+            }
+        });
     }
 
     private void shiftStatusCheck(JsonObject data, float newValue, String tableName, int shift){

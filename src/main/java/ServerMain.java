@@ -9,14 +9,14 @@ class ServerMain {
 //                "wert");
         Vertx vertx = Vertx.vertx();
         ModBus_Master modBusMaster = new ModBus_Master(dataBase);
-        OvenAI ovenAI = new OvenAI(dataBase, vertx, modBusMaster);
-        PLC plc = new PLC(dataBase, vertx, modBusMaster);
+        Vibration vibration = new Vibration(dataBase, vertx, modBusMaster);
+        OEE OEE = new OEE(dataBase, vertx, modBusMaster);
 
 //        Test test = new Test();
 //        test.testing();
 
-//        ovenAI.start();
-//        plc.start();
+//        vibration.start();
+//        OEE.start();
         vertx.deployVerticle(new ScannerVerticle(alAddress, controller, dataBase));
         }
 }

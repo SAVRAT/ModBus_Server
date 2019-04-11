@@ -2,7 +2,7 @@
 import java.util.Arrays;
 import java.util.List;
 
-class Geometry {
+class Geom {
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     double[] geomCentre(double[][] dots){

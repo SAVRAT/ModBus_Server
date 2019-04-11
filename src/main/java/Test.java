@@ -4,37 +4,37 @@ import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
 import com.digitalpetri.modbus.requests.ReadHoldingRegistersRequest;
 import com.digitalpetri.modbus.responses.ReadHoldingRegistersResponse;
 import io.netty.util.ReferenceCountUtil;
+import io.vertx.core.Vertx;
 
-import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 class Test {
 
     @SuppressWarnings("Duplicates")
     public static void main(String[] args) {
-        Parsing parse = new Parsing();
+        Vertx vertx = Vertx.vertx();
         int startAddress = 0, quantity = 7;
         ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5000)
                 .build();
         ModbusTcpMaster master = new ModbusTcpMaster(config);
-        CompletableFuture<ReadHoldingRegistersResponse> future =
-                master.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity), 1);
-//        System.out.println("Request done.");
+        vertx.setPeriodic(50, start -> {
+            CompletableFuture<ReadHoldingRegistersResponse> future =
+                    master.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity), 1);
 
-        future.whenCompleteAsync((response, ex) -> {
-            if (response != null) {
-                int output = uByteToInt(new short[]{response.getRegisters().getUnsignedByte(8),
-                        response.getRegisters().getUnsignedByte(9),
-                        response.getRegisters().getUnsignedByte(10),
-                        response.getRegisters().getUnsignedByte(11)});
-                System.out.println("IpAddress:  " + master.getConfig().getAddress() + " :  " + output);
-
-                ReferenceCountUtil.release(response);
-            } else {
-                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
-            }
-            master.disconnect();
-        }, Modbus.sharedExecutor());
+            future.whenCompleteAsync((response, ex) -> {
+                if (response != null) {
+                    int output = uByteToInt(new short[]{response.getRegisters().getUnsignedByte(8),
+                            response.getRegisters().getUnsignedByte(9),
+                            response.getRegisters().getUnsignedByte(10),
+                            response.getRegisters().getUnsignedByte(11)});
+                    System.out.println("Position: " + output);
+                    ReferenceCountUtil.release(response);
+                } else {
+                    System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
+                }
+//            master.disconnect();
+            }, Modbus.sharedExecutor());
+        });
     }
 
     static int uByteToInt(short[] data){

@@ -2,10 +2,9 @@ import io.netty.buffer.ByteBuf;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.concurrent.ConcurrentHashMap;
 
 class Parsing {
+
     ArrayList<Integer> dInt(ByteBuf registers, int length){
         ArrayList<Integer> output = new ArrayList<>();
         for (int i=0; i<length*2; i+=2){
@@ -36,5 +35,41 @@ class Parsing {
             }
         }
         return arr;
+    }
+
+    int uByteToInt(short[] data){
+        StringBuilder temp = new StringBuilder();
+        for (short datum : data) {
+            StringBuilder str = new StringBuilder(Integer.toBinaryString(0xFFFF & datum));
+            int length = str.length();
+            for (int i = 0; i < (8 - length); i++)
+                str.insert(0, "0");
+            temp.append(str.toString());
+        }
+
+        return Integer.parseInt(temp.toString(), 2);
+    }
+
+    float byteToFloat(byte[] data){
+
+        return ByteBuffer.wrap(data).getFloat();
+    }
+
+    int deviceStateOven(boolean[] statusWord, int startId){
+        int outStat = 0;
+        if (statusWord[startId]) {
+            if (statusWord[startId + 2]) outStat = 2;
+            else if (statusWord[startId + 1]) outStat = 1;
+            else outStat = 3;
+        }
+        return outStat;
+    }
+
+    int deviceState(int status){
+        int stat = 0;
+        if (status == 1280 || status == 1792) stat = 2;
+        else if (status == 768) stat = 1;
+        else if (status == 256) stat = 3;
+        return stat;
     }
 }

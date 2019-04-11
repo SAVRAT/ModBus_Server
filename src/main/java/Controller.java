@@ -1,5 +1,3 @@
-import javafx.scene.paint.Color;
-
 import java.awt.*;
 import java.awt.geom.Line2D;
 import java.util.*;
@@ -7,8 +5,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 class Controller {
 
-    private Geometry geom = new Geometry();
-    private ArrayList<Double> rads = new ArrayList<>();
+    private Geom geom = new Geom();
 
     double[][] data = {{20,65}, {40,85}, {50,110}, {65,125}, {70,130}, {95,125}, {110,120}, {125,115}, {140,95},
             {155,75}, {155,55}, {140,40}, {125,35}, {110,25}, {95,20}, {80,15}, {65,25}, {50,30}, {35,35}, {20,40}};
@@ -19,6 +16,7 @@ class Controller {
             {51,51.1}, {57,42.7}, {60,34.6}, {63,26}, {55,20.4}, {50,14.7}, {46,9.2}, {25, 8.5}};
     double[][] data4 = {{30,70}, {40,90}, {60,95}, {65,125}, {70,140}, {100,130}, {120,120}, {140,105}, {160,100},
             {170,80}, {170,70}, {160,45}, {140,25}, {120,10}, {100,10}, {60,25}, {50,30}, {45,40}, {40,50}, {30,55}};
+
     double[][] forMatrix = {{13,35}, {16,45}, {23,47}, {34,45}, {40,37}, {38,30}, {36,20}, {30,19}, {17,19}, {15,25}};
 
 
@@ -33,7 +31,6 @@ class Controller {
     ArrayList<Double> intersect = new ArrayList<>();
     ArrayList<double[][]> centres = new ArrayList<>();
 
-    ArrayList<Double> intersectRad = new ArrayList<>();
     CopyOnWriteArrayList<double[][]> outData = new CopyOnWriteArrayList<>();
 
 
@@ -51,10 +48,12 @@ class Controller {
                 count++;
         }
         if (count > 11) {
-            System.out.println("Count of null: " + count);
+//            System.out.println("Count of null: " + count);
             woodLog = false;
+//            System.out.print(".");
         } else {
             woodLog = true;
+            System.out.println("Wood: " + woodLog);
             // Цикл фильтриции точек
             if (data.size() == 16) {
                 // Занесение в HashMap с соответсвующиме стороне индексами
@@ -111,6 +110,7 @@ class Controller {
 
     double computeRadius(double[][] sliceData) {
         ArrayList<Double> intersectDots = new ArrayList<>();
+        ArrayList<Double> intersectRad = new ArrayList<>();
         long start = System.currentTimeMillis();
         double radius = 5, step_r = 0.4, step_v = 0.3, count;
         formulData = new Formul[sliceData.length];
@@ -242,14 +242,12 @@ class Controller {
 //                    scale * 2 * intersectRad.get(intersectRad.size() - 1));
         double[][] mass = {{centreDot[0]}, {centreDot[1]}};
         centres.add(mass);
-        rads.add(Collections.max(intersectRad));
 
         System.out.println("Time: " + (System.currentTimeMillis() - start) + " ms");
-
 //        System.out.println("Intersect Dots: " + intersectDots);
 //        System.out.println("Centre:" + Arrays.deepToString(centres.get(centres.size() - 1)));
 //        System.out.println("Radius: " + rads.get(rads.size()-1));
-        return rads.get(rads.size()-1);
+        return Collections.max(intersectRad);
     }
 
     double[][] matrixToSlice(ArrayList<double[][]> matrix){
@@ -387,14 +385,15 @@ class Controller {
             x[i] = (int) Math.round(fig[i][0]);
             y[i] = (int) Math.round(fig[i][1]);
         }
+
         return new Polygon(x, y, x.length);
     }
 
     double maxDist(Polygon polygon, double x_centre, double y_centre){
-        Geometry geometry = new Geometry();
+        Geom geom = new Geom();
         double max = 0, x_m = 0, y_m = 0;
         for (int i=0; i<polygon.npoints; i++){
-            double dist = geometry.distance(x_centre, y_centre, polygon.xpoints[i], polygon.ypoints[i]);
+            double dist = geom.distance(x_centre, y_centre, polygon.xpoints[i], polygon.ypoints[i]);
             if (dist > max) {
                 max = dist;
                 x_m = polygon.xpoints[i];

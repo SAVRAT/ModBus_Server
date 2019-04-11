@@ -5,10 +5,9 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.SQLConnection;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-class PLC {
+class OEE {
 
     private DataBaseConnect dataBaseConnect;
     private Vertx vertx;
@@ -19,7 +18,7 @@ class PLC {
     private ArrayList<String[]> previous = new ArrayList<>();
     private ArrayList<String[]> outData = new ArrayList<>();
 
-    PLC(DataBaseConnect dataBaseConnect, Vertx vertx, ModBus_Master modBusMaster){
+    OEE(DataBaseConnect dataBaseConnect, Vertx vertx, ModBus_Master modBusMaster){
         this.dataBaseConnect = dataBaseConnect;
         this.vertx = vertx;
         this.modBusMaster = modBusMaster;

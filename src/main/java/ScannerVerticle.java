@@ -1,6 +1,9 @@
+import com.digitalpetri.modbus.master.ModbusTcpMaster;
+import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
+import com.digitalpetri.modbus.requests.ReadHoldingRegistersRequest;
+import com.digitalpetri.modbus.responses.ReadHoldingRegistersResponse;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.SQLConnection;
@@ -11,18 +14,16 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 class ScannerVerticle extends AbstractVerticle {
     private Controller controller;
     private DataBaseConnect dataBaseConnect;
-    private ExecutorService executorService = Executors.newFixedThreadPool(4);
+    private Parsing parse = new Parsing();
     private final String[] host;
-    private int counter = 0, writeCounter = 0;
+    private int counter = 0, writeCounter = 0, startAddress = 0, quantity = 7, oldPosition = 0;
     private int[] partCounter = new int[2];
-    private boolean check = false;
+    private boolean check = false, processWood = false;
 
     ScannerVerticle(String[] host, Controller controller, DataBaseConnect dataBaseConnect) {
         this.host = host;
@@ -31,11 +32,15 @@ class ScannerVerticle extends AbstractVerticle {
     }
 
     private ArrayList<ArrayList<Integer>> tempData;
+    private ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5000)
+            .build();
+    private ModbusTcpMaster master = new ModbusTcpMaster(config);
+    private CompletableFuture<ReadHoldingRegistersResponse> future;
 
     @Override
     public void start() {
         vertx.setPeriodic(180, event -> {
-            System.out.println("TICK");
+//            System.out.println("TICK");
             if (counter == 0) {
                 tempData = new ArrayList<>();
                 tempData.add(new ArrayList<>());
@@ -45,6 +50,7 @@ class ScannerVerticle extends AbstractVerticle {
                     Integer[] temp = new Integer[8];
                     requestAndResponse(client, host[k], tempData.get(k), temp, k);
                 }
+                future = master.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity), 1);
             }
         });
     }
@@ -153,19 +159,29 @@ class ScannerVerticle extends AbstractVerticle {
         Collections.reverse(tempData.get(1));
         tempAll.addAll(tempData.get(0));
         tempAll.addAll(tempData.get(1));
-        if (tempData.isEmpty())
-            System.out.println("No data...");
-        System.out.println("Handle...");
+//        System.out.println("Handle...");
         double[][] tempVal = controller.doSlice(tempAll);
+        future.whenComplete((res, ex) -> {
+            if (res!=null){
+                int output = parse.uByteToInt(new short[]{res.getRegisters().getUnsignedByte(8),
+                        res.getRegisters().getUnsignedByte(9),
+                        res.getRegisters().getUnsignedByte(10),
+                        res.getRegisters().getUnsignedByte(11)});
+                conveyorCheck(output);
+//                System.out.println("Position: " + output);
+            }
+        });
         controller.outData.add(tempVal);
-        if (controller.woodLog) {
+        if (controller.woodLog && processWood) {
             writeCounter++;
             controller.figure.add(tempVal);
+//            for (double[][] val:controller.figure)
+//                System.out.println(Arrays.deepToString(val));
             check = true;
             if (writeCounter > 1)
                 toDatabase(tempVal);
         } else {
-            if (check) {
+            if (check && processWood) {
                 writeCounter = 0;
                 compute(controller.figure);
                 controller.figure.clear();
@@ -187,9 +203,19 @@ class ScannerVerticle extends AbstractVerticle {
                 check = false;
             }
         }
-
 //        System.out.println(jsonArray);
 //        System.out.println("Data: " + tempAll);
+    }
+
+    private void conveyorCheck(int currentPosition){
+        if (currentPosition > oldPosition){
+            oldPosition = currentPosition;
+            processWood = true;
+            System.out.println("Conveyor run");
+        } else {
+            processWood = false;
+            System.out.println("Conveyor stop");
+        }
     }
 
     private void toDatabase(double[][] data){
@@ -204,18 +230,23 @@ class ScannerVerticle extends AbstractVerticle {
     }
 
     private void compute (ArrayList<double[][]> figure){
+        final ArrayList<double[][]> tempFigure = new ArrayList<>(figure);
         ArrayList<CompletableFuture<Double>> futureResultList = new ArrayList<>();
         futureResultList.add(CompletableFuture.supplyAsync(() ->
-                controller.computeRadius(figure.get(1)), executorService));
+                controller.computeRadius(tempFigure.get(1))));
         futureResultList.add(CompletableFuture.supplyAsync(() ->
-                controller.computeRadius(figure.get(figure.size()-2)), executorService));
-        CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[futureResultList.size()]);
+                controller.computeRadius(tempFigure.get(tempFigure.size()-3))));
+        CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[2]);
 
         CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureResultArray);
 
         CompletableFuture<List<Double>> finalResults = combinedFuture
                 .thenApply(val ->
                         futureResultList.stream().map(CompletableFuture::join).collect(Collectors.toList()));
-        finalResults.thenAccept(res -> System.out.println("IN/OUT Rad's: " + res));
+        finalResults.thenAccept(res -> {
+            System.out.println("SliceCount:" + tempFigure.size());
+            System.out.println("Input Diameter: " + (double) Math.round(res.get(0)*2.2*10)/10);
+            System.out.println("Output Diameter: " + (double) Math.round(res.get(1)*2.2*10)/10);
+        });
     }
 }

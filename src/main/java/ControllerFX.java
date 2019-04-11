@@ -9,7 +9,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 
 import java.awt.*;
-import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.*;
 import java.util.concurrent.Executors;
@@ -20,7 +19,7 @@ public class ControllerFX {
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private Controller controller = new Controller();
-    private Geometry geom = new Geometry();
+    private Geom geom = new Geom();
     @FXML
     private TextField input;
     @FXML
@@ -28,7 +27,8 @@ public class ControllerFX {
     @FXML
     private ChoiceBox choose;
     private GraphicsContext gc;
-    private ObservableList<String> datas = FXCollections.observableArrayList("data_1", "data_2", "data_3", "data_4", "ALL");
+    private ObservableList<String> datas = FXCollections
+            .observableArrayList("data_1", "data_2", "data_3", "data_4", "ALL");
 
     public void initialize() {
         gc = canvas.getGraphicsContext2D();
@@ -59,18 +59,18 @@ public class ControllerFX {
 //        double[] centreDot = geom.geomCentre(data);
         graph(data);
         centre(data);
-        controller.computeRadius(data);
-        for (int h = 0; h < controller.intersect.size(); h += 2) {
-            drawDot(controller.intersect.get(h), controller.intersect.get(h + 1), scale, canvas.getHeight(), gc, Color.BLUE);
-        }
-        double[] tempDot = {controller.centres.get(controller.centres.size()-1)[0][0],
-                controller.centres.get(controller.centres.size()-1)[1][0]};
-        drawDot(tempDot[0], tempDot[1], scale, canvas.getHeight(), gc, Color.CYAN, 5);
-        gc.setStroke(Color.DARKCYAN);
-        gc.strokeOval(scale * (tempDot[0] - controller.intersectRad.get(controller.intersectRad.size() - 1)),
-                canvas.getHeight() - scale * (tempDot[1] + controller.intersectRad.get(controller.intersectRad.size() - 1)),
-                scale * 2 * controller.intersectRad.get(controller.intersectRad.size() - 1),
-                scale * 2 * controller.intersectRad.get(controller.intersectRad.size() - 1));
+//        controller.computeRadius(data);
+//        for (int h = 0; h < controller.intersect.size(); h += 2) {
+//            drawDot(controller.intersect.get(h), controller.intersect.get(h + 1), scale, canvas.getHeight(), gc, Color.BLUE);
+//        }
+//        double[] tempDot = {controller.centres.get(controller.centres.size()-1)[0][0],
+//                controller.centres.get(controller.centres.size()-1)[1][0]};
+//        drawDot(tempDot[0], tempDot[1], scale, canvas.getHeight(), gc, Color.CYAN, 5);
+//        gc.setStroke(Color.DARKCYAN);
+//        gc.strokeOval(scale * (tempDot[0] - controller.intersectRad.get(controller.intersectRad.size() - 1)),
+//                canvas.getHeight() - scale * (tempDot[1] + controller.intersectRad.get(controller.intersectRad.size() - 1)),
+//                scale * 2 * controller.intersectRad.get(controller.intersectRad.size() - 1),
+//                scale * 2 * controller.intersectRad.get(controller.intersectRad.size() - 1));
     }
 
     @FXML
@@ -144,10 +144,10 @@ public class ControllerFX {
                 controller.centres.get(controller.centres.size()-1)[1][0]};
         drawDot(tempDot[0], tempDot[1], scale, canvas.getHeight(), gc, Color.CYAN, 5);
         gc.setStroke(Color.DARKCYAN);
-        gc.strokeOval(scale * (tempDot[0] - controller.intersectRad.get(controller.intersectRad.size() - 1)),
-                canvas.getHeight() - scale * (tempDot[1] + controller.intersectRad.get(controller.intersectRad.size() - 1)),
-                scale * 2 * controller.intersectRad.get(controller.intersectRad.size() - 1),
-                scale * 2 * controller.intersectRad.get(controller.intersectRad.size() - 1));
+//        gc.strokeOval(scale * (tempDot[0] - controller.intersectRad.get(controller.intersectRad.size() - 1)),
+//                canvas.getHeight() - scale * (tempDot[1] + controller.intersectRad.get(controller.intersectRad.size() - 1)),
+//                scale * 2 * controller.intersectRad.get(controller.intersectRad.size() - 1),
+//                scale * 2 * controller.intersectRad.get(controller.intersectRad.size() - 1));
     }
 
     @FXML
@@ -354,7 +354,7 @@ public class ControllerFX {
 //    }
 //
 //    private double maxDist(Polygon polygon, double x_centre, double y_centre){
-//        Geometry geometry = new Geometry();
+//        Geom geometry = new Geom();
 //        double max = 0, x_m = 0, y_m = 0, scale = getScale();
 //        for (int i=0; i<polygon.npoints; i++){
 //            double dist = geometry.distance(x_centre, y_centre, polygon.xpoints[i], polygon.ypoints[i]);
