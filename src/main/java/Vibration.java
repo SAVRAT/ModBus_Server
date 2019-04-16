@@ -1,15 +1,14 @@
 import com.digitalpetri.modbus.master.ModbusTcpMaster;
 import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
-import io.vertx.core.Vertx;
+import io.vertx.core.AbstractVerticle;
 import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.SQLConnection;
 
 import java.util.ArrayList;
 
-class Vibration {
+class Vibration extends AbstractVerticle {
 
     private DataBaseConnect dataBaseConnect;
-    private Vertx vertx;
     private ModBus_Master modBusMaster;
     private boolean first = true;
     private boolean second = false;
@@ -18,14 +17,13 @@ class Vibration {
     private ArrayList<String[]> outData = new ArrayList<>();
     private ArrayList<ArrayList<String[]>> forWrite = new ArrayList<>();
 
-    Vibration(DataBaseConnect dataBaseConnect, Vertx vertx, ModBus_Master modBusMaster){
+    Vibration(DataBaseConnect dataBaseConnect, ModBus_Master modBusMaster){
         this.dataBaseConnect = dataBaseConnect;
-        this.vertx = vertx;
         this.modBusMaster = modBusMaster;
     }
 
     @SuppressWarnings("Duplicates")
-    void start(){
+    public void start(){
         refreshData();
         vertx.setPeriodic(60000, event -> refreshData());
     }

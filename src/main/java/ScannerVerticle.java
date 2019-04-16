@@ -192,7 +192,7 @@ class ScannerVerticle extends AbstractVerticle {
                             if (res.succeeded()){
                                 connection.query("INSERT INTO woodData_2 SELECT * FROM woodData;", res2 -> {
                                     if (res2.succeeded()){
-                                        dataBaseConnect.databaseQuery("truncate table woodData;");
+                                        dataBaseConnect.databaseQuery("woodData");
                                     } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
                                     connection.close();
                                 });
@@ -237,7 +237,7 @@ class ScannerVerticle extends AbstractVerticle {
         futureResultList.add(CompletableFuture.supplyAsync(() ->
                 controller.computeRadius(tempFigure.get(tempFigure.size()-3))));
         futureResultList.add(CompletableFuture.supplyAsync(() ->
-                controller.figureVolume(tempFigure, (double) 1600/tempFigure.size())));
+                controller.figureVolume(tempFigure, (double) 1680/tempFigure.size())));
         CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[3]);
 
         CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureResultArray);
@@ -249,7 +249,7 @@ class ScannerVerticle extends AbstractVerticle {
             System.out.println("SliceCount:" + tempFigure.size());
             System.out.println("Input Diameter: " + (double) Math.round(res.get(0)*2.2*10)/10);
             System.out.println("Output Diameter: " + (double) Math.round(res.get(1)*2.2*10)/10);
-            System.out.println("Figure Volume: " + (double) Math.round(res.get(2)/1000)/1000);
+            System.out.println("Figure Volume: " + (double) Math.round(res.get(2)*0.38/1000)/1000);
         });
     }
 }

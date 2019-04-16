@@ -57,7 +57,7 @@ class DataBaseConnect {
                         + " ORDER BY id DESC LIMIT 1;", out -> {
                     if (out.succeeded()) {
                         List<JsonObject> output = out.result().getRows();
-                        statusCheck(output, newState, device[4], device[5]);
+                        statusCheck(output, newState, device);
                     } else
                         System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + out.cause());
                     connection.close();
@@ -87,11 +87,11 @@ class DataBaseConnect {
         });
     }
 
-    void databaseQuery(String query){
+    void databaseQuery(String tableName){
         mySQLClient.getConnection(con -> {
             if (con.succeeded()) {
                 SQLConnection connection = con.result();
-                connection.query(query, out -> {
+                connection.query("truncate table " + tableName + ";", out -> {
                     if (out.failed()) {
                         System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + out.cause());
                     }
@@ -121,7 +121,7 @@ class DataBaseConnect {
     ArrayList<String[]> parseDataOee(List<JsonObject> resultSet){
         ArrayList<String[]> data = new ArrayList<>();
         for (JsonObject entries : resultSet) {
-            String[] row = new String[6];
+            String[] row = new String[7];
             if (entries.getString("ip") != null && entries.getString("ip").length() > 0) {
                 row[0] = entries.getString("ip");
                 row[1] = entries.getString("length");
@@ -129,6 +129,7 @@ class DataBaseConnect {
                 row[3] = entries.getString("address");
                 row[4] = entries.getString("tablename");
                 row[5] = String.valueOf(entries.getInteger("id"));
+                row[6] = String.valueOf(entries.getInteger("plain"));
                 data.add(row);
             }
         }
@@ -163,15 +164,19 @@ class DataBaseConnect {
         }
     }
 
-    private void statusCheck(List<JsonObject> data, int currentState, String tableName, String parentId){
-        int oldStatus = data.get(0).getInteger("status");
+    private void statusCheck(List<JsonObject> data, int currentState, String[] device){
+        int oldState = data.get(0).getInteger("status");
         String currentTime = String.valueOf((System.currentTimeMillis())/1000);
-        databaseUpdate("UPDATE " + tableName +
+        databaseUpdate("UPDATE " + device[4] +
                 " SET endperiod = " + currentTime + " ORDER BY id DESC LIMIT 1;");
-        if (oldStatus != currentState){
-            JsonArray toWrite = new JsonArray().add(currentTime).add(currentTime).add(currentState).add(parentId);
-            databaseWrite("INSERT INTO " + tableName +
+        if (oldState != currentState){
+            JsonArray toWrite = new JsonArray().add(currentTime).add(currentTime).add(currentState).add(device[5]);
+            databaseWrite("INSERT INTO " + device[4] +
                     " (startperiod, endperiod, status, parentid) VALUE (?, ?, ?, ?);", toWrite);
+        }
+        if (oldState == 3 && currentState == 1){
+           databaseUpdate("UPDATE " + device[4] + " SET status = 1 WHERE status = 3" +
+                   " AND startperiod > " + (Integer.valueOf(currentTime) - Integer.valueOf(device[6]) * 60) + ";");
         }
     }
 }

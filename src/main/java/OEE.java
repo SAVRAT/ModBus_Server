@@ -1,41 +1,47 @@
 import com.digitalpetri.modbus.master.ModbusTcpMaster;
 import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
-import io.vertx.core.Vertx;
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.SQLConnection;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
-class OEE {
+class OEE extends AbstractVerticle {
 
     private DataBaseConnect dataBaseConnect;
-    private Vertx vertx;
     private ModBus_Master modBusMaster;
     private boolean first = true;
     private boolean second = false;
     private boolean third = false;
     private ArrayList<String[]> previous = new ArrayList<>();
     private ArrayList<String[]> outData = new ArrayList<>();
+    private CopyOnWriteArrayList<String> oeeTables = new CopyOnWriteArrayList<>();
 
-    OEE(DataBaseConnect dataBaseConnect, Vertx vertx, ModBus_Master modBusMaster){
+    OEE(DataBaseConnect dataBaseConnect, ModBus_Master modBusMaster){
         this.dataBaseConnect = dataBaseConnect;
-        this.vertx = vertx;
         this.modBusMaster = modBusMaster;
     }
 
-    @SuppressWarnings("Duplicates")
-    void start(){
+    public void start(){
         refreshData();
         vertx.setPeriodic(60000, event -> refreshData());
+        vertx.setPeriodic(10000, event -> {
+            oeeCompute();
+        });
     }
 
     private long timerID;
-    @SuppressWarnings("Duplicates")
+
     private void handle(ArrayList<String[]> data){
         first = false;
         if (!third) {
             previous = data;
+            previous.forEach(val -> oeeTables.add(val[4]));
             third = true;
         }
         timerID = vertx.setPeriodic(2000, result -> {
@@ -61,16 +67,11 @@ class OEE {
             ThreadGroup OEE = new ThreadGroup("OEE READ");
             for (String[] device:modBusDevice){
                 new Thread(OEE, () -> {
-
-//                    System.out.println("OEE Thread started. IP: " + device[0] +
-//                            "  id: " + Thread.currentThread().getId());
                     switch (device[2]) {
                         case "plc": {
                             ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(device[0]).setPort(502)
                                     .build();
                             ModbusTcpMaster master = new ModbusTcpMaster(config);
-//                            for (String[] val:data)
-//                                System.out.println("Data: " + Arrays.toString(val));
                             modBusMaster.sendAndReceive_PLC(master, Integer.valueOf(device[1]), data);
                             break;
                         }
@@ -96,7 +97,6 @@ class OEE {
         });
     }
 
-    @SuppressWarnings("Duplicates")
     private void check(ArrayList<String[]> data){
         boolean qwerty = false;
         if (data.size() == previous.size())
@@ -110,19 +110,20 @@ class OEE {
             qwerty = true;
         if (qwerty){
             vertx.cancelTimer(timerID);
-            previous=data;
+            previous = data;
+            oeeTables.clear();
+            previous.forEach(val -> oeeTables.add(val[4]));
             handle(data);
             System.out.println(previous);
         }
     }
 
-    @SuppressWarnings("Duplicates")
     private void refreshData(){
         System.out.println("Refresh OEE...");
         dataBaseConnect.mySQLClient.getConnection(con -> {
             if (con.succeeded()) {
                 SQLConnection connection = con.result();
-                connection.query("SELECT tablename, address, ip, length, type, id FROM oborudovanie;", res -> {
+                connection.query("SELECT tablename, address, ip, length, type, id, plain FROM oborudovanie;", res -> {
                     if (res.succeeded()) {
                         List<JsonObject> result = res.result().getRows();
                         outData.clear();
@@ -134,7 +135,40 @@ class OEE {
                     } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
                     connection.close();
                 });
-            } else System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
+            } else
+                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
         });
+    }
+
+    private void oeeCompute(){
+        for (String tableName:oeeTables)
+            dataBaseConnect.mySQLClient.getConnection(con -> {
+                if (con.succeeded()){
+                    SQLConnection connection = con.result();
+                    int period = 600;
+                    String query = "SELECT  UNIX_TIMESTAMP()-" + period + " AS startPeriod, UNIX_TIMESTAMP() AS endPeriod," +
+                            " (SUM(endperiod)-SUM(startperiod))/" + period + "*100 AS workTime " +
+                            "FROM " + tableName + " WHERE status = 1 AND endperiod > UNIX_TIMESTAMP()-" + period + ";";
+                    connection.query(query, res -> {
+                        if (res.succeeded()){
+                            JsonArray oeeRow = res.result().getResults().get(0);
+                            if (oeeRow.getString(2) == null) {
+                                oeeRow.remove(2);
+                                oeeRow.add("0.00");
+                            }
+                            if (Float.valueOf(oeeRow.getString(2)) > 100){
+                                oeeRow.remove(2);
+                                oeeRow.add("100.00");
+                            }
+                            System.out.println(tableName + ": " + oeeRow);
+                            dataBaseConnect.databaseWrite("INSERT INTO " + tableName +
+                                    "_oee (startperiod, endperiod, A) VALUES (?, ?, ?);", oeeRow);
+                        } else
+                            System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
+                        connection.close();
+                    });
+                } else
+                    System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
+            });
     }
 }
