@@ -1,52 +1,35 @@
-import com.digitalpetri.modbus.codec.Modbus;
-import com.digitalpetri.modbus.master.ModbusTcpMaster;
-import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
-import com.digitalpetri.modbus.requests.ReadHoldingRegistersRequest;
-import com.digitalpetri.modbus.responses.ReadHoldingRegistersResponse;
-import io.netty.util.ReferenceCountUtil;
-import io.vertx.core.Vertx;
+import io.vertx.ext.sql.SQLConnection;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.ArrayList;
+import java.util.List;
 
 class Test {
+    private static DataBaseConnect dataBaseConnect = new DataBaseConnect("192.168.49.53", "java", "z1x2c3v4",
+            "fanDOK");
 
     @SuppressWarnings("Duplicates")
     public static void main(String[] args) {
-        Vertx vertx = Vertx.vertx();
-        int startAddress = 0, quantity = 7;
-        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5000)
-                .build();
-        ModbusTcpMaster master = new ModbusTcpMaster(config);
-        vertx.setPeriodic(50, start -> {
-            CompletableFuture<ReadHoldingRegistersResponse> future =
-                    master.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity), 1);
-
-            future.whenCompleteAsync((response, ex) -> {
-                if (response != null) {
-                    int output = uByteToInt(new short[]{response.getRegisters().getUnsignedByte(8),
-                            response.getRegisters().getUnsignedByte(9),
-                            response.getRegisters().getUnsignedByte(10),
-                            response.getRegisters().getUnsignedByte(11)});
-                    System.out.println("Position: " + output);
-                    ReferenceCountUtil.release(response);
-                } else {
-                    System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
-                }
-//            master.disconnect();
-            }, Modbus.sharedExecutor());
-        });
-    }
-
-    static int uByteToInt(short[] data){
-        StringBuilder temp = new StringBuilder();
-        for (short datum : data) {
-            StringBuilder str = new StringBuilder(Integer.toBinaryString(0xFFFF & datum));
-            int length = str.length();
-            for (int i = 0; i < (8 - length); i++)
-                str.insert(0, "0");
-            temp.append(str.toString());
-        }
-
-        return Integer.parseInt(temp.toString(), 2);
+        String[] str = {"lu_N_1", "lu_N_2", "lu_N_3", "shlifstanok", "saw_left", "saw_right", "obreznoy", "press1",
+                "press2", "press3", "press4", "sushilka"};
+//        for (String tableName:str)
+        String tableName = "lu_N_1_Data";
+            dataBaseConnect.mySQLClient.getConnection(con -> {
+                if (con.succeeded()){
+                    SQLConnection connection = con.result();
+                    int period = 600;
+                    String query = "SELECT data, timeStamp FROM lu_N_1_Data WHERE timeStamp > 1555443950;";
+                    List<String> batch = new ArrayList<>();
+                    batch.add("SELECT data, timeStamp FROM lu_N_1_Data WHERE timeStamp > 1555443950;");
+                    batch.add("SELECT startperiod, status FROM lu_N_1 WHERE endperiod > 1555443950;");
+                    connection.batch(batch, res -> {
+                        if (res.succeeded()){
+                            System.out.println(res.result());
+                        } else
+                            System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
+                        connection.close();
+                    });
+                } else
+                    System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
+            });
     }
 }
