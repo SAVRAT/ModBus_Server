@@ -409,6 +409,18 @@ class Controller {
         return (double) Math.round(volume);
     }
 
+    double usefullVolume(ArrayList<double[][]> figure){
+//        ArrayList<double[][]> tempMatrix = new ArrayList<>();
+        ArrayList<double[][]> outMatrix = matrix(0.7, scannerWight, scannerHight, getPolygon(figure.get(0)));
+        for (int i = 1; i < figure.size(); i++){
+//            Polygon polygonFig = getPolygon(figure.get(i));
+            outMatrix = matrixIntersection(outMatrix,
+                    matrix(0.7, scannerWight, scannerHight, getPolygon(figure.get(i))));
+        }
+        double usefullVolume = (double) 1680*polygonArea(matrixToSlice(outMatrix));
+        return usefullVolume;
+    }
+
     double maxDist(Polygon polygon, double x_centre, double y_centre){
         Geom geom = new Geom();
         double max = 0, x_m = 0, y_m = 0;

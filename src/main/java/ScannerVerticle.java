@@ -24,18 +24,17 @@ class ScannerVerticle extends AbstractVerticle {
     private int counter = 0, writeCounter = 0, startAddress = 0, quantity = 7, oldPosition = 0;
     private int[] partCounter = new int[2];
     private boolean check = false, processWood = false;
+    private ArrayList<ArrayList<Integer>> tempData;
+    private ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5000)
+            .build();
+    private ModbusTcpMaster master = new ModbusTcpMaster(config);
+    private CompletableFuture<ReadHoldingRegistersResponse> future;
 
     ScannerVerticle(String[] host, Controller controller, DataBaseConnect dataBaseConnect) {
         this.host = host;
         this.controller = controller;
         this.dataBaseConnect = dataBaseConnect;
     }
-
-    private ArrayList<ArrayList<Integer>> tempData;
-    private ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5000)
-            .build();
-    private ModbusTcpMaster master = new ModbusTcpMaster(config);
-    private CompletableFuture<ReadHoldingRegistersResponse> future;
 
     @Override
     public void start() {
@@ -238,7 +237,9 @@ class ScannerVerticle extends AbstractVerticle {
                 controller.computeRadius(tempFigure.get(tempFigure.size()-3))));
         futureResultList.add(CompletableFuture.supplyAsync(() ->
                 controller.figureVolume(tempFigure, (double) 1680/tempFigure.size())));
-        CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[3]);
+        futureResultList.add(CompletableFuture.supplyAsync(() ->
+                controller.usefullVolume(tempFigure)));
+        CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[4]);
 
         CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureResultArray);
 
@@ -250,6 +251,7 @@ class ScannerVerticle extends AbstractVerticle {
             System.out.println("Input Diameter: " + (double) Math.round(res.get(0)*2.2*10)/10);
             System.out.println("Output Diameter: " + (double) Math.round(res.get(1)*2.2*10)/10);
             System.out.println("Figure Volume: " + (double) Math.round(res.get(2)*0.38/1000)/1000);
+            System.out.println("Usefull Volume: " + (double) Math.round(res.get(3)*100)/100);
         });
     }
 }
