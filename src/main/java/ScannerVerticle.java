@@ -18,12 +18,14 @@ import java.util.stream.Collectors;
 
 class ScannerVerticle extends AbstractVerticle {
     private Controller controller;
+    private RandomString randomString = new RandomString();
     private DataBaseConnect dataBaseConnect;
     private Parsing parse = new Parsing();
     private final String[] host;
     private int counter = 0, writeCounter = 0, startAddress = 0, quantity = 7, oldPosition = 0;
     private int[] partCounter = new int[2];
     private boolean check = false, processWood = false;
+    private String stringKey = "";
     private ArrayList<ArrayList<Integer>> tempData;
     private ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5000)
             .build();
@@ -176,9 +178,13 @@ class ScannerVerticle extends AbstractVerticle {
             controller.figure.add(tempVal);
 //            for (double[][] val:controller.figure)
 //                System.out.println(Arrays.deepToString(val));
+            if (!check){
+                stringKey = randomString.getRandomString(10);
+//                System.out.println("String key: " + stringKey);
+            }
             check = true;
             if (writeCounter > 1)
-                toDatabase(tempVal);
+                woodDataToDatabase(tempVal, stringKey);
         } else {
             if (check && processWood) {
                 writeCounter = 0;
@@ -213,19 +219,30 @@ class ScannerVerticle extends AbstractVerticle {
             System.out.println("Conveyor run");
         } else {
             processWood = false;
-            System.out.println("Conveyor stop");
+//            System.out.println("Conveyor stop");
         }
     }
 
-    private void toDatabase(double[][] data){
+    private void woodDataToDatabase(double[][] data, String key){
+        System.out.println("String key: " + key);
         StringBuilder x_str = new StringBuilder();
         StringBuilder y_str = new StringBuilder();
         for (double[] datum : data) {
             x_str.append(datum[0]).append(",");
             y_str.append(datum[1]).append(",");
         }
-        JsonArray dataArray = new JsonArray().add(x_str).add(y_str);
-        dataBaseConnect.databaseWrite("INSERT INTO woodData (xData, yData) VALUE (?, ?);", dataArray);
+        JsonArray dataArray = new JsonArray().add(x_str).add(y_str).add(key);
+        dataBaseConnect.databaseWrite("INSERT INTO woodData (xData, yData, stringKey) " +
+                "VALUE (?, ?, ?);", dataArray);
+    }
+
+    private void woodParamsToDatabase(double inputRad, double outputRad,
+                                      double volume, double usefullVolume, String stringKey){
+        double avgRad = (inputRad + outputRad) / 2;
+        JsonArray dataArray = new JsonArray().add(stringKey).add(inputRad).add(outputRad)
+                .add(avgRad).add(volume).add(usefullVolume);
+        dataBaseConnect.databaseWrite("INSERT INTO woodParams (stringKey, inputRad," +
+                " outputRad, avrRad, volume, usefulVolume) VALUES (?, ?, ?, ?, ?, ?);", dataArray);
     }
 
     private void compute (ArrayList<double[][]> figure){
@@ -247,11 +264,18 @@ class ScannerVerticle extends AbstractVerticle {
                 .thenApply(val ->
                         futureResultList.stream().map(CompletableFuture::join).collect(Collectors.toList()));
         finalResults.thenAccept(res -> {
+            double inputRad = (double) Math.round(res.get(0)*2.2*10)/10,
+                    outputRad = (double) Math.round(res.get(1)*2.2*10)/10,
+                    volume = (double) Math.round(res.get(2)*0.38/1000)/1000,
+                    usefulVolume = (double) Math.round(res.get(3)*0.48/1000)/1000;
             System.out.println("SliceCount:" + tempFigure.size());
             System.out.println("Input Diameter: " + (double) Math.round(res.get(0)*2.2*10)/10);
             System.out.println("Output Diameter: " + (double) Math.round(res.get(1)*2.2*10)/10);
             System.out.println("Figure Volume: " + (double) Math.round(res.get(2)*0.38/1000)/1000);
-            System.out.println("Usefull Volume: " + (double) Math.round(res.get(3)*100)/100);
+            System.out.println("Usefull Volume: " + (double) Math.round(res.get(3)*0.48/1000)/1000);
+
+            woodParamsToDatabase(inputRad, outputRad, volume, usefulVolume, stringKey);
         });
     }
+
 }

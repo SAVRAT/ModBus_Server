@@ -64,3 +64,24 @@ UPDATE status_connection SET status = 0 WHERE ip = '192.168.49.243';
 SELECT tablename, address, ip, length, type, id FROM oborudovanie;
 
 
+CREATE TABLE woodParams (
+    id INT AUTO_INCREMENT,
+    dataId VARCHAR(50),
+    inputRad DOUBLE,
+    outputRad DOUBLE,
+    avrRad DOUBLE,
+    volume DOUBLE,
+    usefulVolume DOUBLE,
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE woodData_test (
+    id INT AUTO_INCREMENT,
+    xData DOUBLE,
+    yDAta DOUBLE,
+    PRIMARY KEY (id)
+);
+
+INSERT INTO woodData (xData, yData, stringKey) VALUES ('12,43,54,23', '54,23,42,65', '3qwghds5ds');
+INSERT INTO woodParams (dataId, inputRad, outputRad, avrRad, volume, usefulVolume) VALUES (?, ?, ?, ?, ?, ?);
+
