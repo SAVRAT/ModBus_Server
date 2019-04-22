@@ -4,6 +4,7 @@ import com.digitalpetri.modbus.requests.ReadHoldingRegistersRequest;
 import com.digitalpetri.modbus.requests.WriteMultipleRegistersRequest;
 import com.digitalpetri.modbus.responses.ReadHoldingRegistersResponse;
 import com.digitalpetri.modbus.responses.WriteMultipleRegistersResponse;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
@@ -16,6 +17,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 class ScannerVerticle extends AbstractVerticle {
@@ -29,6 +31,7 @@ class ScannerVerticle extends AbstractVerticle {
     private boolean check = false, processWood = false;
     private String stringKey = "";
     private ArrayList<ArrayList<Integer>> tempData;
+    CopyOnWriteArrayList<byte[]> vibroState = new CopyOnWriteArrayList();
     private ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5000)
             .build();
     private ModbusTcpMaster master = new ModbusTcpMaster(config);
@@ -43,6 +46,10 @@ class ScannerVerticle extends AbstractVerticle {
 
     @Override
     public void start() {
+        vibroIndication();
+        vertx.setPeriodic(1000, event -> {
+            vibroIndication();
+        });
         vertx.setPeriodic(180, event -> {
 //            System.out.println("TICK");
             if (counter == 0) {
@@ -54,7 +61,7 @@ class ScannerVerticle extends AbstractVerticle {
                     Integer[] temp = new Integer[8];
                     requestAndResponse(client, host[k], tempData.get(k), temp, k);
                 }
-                byte[] byteArray= {36, 73, -110, 36};
+//                byte[] byteArray= {36, 73, -110, 36};
                 future_1 = master.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity), 1);
             }
         });
@@ -177,7 +184,12 @@ class ScannerVerticle extends AbstractVerticle {
             } else
                 System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
             master.disconnect();
-
+            future_2 = master.sendRequest(
+                    new WriteMultipleRegistersRequest(2, 2, vibroState.get(0)), 1);
+            future_2.whenComplete((res_1, ex_1) -> {
+                if (res_1 == null)
+                    System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex_1.getMessage());
+            });
         });
         controller.outData.add(tempVal);
         if (controller.woodLog && processWood) {
@@ -287,34 +299,27 @@ class ScannerVerticle extends AbstractVerticle {
     }
 
     private void vibroIndication(){
+        vibroState.clear();
         dataBaseConnect.mySQLClient.getConnection(con -> {
             if (con.succeeded()){
                 SQLConnection connection = con.result();
                 connection.query("SELECT * FROM vibroIndication;", res -> {
                     JsonArray result = res.result().getResults().get(0);
                     System.out.println(result);
-                    byte[] temp = new byte[4];
+                    byte[] byteArray = new byte[4];
                     for (int i = 0; i < 27; i++) {
                         if (result.getInteger(i).equals(1)) {
                             if (i < 8)
-                                temp[0] += Math.pow(2, i);
+                                byteArray[0] += Math.pow(2, i);
                             else if (i < 16)
-                                temp[1] += Math.pow(2, i - 8);
+                                byteArray[1] += Math.pow(2, i - 8);
                             else if (i < 24)
-                                temp[2] += Math.pow(2, i - 16);
+                                byteArray[2] += Math.pow(2, i - 16);
                             else
-                                temp[3] += Math.pow(2, i - 24);
+                                byteArray[3] += Math.pow(2, i - 24);
                         }
                     }
-//                    System.out.println(Arrays.toString(temp));
-                    future_2 = master.sendRequest(
-                            new WriteMultipleRegistersRequest(startAddress, quantity, temp), 1);
-                    future_2.whenComplete((res_1, ex) -> {
-                        if (res_1 == null){
-                            System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
-                        }
-                        master.disconnect();
-                    });
+                    vibroState.add(byteArray);
                 });
             }else
                 System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
