@@ -1,7 +1,9 @@
 import com.digitalpetri.modbus.master.ModbusTcpMaster;
 import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
 import com.digitalpetri.modbus.requests.ReadHoldingRegistersRequest;
+import com.digitalpetri.modbus.requests.WriteMultipleRegistersRequest;
 import com.digitalpetri.modbus.responses.ReadHoldingRegistersResponse;
+import com.digitalpetri.modbus.responses.WriteMultipleRegistersResponse;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
@@ -30,7 +32,8 @@ class ScannerVerticle extends AbstractVerticle {
     private ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5000)
             .build();
     private ModbusTcpMaster master = new ModbusTcpMaster(config);
-    private CompletableFuture<ReadHoldingRegistersResponse> future;
+    private CompletableFuture<ReadHoldingRegistersResponse> future_1;
+    private CompletableFuture<WriteMultipleRegistersResponse> future_2;
 
     ScannerVerticle(String[] host, Controller controller, DataBaseConnect dataBaseConnect) {
         this.host = host;
@@ -51,7 +54,8 @@ class ScannerVerticle extends AbstractVerticle {
                     Integer[] temp = new Integer[8];
                     requestAndResponse(client, host[k], tempData.get(k), temp, k);
                 }
-                future = master.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity), 1);
+                byte[] byteArray= {36, 73, -110, 36};
+                future_1 = master.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity), 1);
             }
         });
     }
@@ -162,7 +166,7 @@ class ScannerVerticle extends AbstractVerticle {
         tempAll.addAll(tempData.get(1));
 //        System.out.println("Handle...");
         double[][] tempVal = controller.doSlice(tempAll);
-        future.whenComplete((res, ex) -> {
+        future_1.whenComplete((res, ex) -> {
             if (res!=null){
                 int output = parse.uByteToInt(new short[]{res.getRegisters().getUnsignedByte(8),
                         res.getRegisters().getUnsignedByte(9),
@@ -170,7 +174,10 @@ class ScannerVerticle extends AbstractVerticle {
                         res.getRegisters().getUnsignedByte(11)});
                 conveyorCheck(output);
 //                System.out.println("Position: " + output);
-            }
+            } else
+                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
+            master.disconnect();
+
         });
         controller.outData.add(tempVal);
         if (controller.woodLog && processWood) {
@@ -242,7 +249,8 @@ class ScannerVerticle extends AbstractVerticle {
         JsonArray dataArray = new JsonArray().add(stringKey).add(inputRad).add(outputRad)
                 .add(avgRad).add(volume).add(usefullVolume);
         dataBaseConnect.databaseWrite("INSERT INTO woodParams (stringKey, inputRad," +
-                " outputRad, avrRad, volume, usefulVolume) VALUES (?, ?, ?, ?, ?, ?);", dataArray);
+                " outputRad, avrRad, volume, usefulVolume, timeStamp) " +
+                "VALUES (?, ?, ?, ?, ?, ?, UNIX_TIMESTAMP());", dataArray);
     }
 
     private void compute (ArrayList<double[][]> figure){
@@ -275,6 +283,41 @@ class ScannerVerticle extends AbstractVerticle {
             System.out.println("Usefull Volume: " + (double) Math.round(res.get(3)*0.48/1000)/1000);
 
             woodParamsToDatabase(inputRad, outputRad, volume, usefulVolume, stringKey);
+        });
+    }
+
+    private void vibroIndication(){
+        dataBaseConnect.mySQLClient.getConnection(con -> {
+            if (con.succeeded()){
+                SQLConnection connection = con.result();
+                connection.query("SELECT * FROM vibroIndication;", res -> {
+                    JsonArray result = res.result().getResults().get(0);
+                    System.out.println(result);
+                    byte[] temp = new byte[4];
+                    for (int i = 0; i < 27; i++) {
+                        if (result.getInteger(i).equals(1)) {
+                            if (i < 8)
+                                temp[0] += Math.pow(2, i);
+                            else if (i < 16)
+                                temp[1] += Math.pow(2, i - 8);
+                            else if (i < 24)
+                                temp[2] += Math.pow(2, i - 16);
+                            else
+                                temp[3] += Math.pow(2, i - 24);
+                        }
+                    }
+//                    System.out.println(Arrays.toString(temp));
+                    future_2 = master.sendRequest(
+                            new WriteMultipleRegistersRequest(startAddress, quantity, temp), 1);
+                    future_2.whenComplete((res_1, ex) -> {
+                        if (res_1 == null){
+                            System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
+                        }
+                        master.disconnect();
+                    });
+                });
+            }else
+                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
         });
     }
 
