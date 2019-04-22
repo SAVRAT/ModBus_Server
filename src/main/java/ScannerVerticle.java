@@ -31,11 +31,12 @@ class ScannerVerticle extends AbstractVerticle {
     private boolean check = false, processWood = false;
     private String stringKey = "";
     private ArrayList<ArrayList<Integer>> tempData;
-    private CopyOnWriteArrayList<byte[]> vibroState = new CopyOnWriteArrayList();
-    private ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5000)
+    private ModbusTcpMasterConfig config_1 = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5000)
             .build();
-    private ModbusTcpMaster master_1 = new ModbusTcpMaster(config);
-    private ModbusTcpMaster master_2 = new ModbusTcpMaster(config);
+    private ModbusTcpMasterConfig config_2 = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5001)
+            .build();
+    private ModbusTcpMaster master_1 = new ModbusTcpMaster(config_1);
+    private ModbusTcpMaster master_2 = new ModbusTcpMaster(config_2);
     private CompletableFuture<ReadHoldingRegistersResponse> future_1;
     private CompletableFuture<WriteMultipleRegistersResponse> future_2;
 
@@ -48,9 +49,7 @@ class ScannerVerticle extends AbstractVerticle {
     @Override
     public void start() {
         vibroIndication();
-        vertx.setPeriodic(1000, event -> {
-            vibroIndication();
-        });
+        vertx.setPeriodic(1000, event -> vibroIndication());
         vertx.setPeriodic(180, event -> {
 //            System.out.println("TICK");
             if (counter == 0) {
@@ -62,7 +61,6 @@ class ScannerVerticle extends AbstractVerticle {
                     Integer[] temp = new Integer[8];
                     requestAndResponse(client, host[k], tempData.get(k), temp, k);
                 }
-//                byte[] byteArray= {36, 73, -110, 36};
                 future_1 = master_1.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity), 1);
             }
         });
@@ -184,14 +182,6 @@ class ScannerVerticle extends AbstractVerticle {
 //                System.out.println("Position: " + output);
             } else
                 System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
-            master_1.disconnect();
-            future_2 = master_2.sendRequest(
-                    new WriteMultipleRegistersRequest(2, 2, vibroState.get(0)), 1);
-            future_2.whenComplete((res_1, ex_1) -> {
-                if (res_1 == null)
-                    System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex_1.getMessage());
-                master_2.disconnect();
-            });
         });
         controller.outData.add(tempVal);
         if (controller.woodLog && processWood) {
@@ -204,13 +194,15 @@ class ScannerVerticle extends AbstractVerticle {
 //                System.out.println("String key: " + stringKey);
             }
             check = true;
-            if (writeCounter > 1)
+            if (writeCounter > 1) {
                 woodDataToDatabase(tempVal, stringKey);
+            }
         } else {
             if (check && processWood) {
                 writeCounter = 0;
                 compute(controller.figure);
                 controller.figure.clear();
+                System.out.println("==================================================");
                 dataBaseConnect.mySQLClient.getConnection(con -> {
                     if (con.succeeded()){
                         SQLConnection connection = con.result();
@@ -301,13 +293,12 @@ class ScannerVerticle extends AbstractVerticle {
     }
 
     private void vibroIndication(){
-        vibroState.clear();
         dataBaseConnect.mySQLClient.getConnection(con -> {
             if (con.succeeded()){
                 SQLConnection connection = con.result();
                 connection.query("SELECT * FROM vibroIndication;", res -> {
                     JsonArray result = res.result().getResults().get(0);
-                    System.out.println(result);
+//                    System.out.println(result);
                     byte[] byteArray = new byte[4];
                     for (int i = 0; i < 27; i++) {
                         if (result.getInteger(i).equals(1)) {
@@ -321,8 +312,14 @@ class ScannerVerticle extends AbstractVerticle {
                                 byteArray[3] += Math.pow(2, i - 24);
                         }
                     }
-                    vibroState.add(byteArray);
+            future_2 = master_2.sendRequest(
+                    new WriteMultipleRegistersRequest(2, 2, byteArray), 2);
+            future_2.whenComplete((res_1, ex_1) -> {
+                if (res_1 == null)
+                    System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex_1.getMessage());
+            });
                 });
+                connection.close();
             }else
                 System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
         });

@@ -30,27 +30,20 @@ class Test {
         byte[] byteArray= {36, 73, -110, 36};
 
 
-//        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5000)
-//                .build();
-//        ModbusTcpMaster master = new ModbusTcpMaster(config);
-//
-//        CompletableFuture<ReadHoldingRegistersResponse> future =
-//                master.sendRequest(new WriteMultipleRegistersRequest(address, quantity, byteArray), 1);
-//        future.whenCompleteAsync((response, ex) -> {
-//            if (response != null) {
-//
-//                ReferenceCountUtil.release(response);
-//            } else {
-//                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
-//            }
-//            master.disconnect();
-//        }, Modbus.sharedExecutor());
-        dataBase.mySQLClient.getConnection(con -> {
-            if (con.succeeded()){
-                SQLConnection connection = con.result();
+        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5001)
+                .build();
+        ModbusTcpMaster master = new ModbusTcpMaster(config);
 
+        CompletableFuture<ReadHoldingRegistersResponse> future =
+                master.sendRequest(new WriteMultipleRegistersRequest(address, quantity, byteArray), 2);
+        future.whenCompleteAsync((response, ex) -> {
+            if (response != null) {
+                ReferenceCountUtil.release(response);
+            } else {
+                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
             }
-        });
+            master.disconnect();
+        }, Modbus.sharedExecutor());
     }
 
 

@@ -38,7 +38,7 @@ class Vibration extends AbstractVerticle {
         }
         timerID = vertx.setPeriodic(5000, result -> {
 
-            System.out.println("Vibro write...");
+//            System.out.println("Vibro write...");
             ArrayList<String> ipAddr = new ArrayList<>();
             for (String[] datum : data) {
                 boolean check = false;

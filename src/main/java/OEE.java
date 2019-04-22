@@ -39,7 +39,7 @@ class OEE extends AbstractVerticle {
             third = true;
         }
         timerID = vertx.setPeriodic(2000, result -> {
-            System.out.println("OEE write...");
+//            System.out.println("OEE write...");
             ArrayList<String[]> modBusDevice = new ArrayList<>();
             for (String[] datum : data) {
                 boolean check = false;
