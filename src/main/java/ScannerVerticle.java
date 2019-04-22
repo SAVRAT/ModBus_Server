@@ -31,10 +31,11 @@ class ScannerVerticle extends AbstractVerticle {
     private boolean check = false, processWood = false;
     private String stringKey = "";
     private ArrayList<ArrayList<Integer>> tempData;
-    CopyOnWriteArrayList<byte[]> vibroState = new CopyOnWriteArrayList();
+    private CopyOnWriteArrayList<byte[]> vibroState = new CopyOnWriteArrayList();
     private ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5000)
             .build();
-    private ModbusTcpMaster master = new ModbusTcpMaster(config);
+    private ModbusTcpMaster master_1 = new ModbusTcpMaster(config);
+    private ModbusTcpMaster master_2 = new ModbusTcpMaster(config);
     private CompletableFuture<ReadHoldingRegistersResponse> future_1;
     private CompletableFuture<WriteMultipleRegistersResponse> future_2;
 
@@ -62,7 +63,7 @@ class ScannerVerticle extends AbstractVerticle {
                     requestAndResponse(client, host[k], tempData.get(k), temp, k);
                 }
 //                byte[] byteArray= {36, 73, -110, 36};
-                future_1 = master.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity), 1);
+                future_1 = master_1.sendRequest(new ReadHoldingRegistersRequest(startAddress, quantity), 1);
             }
         });
     }
@@ -183,12 +184,13 @@ class ScannerVerticle extends AbstractVerticle {
 //                System.out.println("Position: " + output);
             } else
                 System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
-            master.disconnect();
-            future_2 = master.sendRequest(
+            master_1.disconnect();
+            future_2 = master_2.sendRequest(
                     new WriteMultipleRegistersRequest(2, 2, vibroState.get(0)), 1);
             future_2.whenComplete((res_1, ex_1) -> {
                 if (res_1 == null)
                     System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex_1.getMessage());
+                master_2.disconnect();
             });
         });
         controller.outData.add(tempVal);
