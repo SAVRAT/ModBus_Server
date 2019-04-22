@@ -9,7 +9,7 @@ class ServerMain {
         ModBus_Master modBusMaster = new ModBus_Master(dataBase);
         vertx.deployVerticle(new Vibration(dataBase, modBusMaster));
         vertx.deployVerticle(new OEE(dataBase, modBusMaster));
-//        vertx.deployVerticle(new ScannerVerticle(alAddress, controller, dataBase));
+        vertx.deployVerticle(new ScannerVerticle(alAddress, controller, dataBase));
 
 //        Test test = new Test();
 //        test.testing();
