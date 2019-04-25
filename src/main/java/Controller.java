@@ -21,7 +21,7 @@ class Controller {
 
 
     private final double[] sensorMatrix = {6.5, 12.5, 19, 25.5, 33.5, 44, 50, 48, 62, 50, 45.9, 32.5, 25, 18.5, 12, 6.5};
-    private final int scannerHight = 82, scannerWight = 116, maxLength = 60, maxHight = 65;
+    final int scannerHight = 82, scannerWight = 116, maxLength = 60, maxHight = 65;
     private final double EPS = 0.4;
     boolean woodLog = false;
 
