@@ -153,7 +153,7 @@ class DataBaseConnect {
     }
 
     private void shiftStatusCheck(JsonObject data, float newValue, String tableName, int shift){
-        float oldValue = Float.valueOf(data.getJsonArray("rows").getJsonObject(0).getString("data"));
+        float oldValue = Float.parseFloat(data.getJsonArray("rows").getJsonObject(0).getString("data"));
         String currentTime = String.valueOf((System.currentTimeMillis())/1000);
         if (oldValue != newValue){
             JsonArray toWrite = new JsonArray().add(String.valueOf(newValue)).add(shift).add(currentTime);

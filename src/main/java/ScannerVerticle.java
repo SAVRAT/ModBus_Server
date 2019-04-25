@@ -4,7 +4,6 @@ import com.digitalpetri.modbus.requests.ReadHoldingRegistersRequest;
 import com.digitalpetri.modbus.requests.WriteMultipleRegistersRequest;
 import com.digitalpetri.modbus.responses.ReadHoldingRegistersResponse;
 import com.digitalpetri.modbus.responses.WriteMultipleRegistersResponse;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonArray;
@@ -17,7 +16,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 class ScannerVerticle extends AbstractVerticle {
@@ -261,6 +259,7 @@ class ScannerVerticle extends AbstractVerticle {
     private void compute (ArrayList<double[][]> figure){
         final ArrayList<double[][]> tempFigure = new ArrayList<>(figure);
         ArrayList<CompletableFuture<Double>> futureResultList = new ArrayList<>();
+
         futureResultList.add(CompletableFuture.supplyAsync(() ->
                 controller.computeRadius(tempFigure.get(1))));
         futureResultList.add(CompletableFuture.supplyAsync(() ->
@@ -268,7 +267,7 @@ class ScannerVerticle extends AbstractVerticle {
         futureResultList.add(CompletableFuture.supplyAsync(() ->
                 controller.figureVolume(tempFigure, (double) 1680/tempFigure.size())));
         futureResultList.add(CompletableFuture.supplyAsync(() ->
-                controller.usefullVolume(tempFigure)));
+                controller.usefulVolume(tempFigure)));
         CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[4]);
 
         CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureResultArray);
@@ -282,10 +281,10 @@ class ScannerVerticle extends AbstractVerticle {
                     volume = (double) Math.round(res.get(2)*0.38/1000)/1000,
                     usefulVolume = (double) Math.round(res.get(3)*0.48/1000)/1000;
             System.out.println("SliceCount:" + tempFigure.size());
-            System.out.println("Input Diameter: " + (double) Math.round(res.get(0)*2.2*10)/10);
-            System.out.println("Output Diameter: " + (double) Math.round(res.get(1)*2.2*10)/10);
-            System.out.println("Figure Volume: " + (double) Math.round(res.get(2)*0.38/1000)/1000);
-            System.out.println("Usefull Volume: " + (double) Math.round(res.get(3)*0.48/1000)/1000);
+            System.out.println("Input Diameter: " + inputRad);
+            System.out.println("Output Diameter: " + outputRad);
+            System.out.println("Figure Volume: " + volume);
+            System.out.println("Usefull Volume: " + usefulVolume);
 
             woodParamsToDatabase(inputRad, outputRad, volume, usefulVolume, stringKey);
         });

@@ -21,13 +21,12 @@ class Controller {
 
 
     private final double[] sensorMatrix = {6.5, 12.5, 19, 25.5, 33.5, 44, 50, 48, 62, 50, 45.9, 32.5, 25, 18.5, 12, 6.5};
-    final int scannerHight = 82, scannerWight = 116, maxLength = 60, maxHight = 65;
+    private final int scannerHight = 82, scannerWight = 116, maxLength = 60, maxHight = 65;
     private final double EPS = 0.4;
     boolean woodLog = false;
 
     ArrayList<ArrayList<double[][]>> matrixFigure = new ArrayList<>();
     ArrayList<double[][]> figure = new ArrayList<>();
-    private Formul[] formulData;
     ArrayList<Double> intersect = new ArrayList<>();
     ArrayList<double[][]> centres = new ArrayList<>();
 
@@ -113,7 +112,7 @@ class Controller {
         ArrayList<Double> intersectRad = new ArrayList<>();
         long start = System.currentTimeMillis();
         double radius = 5, step_r = 0.4, step_v = 0.3, count;
-        formulData = new Formul[sliceData.length];
+        Formul[] formulData = new Formul[sliceData.length];
         geom.lineKoef(formulData, sliceData);
         double[] centreDot = geom.geomCentre(sliceData);
 
@@ -251,20 +250,20 @@ class Controller {
     }
 
     double[][] matrixToSlice(ArrayList<double[][]> matrix){
-        double step_y = 1, step_x = 1;;
+        double step_y = 1, step_x = 1;
         ArrayList<double[][]> line = new ArrayList<>();
         double[][] out;
-        int last = 0;
-        for (int i=0; i<matrix.size(); i++){
+        int last;
+        for (double[][] doubles : matrix) {
             boolean check = false;
             double step = 0;
-            while (!check && step<scannerWight) {
+            while (!check && step < scannerWight) {
                 step += step_x;
                 for (int x = 0; x < matrix.get(0).length; x++) {
                     double[][] temp = new double[1][3];
-                    if (Math.abs(step - matrix.get(i)[x][0]) < step_x * 2 && matrix.get(i)[x][0] != 0) {
-                        temp[0][0] = matrix.get(i)[x][0];
-                        temp[0][1] = matrix.get(i)[x][1];
+                    if (Math.abs(step - doubles[x][0]) < step_x * 2 && doubles[x][0] != 0) {
+                        temp[0][0] = doubles[x][0];
+                        temp[0][1] = doubles[x][1];
                         temp[0][2] = x;
                         line.add(temp);
                         check = true;
@@ -409,7 +408,7 @@ class Controller {
         return (double) Math.round(volume);
     }
 
-    double usefullVolume(ArrayList<double[][]> figure){
+    double usefulVolume(ArrayList<double[][]> figure){
 //        ArrayList<double[][]> tempMatrix = new ArrayList<>();
         ArrayList<double[][]> outMatrix = matrix(0.7, scannerWight, scannerHight, getPolygon(figure.get(0)));
         for (int i = 1; i < figure.size(); i++){
@@ -417,8 +416,7 @@ class Controller {
             outMatrix = matrixIntersection(outMatrix,
                     matrix(0.7, scannerWight, scannerHight, getPolygon(figure.get(i))));
         }
-        double usefullVolume = (double) 1680*polygonArea(matrixToSlice(outMatrix));
-        return usefullVolume;
+        return (double) 1680*polygonArea(matrixToSlice(outMatrix));
     }
 
     double maxDist(Polygon polygon, double x_centre, double y_centre){
