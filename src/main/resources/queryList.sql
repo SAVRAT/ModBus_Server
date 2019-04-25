@@ -118,3 +118,5 @@ CREATE TABLE vibroIndication (
 INSERT INTO vibroIndication VALUES (false, false, true, false, false, true, false, false, true, false, false, true,
                                     false, false, true, false, false, true, false, false, true, false, false, true,
                                     false, false, true);
+
+SELECT * FROM err_message;

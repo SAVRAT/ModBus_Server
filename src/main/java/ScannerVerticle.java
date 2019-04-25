@@ -48,8 +48,7 @@ class ScannerVerticle extends AbstractVerticle {
 
     @Override
     public void start() {
-        vibroIndication();
-        vertx.setPeriodic(1000, event -> vibroIndication());
+        vertx.setPeriodic(10000, event -> vibroIndication());
         vertx.setPeriodic(180, event -> {
 //            System.out.println("TICK");
             if (counter == 0) {
@@ -297,29 +296,35 @@ class ScannerVerticle extends AbstractVerticle {
             if (con.succeeded()){
                 SQLConnection connection = con.result();
                 connection.query("SELECT * FROM vibroIndication;", res -> {
-                    JsonArray result = res.result().getResults().get(0);
-//                    System.out.println(result);
-                    byte[] byteArray = new byte[4];
-                    for (int i = 0; i < 27; i++) {
-                        if (result.getInteger(i).equals(1)) {
-                            if (i < 8)
-                                byteArray[0] += Math.pow(2, i);
-                            else if (i < 16)
-                                byteArray[1] += Math.pow(2, i - 8);
-                            else if (i < 24)
-                                byteArray[2] += Math.pow(2, i - 16);
-                            else
-                                byteArray[3] += Math.pow(2, i - 24);
+                    if (res.succeeded()) {
+                        JsonArray result = res.result().getResults().get(0);
+//                        System.out.println("dataBase: " + result);
+                        byte[] byteArray = new byte[4];
+                        for (int i = 0; i < 27; i++) {
+                            if (result.getInteger(i).equals(1)) {
+                                if (i < 8)
+                                    byteArray[0] += Math.pow(2, i);
+                                else if (i < 16)
+                                    byteArray[1] += Math.pow(2, i - 8);
+                                else if (i < 24)
+                                    byteArray[2] += Math.pow(2, i - 16);
+                                else
+                                    byteArray[3] += Math.pow(2, i - 24);
+                            }
                         }
-                    }
-            future_2 = master_2.sendRequest(
-                    new WriteMultipleRegistersRequest(2, 2, byteArray), 2);
-            future_2.whenComplete((res_1, ex_1) -> {
-                if (res_1 == null)
-                    System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex_1.getMessage());
-            });
+                        future_2 = master_2.sendRequest(
+                                new WriteMultipleRegistersRequest(2, 2, byteArray), 2);
+                        future_2.whenComplete((res_1, ex_1) -> {
+                            if (res_1 == null)
+                                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex_1.getMessage());
+//                            else
+//                                System.out.println("Done! " + Arrays.toString(byteArray));
+//                            master_2.disconnect();
+                        });
+                    } else
+                        System.out.println("\u001B[33m" + "Write Query ERROR" + "\u001B[0m" + " " + res.cause());
+                    connection.close();
                 });
-                connection.close();
             }else
                 System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
         });
