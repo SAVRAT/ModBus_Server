@@ -16,6 +16,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 class ScannerVerticle extends AbstractVerticle {
@@ -37,6 +39,7 @@ class ScannerVerticle extends AbstractVerticle {
     private ModbusTcpMaster master_2 = new ModbusTcpMaster(config_2);
     private CompletableFuture<ReadHoldingRegistersResponse> future_1;
     private CompletableFuture<WriteMultipleRegistersResponse> future_2;
+    private ExecutorService executorService = Executors.newFixedThreadPool(15);
 
     ScannerVerticle(String[] host, Controller controller, DataBaseConnect dataBaseConnect) {
         this.host = host;
@@ -258,12 +261,37 @@ class ScannerVerticle extends AbstractVerticle {
 
     private void compute (ArrayList<double[][]> figure){
         final ArrayList<double[][]> tempFigure = new ArrayList<>(figure);
-        ArrayList<CompletableFuture<Double>> futureResultList = new ArrayList<>();
+        ArrayList<CompletableFuture<double[]>> futureResultList = new ArrayList<>();
 
-        futureResultList.add(CompletableFuture.supplyAsync(() ->
-                controller.computeRadius(tempFigure.get(1))));
-        futureResultList.add(CompletableFuture.supplyAsync(() ->
-                controller.computeRadius(tempFigure.get(tempFigure.size()-3))));
+        if (figure.size() >= 14){
+            futureResultList.add(CompletableFuture.supplyAsync(() -> controller.computeRadius(tempFigure.get(1))));
+            for (int i = 2; i < 12; i++){
+                int index = i;
+                futureResultList.add(CompletableFuture.supplyAsync(() ->
+                        controller.computeRadius(tempFigure.get(index))));
+            }
+            futureResultList.add(CompletableFuture.supplyAsync(() ->
+                    controller.computeRadius(tempFigure.get(tempFigure.size()-2))));
+        }else if (figure.size() >= 5){
+            futureResultList.add(CompletableFuture.supplyAsync(() ->
+                    controller.computeRadius(tempFigure.get(1))));
+            for (int i = 2; i < figure.size()-2; i++){
+                int index = i;
+                futureResultList.add(CompletableFuture.supplyAsync(() ->
+                        controller.computeRadius(tempFigure.get(index))));
+            }
+            for (int i = 0; i < 14 - figure.size(); i++){
+                futureResultList.add(CompletableFuture.supplyAsync(() ->
+                        controller.computeRadius(tempFigure.get(figure.size()-3))));
+            }
+            futureResultList.add(CompletableFuture.supplyAsync(() ->
+                    controller.computeRadius(tempFigure.get(tempFigure.size()-2))));
+        }
+
+//        futureResultList.add(CompletableFuture.supplyAsync(() ->
+//                controller.computeRadius(tempFigure.get(1))));
+//        futureResultList.add(CompletableFuture.supplyAsync(() ->
+//                controller.computeRadius(tempFigure.get(tempFigure.size()-2))));
         futureResultList.add(CompletableFuture.supplyAsync(() ->
                 controller.figureVolume(tempFigure, (double) 1680/tempFigure.size())));
         futureResultList.add(CompletableFuture.supplyAsync(() ->
@@ -272,21 +300,22 @@ class ScannerVerticle extends AbstractVerticle {
 
         CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureResultArray);
 
-        CompletableFuture<List<Double>> finalResults = combinedFuture
+        CompletableFuture<List<double[]>> finalResults = combinedFuture
                 .thenApply(val ->
                         futureResultList.stream().map(CompletableFuture::join).collect(Collectors.toList()));
         finalResults.thenAccept(res -> {
-            double inputRad = (double) Math.round(res.get(0)*2.2*10)/10,
-                    outputRad = (double) Math.round(res.get(1)*2.2*10)/10,
-                    volume = (double) Math.round(res.get(2)*0.38/1000)/1000,
-                    usefulVolume = (double) Math.round(res.get(3)*0.48/1000)/1000;
-            System.out.println("SliceCount:" + tempFigure.size());
-            System.out.println("Input Diameter: " + inputRad);
-            System.out.println("Output Diameter: " + outputRad);
-            System.out.println("Figure Volume: " + volume);
-            System.out.println("Usefull Volume: " + usefulVolume);
-
-            woodParamsToDatabase(inputRad, outputRad, volume, usefulVolume, stringKey);
+            for (double[] val:res)
+                System.out.println(Arrays.toString(val));
+//            double inputRad = (double) Math.round(res.get(0)[0]*2.2*10)/10,
+//                    outputRad = (double) Math.round(res.get(1)[0]*2.2*10)/10,
+//                    volume = (double) Math.round(res.get(2)[0]*0.38/1000)/1000,
+//                    usefulVolume = (double) Math.round(res.get(3)[0]*0.48/1000)/1000;
+//            System.out.println("SliceCount:" + tempFigure.size());
+//            System.out.println("Input Diameter: " + inputRad);
+//            System.out.println("Output Diameter: " + outputRad);
+//            System.out.println("Figure Volume: " + volume);
+//            System.out.println("Usefull Volume: " + usefulVolume);
+//            woodParamsToDatabase(inputRad, outputRad, volume, usefulVolume, stringKey);
         });
     }
 
@@ -327,6 +356,10 @@ class ScannerVerticle extends AbstractVerticle {
             }else
                 System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
         });
+    }
+
+    Double computeRadius(){
+        return 62.0;
     }
 
 }

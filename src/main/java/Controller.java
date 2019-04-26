@@ -28,7 +28,7 @@ class Controller {
     ArrayList<ArrayList<double[][]>> matrixFigure = new ArrayList<>();
     ArrayList<double[][]> figure = new ArrayList<>();
     ArrayList<Double> intersect = new ArrayList<>();
-    ArrayList<double[][]> centres = new ArrayList<>();
+    private ArrayList<double[]> centres = new ArrayList<>();
 
     CopyOnWriteArrayList<double[][]> outData = new CopyOnWriteArrayList<>();
 
@@ -107,7 +107,7 @@ class Controller {
         return null;
     }
 
-    double computeRadius(double[][] sliceData) {
+    double[] computeRadius(double[][] sliceData) {
         ArrayList<Double> intersectDots = new ArrayList<>();
         ArrayList<Double> intersectRad = new ArrayList<>();
         long start = System.currentTimeMillis();
@@ -239,14 +239,13 @@ class Controller {
 //                    canvas.getHeight() - scale * (centreDot[1] + intersectRad.get(intersectRad.size() - 1)),
 //                    scale * 2 * intersectRad.get(intersectRad.size() - 1),
 //                    scale * 2 * intersectRad.get(intersectRad.size() - 1));
-        double[][] mass = {{centreDot[0]}, {centreDot[1]}};
-        centres.add(mass);
+        double[] mass = {centreDot[0], centreDot[1]};
 
         System.out.println("Time: " + (System.currentTimeMillis() - start) + " ms");
 //        System.out.println("Intersect Dots: " + intersectDots);
 //        System.out.println("Centre:" + Arrays.deepToString(centres.get(centres.size() - 1)));
 //        System.out.println("Radius: " + rads.get(rads.size()-1));
-        return Collections.max(intersectRad);
+        return new double[]{Collections.max(intersectRad), centreDot[0], centreDot[1]};
     }
 
     double[][] matrixToSlice(ArrayList<double[][]> matrix){
@@ -399,16 +398,16 @@ class Controller {
         return Math.abs(area / 2.0);
     }
 
-    double figureVolume(ArrayList<double[][]> figure, double step){
+    double[] figureVolume(ArrayList<double[][]> figure, double step){
         double volume = 0.0;
 
         for (double[][] slice:figure){
             volume += polygonArea(slice) * step;
         }
-        return (double) Math.round(volume);
+        return new double[]{(double) Math.round(volume)};
     }
 
-    double usefulVolume(ArrayList<double[][]> figure){
+    double[] usefulVolume(ArrayList<double[][]> figure){
 //        ArrayList<double[][]> tempMatrix = new ArrayList<>();
         ArrayList<double[][]> outMatrix = matrix(0.7, scannerWight, scannerHight, getPolygon(figure.get(0)));
         for (int i = 1; i < figure.size(); i++){
@@ -416,7 +415,7 @@ class Controller {
             outMatrix = matrixIntersection(outMatrix,
                     matrix(0.7, scannerWight, scannerHight, getPolygon(figure.get(i))));
         }
-        return (double) 1680*polygonArea(matrixToSlice(outMatrix));
+        return new double[] {(double) 1680*polygonArea(matrixToSlice(outMatrix))};
     }
 
     double maxDist(Polygon polygon, double x_centre, double y_centre){
