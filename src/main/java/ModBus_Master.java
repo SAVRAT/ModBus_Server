@@ -52,6 +52,12 @@ class ModBus_Master {
                 ReferenceCountUtil.release(response);
                 moduleOk(master);
             } else {
+                for (String[] device:writeData){
+                    if (device[0].equals(master.getConfig().getAddress())){
+                        int currentState = 0;
+                        dataBaseConnect.databaseReadOEE(device, currentState);
+                    }
+                }
                 System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
                 moduleError(master);
             }
@@ -81,6 +87,14 @@ class ModBus_Master {
                 ReferenceCountUtil.release(response);
                 moduleOk(master);
             }else {
+                boolean[] data = new boolean[20];
+                for (String[] device:writeData){
+                    if (device[0].equals(master.getConfig().getAddress())){
+                        int startId = Integer.valueOf(device[3])-1;
+                        int currentState = parse.deviceStateOven(data, startId);
+                        dataBaseConnect.databaseReadOEE(device, currentState);
+                    }
+                }
                 System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
                 moduleError(master);
             }

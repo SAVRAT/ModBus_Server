@@ -60,7 +60,7 @@ class Parsing {
         if (statusWord[startId]) {
             if (statusWord[startId + 2]) outStat = 2;
             else if (statusWord[startId + 1]) outStat = 1;
-            else outStat = 3;
+            else if (statusWord[startId]) outStat = 3;
         }
         return outStat;
     }
