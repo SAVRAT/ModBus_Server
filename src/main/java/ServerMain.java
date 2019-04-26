@@ -1,7 +1,8 @@
 import io.vertx.core.Vertx;
 
 class ServerMain {
-    ServerMain(Controller controller) {
+    public static void main(String[] args) {
+        Controller controller = new Controller();
         Vertx vertx = Vertx.vertx();
         String[] alAddress = {"192.168.49.239", "192.168.49.238"};
         DataBaseConnect dataBase = new DataBaseConnect("192.168.49.53", "java", "z1x2c3v4",

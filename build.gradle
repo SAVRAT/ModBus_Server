@@ -1,7 +1,6 @@
 plugins {
     id 'java'
     id 'application'
-    id 'org.openjfx.javafxplugin' version '0.0.7'
 }
 
 group '1'
@@ -35,7 +34,4 @@ dependencies {
     compile 'io.vertx:vertx-mysql-postgresql-client:3.6.3'
 }
 
-javafx {
-    modules = [ 'javafx.controls', 'javafx.fxml' ]
-}
-mainClassName = 'Main'
+mainClassName = 'ServerMain'
