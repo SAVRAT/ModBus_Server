@@ -12,8 +12,5 @@ class ServerMain {
         vertx.deployVerticle(new OEE(dataBase, modBusMaster));
         vertx.deployVerticle(new ScannerVerticle(alAddress, controller, dataBase));
 
-//        Test test = new Test();
-//        test.testing();
-
         }
 }
