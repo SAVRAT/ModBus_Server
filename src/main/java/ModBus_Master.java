@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 class ModBus_Master {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
     private DataBaseConnect dataBaseConnect;
     int[] buffer;
     int[] aiCount;
@@ -121,8 +120,7 @@ class ModBus_Master {
                 moduleOk(master);
             } else {
                 moduleError(master);
-                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
-                logger.error("Completed exceptionally, message={}", ex.getMessage(), ex);
+//                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
             }
             decBuffer(bufId);
             if (aiCount[bufId] == 0){
