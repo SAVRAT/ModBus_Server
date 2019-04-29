@@ -108,6 +108,7 @@ class Controller {
     }
 
     double[] computeRadius(double[][] sliceData) {
+        System.out.println("Enter to compute: " + Arrays.deepToString(sliceData));
         ArrayList<Double> intersectDots = new ArrayList<>();
         ArrayList<Double> intersectRad = new ArrayList<>();
         long start = System.currentTimeMillis();
@@ -234,6 +235,7 @@ class Controller {
                 }
             }
         }
+        System.out.println("Compute done: " + Arrays.deepToString(sliceData));
 //            drawDot(centreDot[0], centreDot[1], scale, canvas.getHeight(), gc, Color.YELLOWGREEN);
 //            gc.strokeOval(scale * (centreDot[0] - intersectRad.get(intersectRad.size() - 1)),
 //                    canvas.getHeight() - scale * (centreDot[1] + intersectRad.get(intersectRad.size() - 1)),
