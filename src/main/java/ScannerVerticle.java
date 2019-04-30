@@ -322,6 +322,22 @@ class ScannerVerticle extends AbstractVerticle {
                         circleCentres[i][1] = averageY;
                     }
                 }
+                averageX = 0;
+                averageY = 0;
+                for (int i = 0; i < 14; i++){
+                    averageX += circleCentres[i][0];
+                    averageY += circleCentres[i][1];
+                }
+                averageX = averageX / 14;
+                averageY = averageY / 14;
+                for (int i = 0; i < 14; i++){
+                    if (circleCentres[i][0] / averageX > 1.08 || circleCentres[i][0] / averageX < 0.92){
+                        circleCentres[i][0] = averageX;
+                    }
+                    if (circleCentres[i][1] / averageY > 1.08 || circleCentres[i][1] / averageY < 0.92){
+                        circleCentres[i][1] = averageY;
+                    }
+                }
                 for (int i = 0; i < 14; i++)
                     System.out.println(rads[i] + "  " + circleCentres[i][0] + "  " + circleCentres[i][1]);
                 dataBaseConnect.mySQLClient.getConnection(con -> {
