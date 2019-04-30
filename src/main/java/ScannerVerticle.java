@@ -262,9 +262,9 @@ class ScannerVerticle extends AbstractVerticle {
         final ArrayList<double[][]> tempFigure = new ArrayList<>(figure);
         ArrayList<CompletableFuture<double[]>> futureResultList = new ArrayList<>();
 
-        if (figure.size() >= 14){
+        if (figure.size() >= 16){
             futureResultList.add(CompletableFuture.supplyAsync(() -> controller.computeRadius(tempFigure.get(1))));
-            for (int i = 2; i < 12; i++){
+            for (int i = 2; i < 14; i++){
                 int index = i;
                 futureResultList.add(CompletableFuture.supplyAsync(() ->
                         controller.computeRadius(tempFigure.get(index))));
@@ -279,7 +279,7 @@ class ScannerVerticle extends AbstractVerticle {
                 futureResultList.add(CompletableFuture.supplyAsync(() ->
                         controller.computeRadius(tempFigure.get(index))));
             }
-            for (int i = 0; i < 14 - figure.size(); i++){
+            for (int i = 0; i < 16 - figure.size(); i++){
                 futureResultList.add(CompletableFuture.supplyAsync(() ->
                         controller.computeRadius(tempFigure.get(figure.size()-3))));
             }
@@ -310,7 +310,7 @@ class ScannerVerticle extends AbstractVerticle {
                         connection.query("TRUNCATE woodData_3;", result -> {
                             connection.close();
                             if (result.succeeded())
-                                for (int i = 0; i < 12; i++) {
+                                for (int i = 0; i < 14; i++) {
                                     JsonArray toDatabase = new JsonArray().add(i + 1)
                                             .add((double) Math.round(res.get(i)[1] * 10) / 10)
                                             .add((double) Math.round(res.get(i)[2] * 10) / 10)
