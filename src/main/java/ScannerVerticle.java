@@ -306,6 +306,22 @@ class ScannerVerticle extends AbstractVerticle {
             System.out.println("Futures done!");
             for (double[] val:res)
                 System.out.println(Arrays.toString(val));
+            dataBaseConnect.mySQLClient.getConnection(con -> {
+                if (con.succeeded()){
+                    SQLConnection connection = con.result();
+                    connection.query("TRUNCATE woodData_3;", result -> {
+                        connection.close();
+                        if (result.succeeded())
+                            for (int i = 0; i < 12; i++) {
+                                JsonArray toDatabase = new JsonArray().add(i).add(res.get(i)[1]).add(res.get(i)[2])
+                                        .add(res.get(i)[0]);
+                                dataBaseConnect.databaseWrite("INSERT INTO woodData_3 VALUES (?, ?, ?, ?)",
+                                        toDatabase);
+                            }
+                    });
+                }
+            });
+
 //            double inputRad = (double) Math.round(res.get(0)[0]*2.2*10)/10,
 //                    outputRad = (double) Math.round(res.get(1)[0]*2.2*10)/10,
 //                    volume = (double) Math.round(res.get(2)[0]*0.38/1000)/1000,
