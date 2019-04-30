@@ -261,6 +261,8 @@ class ScannerVerticle extends AbstractVerticle {
     private void compute (ArrayList<double[][]> figure){
         final ArrayList<double[][]> tempFigure = new ArrayList<>(figure);
         ArrayList<CompletableFuture<double[]>> futureResultList = new ArrayList<>();
+        double[] rads = new double[14];
+        double[][] circleCentres = new double[14][2];
 
         if (figure.size() >= 16){
             futureResultList.add(CompletableFuture.supplyAsync(() -> controller.computeRadius(tempFigure.get(1))));
@@ -302,8 +304,26 @@ class ScannerVerticle extends AbstractVerticle {
                             futureResultList.stream().map(CompletableFuture::join).collect(Collectors.toList()));
             finalResults.thenAccept(res -> {
                 System.out.println("Futures done!");
-                for (double[] val : res)
-                    System.out.println(Arrays.toString(val));
+                double averageX = 0, averageY = 0;
+                for (int i = 0; i < 14; i++){
+                    rads[i] = res.get(i)[0];
+                    circleCentres[i][0] = res.get(i)[1];
+                    circleCentres[i][1] = res.get(i)[2];
+                    averageX += circleCentres[i][0];
+                    averageY += circleCentres[i][1];
+                }
+                averageX = averageX / 14;
+                averageY = averageY / 14;
+                for (int i = 0; i < 14; i++){
+                    if (circleCentres[i][0] / averageX > 1.15 || circleCentres[i][0] / averageX < 0.85){
+                        circleCentres[i][0] = averageX;
+                    }
+                    if (circleCentres[i][1] / averageY > 1.15 || circleCentres[i][1] / averageY < 0.85){
+                        circleCentres[i][1] = averageY;
+                    }
+                }
+                for (int i = 0; i < 14; i++)
+                    System.out.println(rads[i] + "  " + circleCentres[i][0] + "  " + circleCentres[i][1]);
                 dataBaseConnect.mySQLClient.getConnection(con -> {
                     if (con.succeeded()) {
                         SQLConnection connection = con.result();
@@ -312,9 +332,9 @@ class ScannerVerticle extends AbstractVerticle {
                             if (result.succeeded())
                                 for (int i = 0; i < 14; i++) {
                                     JsonArray toDatabase = new JsonArray().add(i + 1)
-                                            .add((double) Math.round(res.get(i)[1] * 10) / 10)
-                                            .add((double) Math.round(res.get(i)[2] * 10) / 10)
-                                            .add((double) Math.round(res.get(i)[0] * 1.2 * 10) / 10);
+                                            .add((double) Math.round(circleCentres[i][0] * 10) / 10)
+                                            .add((double) Math.round(circleCentres[i][1] * 10) / 10)
+                                            .add((double) Math.round(rads[i] * 1.2 * 10) / 10);
                                     dataBaseConnect.databaseWrite("INSERT INTO woodData_3 VALUES (?, ?, ?, ?)",
                                             toDatabase);
                                 }
