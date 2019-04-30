@@ -287,54 +287,55 @@ class ScannerVerticle extends AbstractVerticle {
                     controller.computeRadius(tempFigure.get(tempFigure.size()-2))));
         }
 
-//        futureResultList.add(CompletableFuture.supplyAsync(() ->
-//                controller.computeRadius(tempFigure.get(1))));
-//        futureResultList.add(CompletableFuture.supplyAsync(() ->
-//                controller.computeRadius(tempFigure.get(tempFigure.size()-2))));
         futureResultList.add(CompletableFuture.supplyAsync(() ->
                 controller.figureVolume(tempFigure, (double) 1680/tempFigure.size())));
         futureResultList.add(CompletableFuture.supplyAsync(() ->
                 controller.usefulVolume(tempFigure)));
         CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[4]);
 
-        CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureResultArray);
+        CompletableFuture<Void> combinedFuture;
+        try {
+            combinedFuture = CompletableFuture.allOf(futureResultArray);
 
-        CompletableFuture<List<double[]>> finalResults = combinedFuture
-                .thenApply(val ->
-                        futureResultList.stream().map(CompletableFuture::join).collect(Collectors.toList()));
-        finalResults.thenAccept(res -> {
-            System.out.println("Futures done!");
-            for (double[] val:res)
-                System.out.println(Arrays.toString(val));
-            dataBaseConnect.mySQLClient.getConnection(con -> {
-                if (con.succeeded()){
-                    SQLConnection connection = con.result();
-                    connection.query("TRUNCATE woodData_3;", result -> {
-                        connection.close();
-                        if (result.succeeded())
-                            for (int i = 0; i < 12; i++) {
-                                JsonArray toDatabase = new JsonArray().add(i+1)
-                                        .add((double) Math.round(res.get(i)[1]*10)/10)
-                                        .add((double) Math.round(res.get(i)[2]*10)/10)
-                                        .add((double) Math.round(res.get(i)[0]*1.2*10)/10);
-                                dataBaseConnect.databaseWrite("INSERT INTO woodData_3 VALUES (?, ?, ?, ?)",
-                                        toDatabase);
-                            }
-                    });
-                }
-            });
+            CompletableFuture<List<double[]>> finalResults = combinedFuture
+                    .thenApply(val ->
+                            futureResultList.stream().map(CompletableFuture::join).collect(Collectors.toList()));
+            finalResults.thenAccept(res -> {
+                System.out.println("Futures done!");
+                for (double[] val : res)
+                    System.out.println(Arrays.toString(val));
+                dataBaseConnect.mySQLClient.getConnection(con -> {
+                    if (con.succeeded()) {
+                        SQLConnection connection = con.result();
+                        connection.query("TRUNCATE woodData_3;", result -> {
+                            connection.close();
+                            if (result.succeeded())
+                                for (int i = 0; i < 12; i++) {
+                                    JsonArray toDatabase = new JsonArray().add(i + 1)
+                                            .add((double) Math.round(res.get(i)[1] * 10) / 10)
+                                            .add((double) Math.round(res.get(i)[2] * 10) / 10)
+                                            .add((double) Math.round(res.get(i)[0] * 1.2 * 10) / 10);
+                                    dataBaseConnect.databaseWrite("INSERT INTO woodData_3 VALUES (?, ?, ?, ?)",
+                                            toDatabase);
+                                }
+                        });
+                    }
+                });
 
-//            double inputRad = (double) Math.round(res.get(0)[0]*2.2*10)/10,
-//                    outputRad = (double) Math.round(res.get(1)[0]*2.2*10)/10,
-//                    volume = (double) Math.round(res.get(2)[0]*0.38/1000)/1000,
-//                    usefulVolume = (double) Math.round(res.get(3)[0]*0.48/1000)/1000;
-//            System.out.println("SliceCount:" + tempFigure.size());
-//            System.out.println("Input Diameter: " + inputRad);
-//            System.out.println("Output Diameter: " + outputRad);
-//            System.out.println("Figure Volume: " + volume);
-//            System.out.println("Usefull Volume: " + usefulVolume);
+                double inputRad = (double) Math.round(res.get(0)[0] * 2.2 * 10) / 10,
+                        outputRad = (double) Math.round(res.get(res.size() - 3)[0] * 2.2 * 10) / 10,
+                        volume = (double) Math.round(res.get(res.size() - 2)[0] * 0.38 / 1000) / 1000,
+                        usefulVolume = (double) Math.round(res.get(res.size() - 1)[0] * 0.48 / 1000) / 1000;
+                System.out.println("SliceCount:" + tempFigure.size());
+                System.out.println("Input Diameter: " + inputRad);
+                System.out.println("Output Diameter: " + outputRad);
+                System.out.println("Figure Volume: " + volume);
+                System.out.println("Usefull Volume: " + usefulVolume);
 //            woodParamsToDatabase(inputRad, outputRad, volume, usefulVolume, stringKey);
-        });
+            });
+        } catch (NullPointerException e){
+            e.printStackTrace();
+        }
     }
 
     private void vibroIndication(){

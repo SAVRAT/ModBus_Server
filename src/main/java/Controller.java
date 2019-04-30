@@ -11,10 +11,7 @@ class Controller {
     private final double EPS = 0.4;
     boolean woodLog = false;
 
-    ArrayList<ArrayList<double[][]>> matrixFigure = new ArrayList<>();
     ArrayList<double[][]> figure = new ArrayList<>();
-    ArrayList<Double> intersect = new ArrayList<>();
-    private ArrayList<double[]> centres = new ArrayList<>();
 
     CopyOnWriteArrayList<double[][]> outData = new CopyOnWriteArrayList<>();
 
@@ -94,7 +91,6 @@ class Controller {
     }
 
     double[] computeRadius(double[][] sliceData) {
-//        System.out.println("Enter to compute: " + Arrays.deepToString(sliceData));
         ArrayList<Double> intersectDots = new ArrayList<>();
         ArrayList<Double> intersectRad = new ArrayList<>();
         long start = System.currentTimeMillis();
@@ -221,22 +217,13 @@ class Controller {
                 }
             }
         }
-//        System.out.println("Compute done: " + Arrays.deepToString(sliceData));
-//            drawDot(centreDot[0], centreDot[1], scale, canvas.getHeight(), gc, Color.YELLOWGREEN);
-//            gc.strokeOval(scale * (centreDot[0] - intersectRad.get(intersectRad.size() - 1)),
-//                    canvas.getHeight() - scale * (centreDot[1] + intersectRad.get(intersectRad.size() - 1)),
-//                    scale * 2 * intersectRad.get(intersectRad.size() - 1),
-//                    scale * 2 * intersectRad.get(intersectRad.size() - 1));
-        double[] mass = {centreDot[0], centreDot[1]};
+        // {centreDot[0], centreDot[1]} координаты X и Y центра вписанной окружности
 
         System.out.println("Time: " + (System.currentTimeMillis() - start) + " ms");
-//        System.out.println("Intersect Dots: " + intersectDots);
-//        System.out.println("Centre:" + Arrays.deepToString(centres.get(centres.size() - 1)));
-//        System.out.println("Radius: " + rads.get(rads.size()-1));
         return new double[]{Collections.max(intersectRad), centreDot[0], centreDot[1]};
     }
 
-    double[][] matrixToSlice(ArrayList<double[][]> matrix){
+    private double[][] matrixToSlice(ArrayList<double[][]> matrix){
         double step_y = 1, step_x = 1;
         ArrayList<double[][]> line = new ArrayList<>();
         double[][] out;
@@ -324,7 +311,7 @@ class Controller {
         return out;
     }
 
-    ArrayList<double[][]> matrixIntersection(ArrayList<double[][]> first, ArrayList<double[][]> second){
+    private ArrayList<double[][]> matrixIntersection(ArrayList<double[][]> first, ArrayList<double[][]> second){
         ArrayList<double[][]> out = new ArrayList<>();
         if (first.size() == second.size()) {
             for (int n = 0; n < first.size(); n++) {
@@ -345,7 +332,7 @@ class Controller {
         return out;
     }
 
-    ArrayList<double[][]> matrix(double step, int xSize, int ySize, Polygon fig){
+    private ArrayList<double[][]> matrix(double step, int xSize, int ySize, Polygon fig){
         ArrayList<double[][]> dotsMatrix = new ArrayList<>();
         int count = (int) Math.round(xSize/step);
         for (double y=0; y<ySize; y+=step) {
@@ -364,7 +351,7 @@ class Controller {
         return dotsMatrix;
     }
 
-    Polygon getPolygon(double[][] fig){
+    private Polygon getPolygon(double[][] fig){
         int[] x = new int[fig.length];
         int[] y = new int[fig.length];
         for (int i=0; i<fig.length; i++){
