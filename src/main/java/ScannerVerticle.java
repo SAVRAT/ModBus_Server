@@ -313,8 +313,10 @@ class ScannerVerticle extends AbstractVerticle {
                         connection.close();
                         if (result.succeeded())
                             for (int i = 0; i < 12; i++) {
-                                JsonArray toDatabase = new JsonArray().add(i).add(res.get(i)[1]).add(res.get(i)[2])
-                                        .add(res.get(i)[0]);
+                                JsonArray toDatabase = new JsonArray().add(i+1)
+                                        .add((double) Math.round(res.get(i)[1]*10)/10)
+                                        .add((double) Math.round(res.get(i)[2]*10)/10)
+                                        .add((double) Math.round(res.get(i)[0]*1.2*10)/10);
                                 dataBaseConnect.databaseWrite("INSERT INTO woodData_3 VALUES (?, ?, ?, ?)",
                                         toDatabase);
                             }
