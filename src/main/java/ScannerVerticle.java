@@ -304,13 +304,14 @@ class ScannerVerticle extends AbstractVerticle {
                             futureResultList.stream().map(CompletableFuture::join).collect(Collectors.toList()));
             finalResults.thenAccept(res -> {
                 System.out.println("Futures done!");
-                double averageX = 0, averageY = 0;
+                double averageX = 0, averageY = 0, averageR = 0;
                 for (int i = 0; i < 14; i++){
                     rads[i] = res.get(i)[0];
                     circleCentres[i][0] = res.get(i)[1];
                     circleCentres[i][1] = res.get(i)[2];
                     averageX += circleCentres[i][0];
                     averageY += circleCentres[i][1];
+                    averageR += rads[i];
                 }
                 averageX = averageX / 14;
                 averageY = averageY / 14;
@@ -320,6 +321,9 @@ class ScannerVerticle extends AbstractVerticle {
                     }
                     if (circleCentres[i][1] / averageY > 1.15 || circleCentres[i][1] / averageY < 0.85){
                         circleCentres[i][1] = averageY;
+                    }
+                    if (rads[i] / averageR > 1.15 || rads[i] / averageR < 0.85){
+                        rads[i] = averageR;
                     }
                 }
                 averageX = 0;
