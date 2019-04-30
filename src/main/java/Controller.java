@@ -6,20 +6,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 class Controller {
 
     private Geom geom = new Geom();
-
-    double[][] data = {{20,65}, {40,85}, {50,110}, {65,125}, {70,130}, {95,125}, {110,120}, {125,115}, {140,95},
-            {155,75}, {155,55}, {140,40}, {125,35}, {110,25}, {95,20}, {80,15}, {65,25}, {50,30}, {35,35}, {20,40}};
-    double[][] data1 = {{30,70}, {40,90}, {60,95}, {65,125}, {70,140}, {100,130}, {120,120}, {140,105}, {160,100},
-            {170,80}, {170,70}, {160,45}, {140,25}, {120,10}, {100,10}, {60,25}, {50,30}, {45,40}, {40,50}, {30,55}};
-    double[][] data2 = {{60,20}, {40,40}, {50,60}, {70,80}, {110,80}, {124,60}, {124,40}, {90,20}};
-    double[][] data3 = {{25,8.5}, {15,14.2}, {10,20}, {7,25.7}, {11,33.8}, {15,42}, {32,51.7}, {34.6,50}, {46.3,53},
-            {51,51.1}, {57,42.7}, {60,34.6}, {63,26}, {55,20.4}, {50,14.7}, {46,9.2}, {25, 8.5}};
-    double[][] data4 = {{30,70}, {40,90}, {60,95}, {65,125}, {70,140}, {100,130}, {120,120}, {140,105}, {160,100},
-            {170,80}, {170,70}, {160,45}, {140,25}, {120,10}, {100,10}, {60,25}, {50,30}, {45,40}, {40,50}, {30,55}};
-
-    double[][] forMatrix = {{13,35}, {16,45}, {23,47}, {34,45}, {40,37}, {38,30}, {36,20}, {30,19}, {17,19}, {15,25}};
-
-
     private final double[] sensorMatrix = {6.5, 12.5, 19, 25.5, 33.5, 44, 50, 48, 62, 50, 45.9, 32.5, 25, 18.5, 12, 6.5};
     final int scannerHight = 82, scannerWight = 116, maxLength = 60, maxHight = 65;
     private final double EPS = 0.4;
@@ -108,7 +94,7 @@ class Controller {
     }
 
     double[] computeRadius(double[][] sliceData) {
-        System.out.println("Enter to compute: " + Arrays.deepToString(sliceData));
+//        System.out.println("Enter to compute: " + Arrays.deepToString(sliceData));
         ArrayList<Double> intersectDots = new ArrayList<>();
         ArrayList<Double> intersectRad = new ArrayList<>();
         long start = System.currentTimeMillis();
@@ -235,7 +221,7 @@ class Controller {
                 }
             }
         }
-        System.out.println("Compute done: " + Arrays.deepToString(sliceData));
+//        System.out.println("Compute done: " + Arrays.deepToString(sliceData));
 //            drawDot(centreDot[0], centreDot[1], scale, canvas.getHeight(), gc, Color.YELLOWGREEN);
 //            gc.strokeOval(scale * (centreDot[0] - intersectRad.get(intersectRad.size() - 1)),
 //                    canvas.getHeight() - scale * (centreDot[1] + intersectRad.get(intersectRad.size() - 1)),

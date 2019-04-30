@@ -120,3 +120,12 @@ INSERT INTO vibroIndication VALUES (false, false, true, false, false, true, fals
                                     false, false, true);
 
 SELECT * FROM err_message;
+
+CREATE TABLE woodData_3 (
+    id INT,
+    xCentre REAL,
+    yCentre REAL,
+    radius REAL,
+    PRIMARY KEY(id)
+);
+DROP TABLE woodData_3;

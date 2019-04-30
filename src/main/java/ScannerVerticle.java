@@ -303,6 +303,7 @@ class ScannerVerticle extends AbstractVerticle {
                 .thenApply(val ->
                         futureResultList.stream().map(CompletableFuture::join).collect(Collectors.toList()));
         finalResults.thenAccept(res -> {
+            System.out.println("Futures done!");
             for (double[] val:res)
                 System.out.println(Arrays.toString(val));
 //            double inputRad = (double) Math.round(res.get(0)[0]*2.2*10)/10,

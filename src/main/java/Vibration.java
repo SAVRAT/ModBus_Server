@@ -5,6 +5,7 @@ import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.SQLConnection;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 class Vibration extends AbstractVerticle {
 
@@ -30,7 +31,7 @@ class Vibration extends AbstractVerticle {
 
     private long timerID;
     @SuppressWarnings("Duplicates")
-    private void handle(ArrayList<String[]> data){
+    private void handle(ArrayList<String[]> data) throws IndexOutOfBoundsException{
         first = false;
         if (!third) {
             previous = data;
@@ -65,19 +66,20 @@ class Vibration extends AbstractVerticle {
             for (int i=0; i<ipAddr.size(); i++){
                 int lamI = i;
                 new Thread(ovenAI, () -> {
+                    ArrayList<String[]> tempForWrite = forWrite.get(lamI);
                     ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(ipAddr.get(lamI)).setPort(502).build();
                     ModbusTcpMaster master = new ModbusTcpMaster(config);
                     modBusMaster.buffer[lamI] = 0;
-                    modBusMaster.aiCount[lamI] = forWrite.get(lamI).size();
+                    modBusMaster.aiCount[lamI] = tempForWrite.size();
                     int count = 0, num = 0;
 
-                    while (count < forWrite.get(lamI).size()){
+                    while (count < tempForWrite.size()){
                         System.out.print("");
                         if (modBusMaster.buffer[lamI] < 1) {
                             count++;
                             modBusMaster.buffer[lamI]++;
-                            modBusMaster.sendAndReceive_OBEH_AI(master, forWrite.get(lamI).get(num)[2],
-                                    forWrite.get(lamI).get(num)[1], lamI);
+                            modBusMaster.sendAndReceive_OBEH_AI(master, tempForWrite.get(num)[2],
+                                    tempForWrite.get(num)[1], lamI);
                             num++;
                         }
                     }
