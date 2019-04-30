@@ -315,6 +315,7 @@ class ScannerVerticle extends AbstractVerticle {
                 }
                 averageX = averageX / 14;
                 averageY = averageY / 14;
+                averageR = averageR / 14;
                 for (int i = 0; i < 14; i++){
                     if (circleCentres[i][0] / averageX > 1.15 || circleCentres[i][0] / averageX < 0.85){
                         circleCentres[i][0] = averageX;
