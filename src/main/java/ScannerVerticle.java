@@ -16,7 +16,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -186,7 +185,7 @@ class ScannerVerticle extends AbstractVerticle {
         });
         controller.outData.add(tempVal);
         if (controller.woodLog && processWood) {
-            writeCounter++;
+//            writeCounter++;
             controller.figure.add(tempVal);
 //            for (double[][] val:controller.figure)
 //                System.out.println(Arrays.deepToString(val));
@@ -195,29 +194,29 @@ class ScannerVerticle extends AbstractVerticle {
 //                System.out.println("String key: " + stringKey);
             }
             check = true;
-            if (writeCounter > 1) {
-                woodDataToDatabase(tempVal, stringKey);
-            }
+//            if (writeCounter > 1) {
+//                woodDataToDatabase(tempVal, stringKey);
+//            }
         } else {
             if (check && processWood) {
-                writeCounter = 0;
+//                writeCounter = 0;
                 compute(controller.figure);
                 controller.figure.clear();
-                dataBaseConnect.mySQLClient.getConnection(con -> {
-                    if (con.succeeded()){
-                        SQLConnection connection = con.result();
-                        connection.query("truncate table woodData_2;", res -> {
-                            if (res.succeeded()){
-                                connection.query("INSERT INTO woodData_2 SELECT * FROM woodData;", res2 -> {
-                                    if (res2.succeeded()){
-                                        dataBaseConnect.databaseQuery("woodData");
-                                    } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
-                                    connection.close();
-                                });
-                            } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
-                        });
-                    } else System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
-                });
+//                dataBaseConnect.mySQLClient.getConnection(con -> {
+//                    if (con.succeeded()){
+//                        SQLConnection connection = con.result();
+//                        connection.query("truncate table woodData_2;", res -> {
+//                            if (res.succeeded()){
+//                                connection.query("INSERT INTO woodData_2 SELECT * FROM woodData;", res2 -> {
+//                                    if (res2.succeeded()){
+//                                        dataBaseConnect.databaseQuery("woodData");
+//                                    } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
+//                                    connection.close();
+//                                });
+//                            } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
+//                        });
+//                    } else System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
+//                });
                 check = false;
             }
         }
