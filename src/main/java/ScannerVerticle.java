@@ -268,26 +268,30 @@ class ScannerVerticle extends AbstractVerticle {
                     rads[i] = res.get(i)[0];
                     circleCentres[i][0] = res.get(i)[1];
                     circleCentres[i][1] = res.get(i)[2];
-                    averageX += circleCentres[i][0];
-                    averageY += circleCentres[i][1];
-                    averageR += rads[i];
                 }
-                averageX = averageX / 14;
-                averageY = averageY / 14;
-                averageR = averageR / 14;
-                for (int i = 0; i < 14; i++) {
-                    if (circleCentres[i][0] / averageX > 1.15 || circleCentres[i][0] / averageX < 0.85) {
-                        circleCentres[i][0] = averageX;
+                for (int n = 0; n < 2; n++) {
+                    for (int i = 0; i < 14; i++) {
+                        averageX += circleCentres[i][0];
+                        averageY += circleCentres[i][1];
+                        averageR += rads[i];
                     }
-                    if (circleCentres[i][1] / averageY > 1.15 || circleCentres[i][1] / averageY < 0.85) {
-                        circleCentres[i][1] = averageY;
+                    averageX = averageX / 14;
+                    averageY = averageY / 14;
+                    averageR = averageR / 14;
+                    for (int i = 0; i < 14; i++) {
+                        if (circleCentres[i][0] / averageX > 1.15 || circleCentres[i][0] / averageX < 0.85) {
+                            circleCentres[i][0] = averageX;
+                        }
+                        if (circleCentres[i][1] / averageY > 1.15 || circleCentres[i][1] / averageY < 0.85) {
+                            circleCentres[i][1] = averageY;
+                        }
+                        if (rads[i] / averageR > 1.15 || rads[i] / averageR < 0.85) {
+                            rads[i] = averageR;
+                        }
                     }
-                    if (rads[i] / averageR > 1.15 || rads[i] / averageR < 0.85) {
-                        rads[i] = averageR;
-                    }
+                    averageX = 0;
+                    averageY = 0;
                 }
-                averageX = 0;
-                averageY = 0;
                 for (int i = 0; i < 14; i++) {
                     averageX += circleCentres[i][0];
                     averageY += circleCentres[i][1];
@@ -328,7 +332,6 @@ class ScannerVerticle extends AbstractVerticle {
                         volume = (double) Math.round(res.get(res.size() - 2)[0] * 0.38 / 1000) / 1000,
                         usefulVolume = (double) Math.round(res.get(res.size() - 1)[0] * 0.48 / 1000) / 1000,
                         curvature = res.get(res.size()-1)[1];
-                System.out.println("SliceCount:" + tempFigure.size());
                 System.out.println("Input Diameter: " + inputRad);
                 System.out.println("Output Diameter: " + outputRad);
                 System.out.println("Figure Volume: " + volume);
