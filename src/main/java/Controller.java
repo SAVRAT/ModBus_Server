@@ -398,7 +398,7 @@ class Controller {
                 maxDist = tempDist;
         }
 
-        return new double[] {(double) 1680*polygonArea(usefulSlice), (double) 1680 / (maxDist - sliceCircle[0])};
+        return new double[] {(double) 1680*polygonArea(usefulSlice), (maxDist - sliceCircle[0]) / 1680};
     }
 
     private double maxDist(Polygon polygon, double x_centre, double y_centre){
