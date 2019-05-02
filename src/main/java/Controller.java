@@ -382,15 +382,23 @@ class Controller {
         return new double[]{(double) Math.round(volume)};
     }
 
-    double[] usefulVolume(ArrayList<double[][]> figure){
-//        ArrayList<double[][]> tempMatrix = new ArrayList<>();
+    double[] usefulVolume(ArrayList<double[][]> figure){                                                                // вычисление полезного объёма и кривизны
         ArrayList<double[][]> outMatrix = matrix(0.7, scannerWight, scannerHight, getPolygon(figure.get(0)));
         for (int i = 1; i < figure.size(); i++){
-//            Polygon polygonFig = getPolygon(figure.get(i));
             outMatrix = matrixIntersection(outMatrix,
                     matrix(0.7, scannerWight, scannerHight, getPolygon(figure.get(i))));
         }
-        return new double[] {(double) 1680*polygonArea(matrixToSlice(outMatrix))};
+
+        double[][] usefulSlice = matrixToSlice(outMatrix);
+        double[] sliceCircle = computeRadius(usefulSlice);
+        double maxDist = 0, tempDist;
+        for (double[][] val:figure){
+            tempDist = maxDist(getPolygon(val), sliceCircle[1], sliceCircle[2]);
+            if (maxDist < tempDist)
+                maxDist = tempDist;
+        }
+
+        return new double[] {(double) 1680*polygonArea(usefulSlice), (double) 1680 / (maxDist - sliceCircle[0])};
     }
 
     double maxDist(Polygon polygon, double x_centre, double y_centre){

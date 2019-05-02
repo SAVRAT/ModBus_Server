@@ -170,7 +170,6 @@ class ScannerVerticle extends AbstractVerticle {
         Collections.reverse(tempData.get(1));
         tempAll.addAll(tempData.get(0));
         tempAll.addAll(tempData.get(1));
-//        System.out.println("Handle...");
         double[][] tempVal = controller.doSlice(tempAll);
         future_1.whenComplete((res, ex) -> {
             if (res!=null){
@@ -179,49 +178,20 @@ class ScannerVerticle extends AbstractVerticle {
                         res.getRegisters().getUnsignedByte(10),
                         res.getRegisters().getUnsignedByte(11)});
                 conveyorCheck(output);
-//                System.out.println("Position: " + output);
             } else
                 System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
         });
         controller.outData.add(tempVal);
         if (controller.woodLog && processWood) {
-//            writeCounter++;
             controller.figure.add(tempVal);
-//            for (double[][] val:controller.figure)
-//                System.out.println(Arrays.deepToString(val));
-            if (!check){
-                stringKey = randomString.getRandomString(10);
-//                System.out.println("String key: " + stringKey);
-            }
             check = true;
-//            if (writeCounter > 1) {
-//                woodDataToDatabase(tempVal, stringKey);
-//            }
         } else {
             if (check && processWood) {
-//                writeCounter = 0;
                 compute(controller.figure);
                 controller.figure.clear();
-//                dataBaseConnect.mySQLClient.getConnection(con -> {
-//                    if (con.succeeded()){
-//                        SQLConnection connection = con.result();
-//                        connection.query("truncate table woodData_2;", res -> {
-//                            if (res.succeeded()){
-//                                connection.query("INSERT INTO woodData_2 SELECT * FROM woodData;", res2 -> {
-//                                    if (res2.succeeded()){
-//                                        dataBaseConnect.databaseQuery("woodData");
-//                                    } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
-//                                    connection.close();
-//                                });
-//                            } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
-//                        });
-//                    } else System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
-//                });
                 check = false;
             }
         }
-//        System.out.println(jsonArray);
-//        System.out.println("Data: " + tempAll);
     }
 
     private void conveyorCheck(int currentPosition){
@@ -233,19 +203,6 @@ class ScannerVerticle extends AbstractVerticle {
             processWood = false;
 //            System.out.println("Conveyor stop");
         }
-    }
-
-    private void woodDataToDatabase(double[][] data, String key){
-        System.out.println("String key: " + key);
-        StringBuilder x_str = new StringBuilder();
-        StringBuilder y_str = new StringBuilder();
-        for (double[] datum : data) {
-            x_str.append(datum[0]).append(",");
-            y_str.append(datum[1]).append(",");
-        }
-        JsonArray dataArray = new JsonArray().add(x_str).add(y_str).add(key);
-        dataBaseConnect.databaseWrite("INSERT INTO woodData (xData, yData, stringKey) " +
-                "VALUE (?, ?, ?);", dataArray);
     }
 
     private void woodParamsToDatabase(double inputRad, double outputRad,
@@ -368,12 +325,14 @@ class ScannerVerticle extends AbstractVerticle {
                 double inputRad = (double) Math.round(res.get(0)[0] * 2.2 * 10) / 10,
                         outputRad = (double) Math.round(res.get(res.size() - 3)[0] * 2.2 * 10) / 10,
                         volume = (double) Math.round(res.get(res.size() - 2)[0] * 0.38 / 1000) / 1000,
-                        usefulVolume = (double) Math.round(res.get(res.size() - 1)[0] * 0.48 / 1000) / 1000;
+                        usefulVolume = (double) Math.round(res.get(res.size() - 1)[0] * 0.48 / 1000) / 1000,
+                        curvature = res.get(res.size()-1)[1];
                 System.out.println("SliceCount:" + tempFigure.size());
                 System.out.println("Input Diameter: " + inputRad);
                 System.out.println("Output Diameter: " + outputRad);
                 System.out.println("Figure Volume: " + volume);
                 System.out.println("Usefull Volume: " + usefulVolume);
+                System.out.println("Curvature: " + curvature);
                 woodParamsToDatabase(inputRad, outputRad, volume, usefulVolume, stringKey);
             });
         }
@@ -386,7 +345,6 @@ class ScannerVerticle extends AbstractVerticle {
                 connection.query("SELECT * FROM vibroIndication;", res -> {
                     if (res.succeeded()) {
                         JsonArray result = res.result().getResults().get(0);
-//                        System.out.println("dataBase: " + result);
                         byte[] byteArray = new byte[4];
                         for (int i = 0; i < 27; i++) {
                             if (result.getInteger(i).equals(1)) {
@@ -405,9 +363,6 @@ class ScannerVerticle extends AbstractVerticle {
                         future_2.whenComplete((res_1, ex_1) -> {
                             if (res_1 == null)
                                 System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex_1.getMessage());
-//                            else
-//                                System.out.println("Done! " + Arrays.toString(byteArray));
-//                            master_2.disconnect();
                         });
                     } else
                         System.out.println("\u001B[33m" + "Write Query ERROR" + "\u001B[0m" + " " + res.cause());
