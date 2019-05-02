@@ -31,7 +31,6 @@ class ScannerVerticle extends AbstractVerticle {
     private int oldPosition = 0;
     private int[] partCounter = new int[2];
     private boolean check = false, processWood = false;
-    private String stringKey = "";
     private ArrayList<ArrayList<Integer>> tempData;
     private ModbusTcpMasterConfig config_1 = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5000)
             .build();
@@ -208,11 +207,11 @@ class ScannerVerticle extends AbstractVerticle {
     }
 
     private void woodParamsToDatabase(double inputRad, double outputRad,
-                                      double volume, double usefullVolume, String stringKey){
+                                      double volume, double usefullVolume, double curvature){
         double avgRad = (inputRad + outputRad) / 2;
-        JsonArray dataArray = new JsonArray().add(stringKey).add(inputRad).add(outputRad)
+        JsonArray dataArray = new JsonArray().add(curvature).add(inputRad).add(outputRad)
                 .add(avgRad).add(volume).add(usefullVolume);
-        dataBaseConnect.databaseWrite("INSERT INTO woodParams (stringKey, inputRad," +
+        dataBaseConnect.databaseWrite("INSERT INTO woodParams (curvature, inputRad," +
                 " outputRad, avrRad, volume, usefulVolume, timeStamp) " +
                 "VALUES (?, ?, ?, ?, ?, ?, UNIX_TIMESTAMP());", dataArray);
     }
@@ -335,7 +334,7 @@ class ScannerVerticle extends AbstractVerticle {
                 System.out.println("Figure Volume: " + volume);
                 System.out.println("Usefull Volume: " + usefulVolume);
                 System.out.println("Curvature: " + curvature);
-                woodParamsToDatabase(inputRad, outputRad, volume, usefulVolume, stringKey);
+                woodParamsToDatabase(inputRad, outputRad, volume, usefulVolume, curvature);
             });
         }
     }
