@@ -5,8 +5,6 @@ import com.digitalpetri.modbus.responses.ReadHoldingRegistersResponse;
 import io.netty.buffer.ByteBuf;
 import io.netty.util.ReferenceCountUtil;
 import io.vertx.core.json.JsonArray;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
@@ -57,7 +55,7 @@ class ModBus_Master {
                         dataBaseConnect.databaseReadOEE(device, currentState);
                     }
                 }
-                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
+                System.out.println("\u001B[41m" + "PLC ERROR" + "\u001B[0m" + " " + ex.getMessage());
                 moduleError(master);
             }
             master.disconnect();
@@ -94,7 +92,7 @@ class ModBus_Master {
                         dataBaseConnect.databaseReadOEE(device, currentState);
                     }
                 }
-                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
+                System.out.println("\u001B[41m" + "DI ERROR" + "\u001B[0m" + " " + ex.getMessage());
                 moduleError(master);
             }
             master.disconnect();
