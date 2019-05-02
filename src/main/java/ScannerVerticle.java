@@ -40,7 +40,7 @@ class ScannerVerticle extends AbstractVerticle {
     private ModbusTcpMaster master_2 = new ModbusTcpMaster(config_2);
     private CompletableFuture<ReadHoldingRegistersResponse> future_1;
     private CompletableFuture<WriteMultipleRegistersResponse> future_2;
-    private ExecutorService executor = Executors.newFixedThreadPool(18);
+//    private ExecutorService executor = Executors.newFixedThreadPool(16);
 
     ScannerVerticle(String[] host, Controller controller, DataBaseConnect dataBaseConnect) {
         this.host = host;
@@ -188,6 +188,7 @@ class ScannerVerticle extends AbstractVerticle {
             check = true;
         } else {
             if (check && processWood) {
+                System.out.println("+++++++Compute wood!+++++++");
                 compute(controller.figure);
                 controller.figure.clear();
                 check = false;
@@ -217,46 +218,45 @@ class ScannerVerticle extends AbstractVerticle {
     }
 
     private void compute (ArrayList<double[][]> figure){
+        System.out.println("Start computing...");
         final ArrayList<double[][]> tempFigure = new ArrayList<>(figure);
         ArrayList<CompletableFuture<double[]>> futureResultList = new ArrayList<>();
         double[] rads = new double[14];
         double[][] circleCentres = new double[14][2];
 
         if (tempFigure.size() >= 16){
-            futureResultList.add(CompletableFuture.supplyAsync(() -> controller.computeRadius(tempFigure.get(1)),
-                    executor));
+            futureResultList.add(CompletableFuture.supplyAsync(() -> controller.computeRadius(tempFigure.get(1))));
             for (int i = 2; i < 14; i++){
                 int index = i;
                 futureResultList.add(CompletableFuture.supplyAsync(() ->
-                        controller.computeRadius(tempFigure.get(index)), executor));
+                        controller.computeRadius(tempFigure.get(index))));
             }
             futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.computeRadius(tempFigure.get(tempFigure.size()-2)), executor));
+                    controller.computeRadius(tempFigure.get(tempFigure.size()-2))));
         }else if (tempFigure.size() >= 5){
             futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.computeRadius(tempFigure.get(1)), executor));
+                    controller.computeRadius(tempFigure.get(1))));
             for (int i = 2; i < tempFigure.size()-2; i++){
                 int index = i;
                 futureResultList.add(CompletableFuture.supplyAsync(() ->
-                        controller.computeRadius(tempFigure.get(index)), executor));
+                        controller.computeRadius(tempFigure.get(index))));
             }
             for (int i = 0; i < 16 - tempFigure.size(); i++){
                 futureResultList.add(CompletableFuture.supplyAsync(() ->
-                        controller.computeRadius(tempFigure.get(tempFigure.size()-3)), executor));
+                        controller.computeRadius(tempFigure.get(tempFigure.size()-3))));
             }
             futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.computeRadius(tempFigure.get(tempFigure.size()-2)), executor));
+                    controller.computeRadius(tempFigure.get(tempFigure.size()-2))));
         }
         if (tempFigure.size() >= 5) {
             futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.figureVolume(tempFigure, (double) 1680 / tempFigure.size()), executor));
+                    controller.figureVolume(tempFigure, (double) 1680 / tempFigure.size())));
             futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.usefulVolume(tempFigure), executor));
+                    controller.usefulVolume(tempFigure)));
             CompletableFuture[] futureResultArray = futureResultList.toArray(
                     new CompletableFuture[futureResultList.size()]);
 
-            CompletableFuture<Void> combinedFuture;
-            combinedFuture = CompletableFuture.allOf(futureResultArray);
+            CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureResultArray);
 
             CompletableFuture<List<double[]>> finalResults = combinedFuture
                     .thenApply(val ->
@@ -269,7 +269,7 @@ class ScannerVerticle extends AbstractVerticle {
                     circleCentres[i][0] = res.get(i)[1];
                     circleCentres[i][1] = res.get(i)[2];
                 }
-                for (int n = 0; n < 3; n++) {
+                for (int n = 0; n < 2; n++) {
                     for (int i = 0; i < 14; i++) {
                         averageX += circleCentres[i][0];
                         averageY += circleCentres[i][1];
@@ -299,10 +299,10 @@ class ScannerVerticle extends AbstractVerticle {
                 averageX = averageX / 14;
                 averageY = averageY / 14;
                 for (int i = 0; i < 14; i++) {
-                    if (circleCentres[i][0] / averageX > 1.15 || circleCentres[i][0] / averageX < 0.85) {
+                    if (circleCentres[i][0] / averageX > 1.03 || circleCentres[i][0] / averageX < 0.97) {
                         circleCentres[i][0] = averageX;
                     }
-                    if (circleCentres[i][1] / averageY > 1.15 || circleCentres[i][1] / averageY < 0.85) {
+                    if (circleCentres[i][1] / averageY > 1.03 || circleCentres[i][1] / averageY < 0.97) {
                         circleCentres[i][1] = averageY;
                     }
                 }
@@ -327,8 +327,9 @@ class ScannerVerticle extends AbstractVerticle {
                     }
                 });
 
-                double inputRad = (double) Math.round(res.get(0)[0] * 2.2 * 10) / 10,
-                        outputRad = (double) Math.round(res.get(res.size() - 3)[0] * 2.2 * 10) / 10,
+//                double inputRad = (double) Math.round(res.get(0)[0] * 2.2 * 10) / 10,
+//                        outputRad = (double) Math.round(res.get(res.size() - 3)[0] * 2.2 * 10) / 10,
+                double inputRad = rads[0] * 2.2, outputRad = rads[13] * 2.2,
                         volume = (double) Math.round(res.get(res.size() - 2)[0] * 0.38 / 1000) / 1000,
                         usefulVolume = (double) Math.round(res.get(res.size() - 1)[0] * 0.48 / 1000) / 1000,
                         curvature = res.get(res.size()-1)[1];

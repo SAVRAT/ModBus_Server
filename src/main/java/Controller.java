@@ -93,7 +93,7 @@ class Controller {
     double[] computeRadius(double[][] sliceData) {
         ArrayList<Double> intersectDots = new ArrayList<>();
         ArrayList<Double> intersectRad = new ArrayList<>();
-        long start = System.currentTimeMillis();
+//        long start = System.currentTimeMillis();
         double radius = 5, step_r = 0.4, step_v = 0.3, count;
         Formul[] formulData = new Formul[sliceData.length];
         geom.lineKoef(formulData, sliceData);
@@ -219,7 +219,7 @@ class Controller {
         }
         // {centreDot[0], centreDot[1]} координаты X и Y центра вписанной окружности
 
-        System.out.println("Time: " + (System.currentTimeMillis() - start) + " ms");
+//        System.out.println("Time: " + (System.currentTimeMillis() - start) + " ms");
         return new double[]{Collections.max(intersectRad), centreDot[0], centreDot[1]};
     }
 
@@ -398,7 +398,8 @@ class Controller {
                 maxDist = tempDist;
         }
 
-        return new double[] {(double) 1680*polygonArea(usefulSlice), (maxDist - sliceCircle[0]) / 1680};
+        return new double[] {(double) 1680*polygonArea(usefulSlice),
+                (double) Math.round((maxDist - sliceCircle[0]) / 1.680) / 1000};
     }
 
     private double maxDist(Polygon polygon, double x_centre, double y_centre){
