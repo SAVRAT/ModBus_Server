@@ -16,6 +16,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -39,6 +40,7 @@ class ScannerVerticle extends AbstractVerticle {
     private ModbusTcpMaster master_2 = new ModbusTcpMaster(config_2);
     private CompletableFuture<ReadHoldingRegistersResponse> future_1;
     private CompletableFuture<WriteMultipleRegistersResponse> future_2;
+    private ExecutorService executor = Executors.newFixedThreadPool(18);
 
     ScannerVerticle(String[] host, Controller controller, DataBaseConnect dataBaseConnect) {
         this.host = host;
@@ -201,7 +203,6 @@ class ScannerVerticle extends AbstractVerticle {
                 writeCounter = 0;
                 compute(controller.figure);
                 controller.figure.clear();
-                System.out.println("==================================================");
                 dataBaseConnect.mySQLClient.getConnection(con -> {
                     if (con.succeeded()){
                         SQLConnection connection = con.result();
@@ -264,39 +265,40 @@ class ScannerVerticle extends AbstractVerticle {
         double[] rads = new double[14];
         double[][] circleCentres = new double[14][2];
 
-        if (figure.size() >= 16){
-            futureResultList.add(CompletableFuture.supplyAsync(() -> controller.computeRadius(tempFigure.get(1))));
+        if (tempFigure.size() >= 16){
+            futureResultList.add(CompletableFuture.supplyAsync(() -> controller.computeRadius(tempFigure.get(1)),
+                    executor));
             for (int i = 2; i < 14; i++){
                 int index = i;
                 futureResultList.add(CompletableFuture.supplyAsync(() ->
-                        controller.computeRadius(tempFigure.get(index))));
+                        controller.computeRadius(tempFigure.get(index)), executor));
             }
             futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.computeRadius(tempFigure.get(tempFigure.size()-2))));
-        }else if (figure.size() >= 5){
+                    controller.computeRadius(tempFigure.get(tempFigure.size()-2)), executor));
+        }else if (tempFigure.size() >= 5){
             futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.computeRadius(tempFigure.get(1))));
-            for (int i = 2; i < figure.size()-2; i++){
+                    controller.computeRadius(tempFigure.get(1)), executor));
+            for (int i = 2; i < tempFigure.size()-2; i++){
                 int index = i;
                 futureResultList.add(CompletableFuture.supplyAsync(() ->
-                        controller.computeRadius(tempFigure.get(index))));
+                        controller.computeRadius(tempFigure.get(index)), executor));
             }
-            for (int i = 0; i < 16 - figure.size(); i++){
+            for (int i = 0; i < 16 - tempFigure.size(); i++){
                 futureResultList.add(CompletableFuture.supplyAsync(() ->
-                        controller.computeRadius(tempFigure.get(figure.size()-3))));
+                        controller.computeRadius(tempFigure.get(tempFigure.size()-3)), executor));
             }
             futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.computeRadius(tempFigure.get(tempFigure.size()-2))));
+                    controller.computeRadius(tempFigure.get(tempFigure.size()-2)), executor));
         }
+        if (tempFigure.size() >= 5) {
+            futureResultList.add(CompletableFuture.supplyAsync(() ->
+                    controller.figureVolume(tempFigure, (double) 1680 / tempFigure.size()), executor));
+            futureResultList.add(CompletableFuture.supplyAsync(() ->
+                    controller.usefulVolume(tempFigure), executor));
+            CompletableFuture[] futureResultArray = futureResultList.toArray(
+                    new CompletableFuture[futureResultList.size()]);
 
-        futureResultList.add(CompletableFuture.supplyAsync(() ->
-                controller.figureVolume(tempFigure, (double) 1680/tempFigure.size())));
-        futureResultList.add(CompletableFuture.supplyAsync(() ->
-                controller.usefulVolume(tempFigure)));
-        CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[4]);
-
-        CompletableFuture<Void> combinedFuture;
-        try {
+            CompletableFuture<Void> combinedFuture;
             combinedFuture = CompletableFuture.allOf(futureResultArray);
 
             CompletableFuture<List<double[]>> finalResults = combinedFuture
@@ -305,7 +307,7 @@ class ScannerVerticle extends AbstractVerticle {
             finalResults.thenAccept(res -> {
                 System.out.println("Futures done!");
                 double averageX = 0, averageY = 0, averageR = 0;
-                for (int i = 0; i < 14; i++){
+                for (int i = 0; i < 14; i++) {
                     rads[i] = res.get(i)[0];
                     circleCentres[i][0] = res.get(i)[1];
                     circleCentres[i][1] = res.get(i)[2];
@@ -316,33 +318,34 @@ class ScannerVerticle extends AbstractVerticle {
                 averageX = averageX / 14;
                 averageY = averageY / 14;
                 averageR = averageR / 14;
-                for (int i = 0; i < 14; i++){
-                    if (circleCentres[i][0] / averageX > 1.15 || circleCentres[i][0] / averageX < 0.85){
+                for (int i = 0; i < 14; i++) {
+                    if (circleCentres[i][0] / averageX > 1.15 || circleCentres[i][0] / averageX < 0.85) {
                         circleCentres[i][0] = averageX;
                     }
-                    if (circleCentres[i][1] / averageY > 1.15 || circleCentres[i][1] / averageY < 0.85){
+                    if (circleCentres[i][1] / averageY > 1.15 || circleCentres[i][1] / averageY < 0.85) {
                         circleCentres[i][1] = averageY;
                     }
-                    if (rads[i] / averageR > 1.15 || rads[i] / averageR < 0.85){
+                    if (rads[i] / averageR > 1.15 || rads[i] / averageR < 0.85) {
                         rads[i] = averageR;
                     }
                 }
                 averageX = 0;
                 averageY = 0;
-                for (int i = 0; i < 14; i++){
+                for (int i = 0; i < 14; i++) {
                     averageX += circleCentres[i][0];
                     averageY += circleCentres[i][1];
                 }
                 averageX = averageX / 14;
                 averageY = averageY / 14;
-                for (int i = 0; i < 14; i++){
-                    if (circleCentres[i][0] / averageX > 1.08 || circleCentres[i][0] / averageX < 0.92){
+                for (int i = 0; i < 14; i++) {
+                    if (circleCentres[i][0] / averageX > 1.15 || circleCentres[i][0] / averageX < 0.85) {
                         circleCentres[i][0] = averageX;
                     }
-                    if (circleCentres[i][1] / averageY > 1.08 || circleCentres[i][1] / averageY < 0.92){
+                    if (circleCentres[i][1] / averageY > 1.15 || circleCentres[i][1] / averageY < 0.85) {
                         circleCentres[i][1] = averageY;
                     }
                 }
+                System.out.println("==================================================");
                 for (int i = 0; i < 14; i++)
                     System.out.println(rads[i] + "  " + circleCentres[i][0] + "  " + circleCentres[i][1]);
                 dataBaseConnect.mySQLClient.getConnection(con -> {
@@ -372,10 +375,8 @@ class ScannerVerticle extends AbstractVerticle {
                 System.out.println("Output Diameter: " + outputRad);
                 System.out.println("Figure Volume: " + volume);
                 System.out.println("Usefull Volume: " + usefulVolume);
-//            woodParamsToDatabase(inputRad, outputRad, volume, usefulVolume, stringKey);
+                woodParamsToDatabase(inputRad, outputRad, volume, usefulVolume, stringKey);
             });
-        } catch (NullPointerException e){
-            e.printStackTrace();
         }
     }
 
