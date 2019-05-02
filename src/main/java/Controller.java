@@ -332,10 +332,10 @@ class Controller {
         return out;
     }
 
-    private ArrayList<double[][]> matrix(double step, int xSize, int ySize, Polygon fig){
+    private ArrayList<double[][]> matrix(double step,Polygon fig){
         ArrayList<double[][]> dotsMatrix = new ArrayList<>();
-        int count = (int) Math.round(xSize/step);
-        for (double y=0; y<ySize; y+=step) {
+        int count = (int) Math.round(scannerWight/step);
+        for (double y=0; y<scannerHight; y+=step) {
             double[][] mass = new double[count][2];
             for (int x = 0; x < count; x++) {
                 if(fig.contains(x*step, y)) {
@@ -383,10 +383,10 @@ class Controller {
     }
 
     double[] usefulVolume(ArrayList<double[][]> figure){                                                                // вычисление полезного объёма и кривизны
-        ArrayList<double[][]> outMatrix = matrix(0.7, scannerWight, scannerHight, getPolygon(figure.get(0)));
+        ArrayList<double[][]> outMatrix = matrix(0.7, getPolygon(figure.get(0)));
         for (int i = 1; i < figure.size(); i++){
             outMatrix = matrixIntersection(outMatrix,
-                    matrix(0.7, scannerWight, scannerHight, getPolygon(figure.get(i))));
+                    matrix(0.7, getPolygon(figure.get(i))));
         }
 
         double[][] usefulSlice = matrixToSlice(outMatrix);
@@ -401,23 +401,15 @@ class Controller {
         return new double[] {(double) 1680*polygonArea(usefulSlice), (double) 1680 / (maxDist - sliceCircle[0])};
     }
 
-    double maxDist(Polygon polygon, double x_centre, double y_centre){
+    private double maxDist(Polygon polygon, double x_centre, double y_centre){
         Geom geom = new Geom();
-        double max = 0, x_m = 0, y_m = 0;
+        double max = 0;
         for (int i=0; i<polygon.npoints; i++){
             double dist = geom.distance(x_centre, y_centre, polygon.xpoints[i], polygon.ypoints[i]);
             if (dist > max) {
                 max = dist;
-                x_m = polygon.xpoints[i];
-                y_m = polygon.ypoints[i];
             }
         }
-        System.out.println(x_m + " :: " + y_m);
         return max;
     }
-
-    double[] centre(double[][] sliceData) {
-        return geom.geomCentre(sliceData);
-    }
-
 }

@@ -22,11 +22,13 @@ import java.util.stream.Collectors;
 
 class ScannerVerticle extends AbstractVerticle {
     private Controller controller;
-    private RandomString randomString = new RandomString();
     private DataBaseConnect dataBaseConnect;
     private Parsing parse = new Parsing();
     private final String[] host;
-    private int counter = 0, writeCounter = 0, startAddress = 0, quantity = 7, oldPosition = 0;
+    private int counter = 0;
+    private int startAddress = 0;
+    private int quantity = 7;
+    private int oldPosition = 0;
     private int[] partCounter = new int[2];
     private boolean check = false, processWood = false;
     private String stringKey = "";
