@@ -269,7 +269,7 @@ class ScannerVerticle extends AbstractVerticle {
                     circleCentres[i][0] = res.get(i)[1];
                     circleCentres[i][1] = res.get(i)[2];
                 }
-                for (int n = 0; n < 2; n++) {
+                for (int n = 0; n < 3; n++) {
                     for (int i = 0; i < 14; i++) {
                         averageX += circleCentres[i][0];
                         averageY += circleCentres[i][1];
@@ -279,10 +279,10 @@ class ScannerVerticle extends AbstractVerticle {
                     averageY = averageY / 14;
                     averageR = averageR / 14;
                     for (int i = 0; i < 14; i++) {
-                        if (circleCentres[i][0] / averageX > 1.15 || circleCentres[i][0] / averageX < 0.85) {
+                        if (circleCentres[i][0] / averageX > 1.1 || circleCentres[i][0] / averageX < 0.9) {
                             circleCentres[i][0] = averageX;
                         }
-                        if (circleCentres[i][1] / averageY > 1.15 || circleCentres[i][1] / averageY < 0.85) {
+                        if (circleCentres[i][1] / averageY > 1.1 || circleCentres[i][1] / averageY < 0.9) {
                             circleCentres[i][1] = averageY;
                         }
                         if (rads[i] / averageR > 1.15 || rads[i] / averageR < 0.85) {
