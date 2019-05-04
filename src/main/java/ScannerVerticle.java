@@ -223,46 +223,41 @@ class ScannerVerticle extends AbstractVerticle {
         ArrayList<CompletableFuture<double[]>> futureResultList = new ArrayList<>();
         double[] rads = new double[14];
         double[][] circleCentres = new double[14][2];
-        System.out.println("LSIT SIZE: "+tempFigure.size());
         if (tempFigure.size() >= 16){
             System.out.println("Figure Size >= 16");
-            futureResultList.add(CompletableFuture.supplyAsync(() -> {
-                System.out.println("START: 1");
-                return controller.computeRadius(tempFigure.get(1));
-            }, executor).completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
-                ex.getCause().printStackTrace();
-                System.out.println(ex.getMessage());
-                return null;
-            }));
+            futureResultList.add(CompletableFuture.supplyAsync(() ->
+                    controller.computeRadius(tempFigure.get(1)), executor)
+                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
+                        ex.getCause().printStackTrace();
+                        System.out.println(ex.getMessage());
+                        return null;
+                    }));
             for (int i = 2; i < 14; i++){
                 int index = i;
-                futureResultList.add(CompletableFuture.supplyAsync(() -> {
-                    System.out.println("START: "+index);
-                    return controller.computeRadius(tempFigure.get(index));
-                }).completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
-                    ex.getCause().printStackTrace();
-                    System.out.println(ex.getMessage());
-                    return null;
-                }));
+                futureResultList.add(CompletableFuture.supplyAsync(() ->
+                        controller.computeRadius(tempFigure.get(index)))
+                        .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
+                            ex.getCause().printStackTrace();
+                            System.out.println(ex.getMessage());
+                            return null;
+                        }));
             }
-            futureResultList.add(CompletableFuture.supplyAsync(() -> {
-                System.out.println("START: "+(tempFigure.size()-2));
-                return controller.computeRadius(tempFigure.get(tempFigure.size()-2));
-            }, executor).completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
-                ex.getCause().printStackTrace();
-                System.out.println(ex.getMessage());
-                return null;
-            }));
+            futureResultList.add(CompletableFuture.supplyAsync(() ->
+                    controller.computeRadius(tempFigure.get(tempFigure.size()-2)), executor)
+                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
+                        ex.getCause().printStackTrace();
+                        System.out.println(ex.getMessage());
+                        return null;
+                    }));
         }else if (tempFigure.size() >= 5){
             System.out.println("Figure Size >= 5");
-            futureResultList.add(CompletableFuture.supplyAsync(() -> {
-                System.out.println("START: 1");
-                return controller.computeRadius(tempFigure.get(1));
-            }, executor).completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
-                ex.getCause().printStackTrace();
-                System.out.println(ex.getMessage());
-                return null;
-            }));
+            futureResultList.add(CompletableFuture.supplyAsync(() ->
+                    controller.computeRadius(tempFigure.get(1)), executor)
+                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
+                        ex.getCause().printStackTrace();
+                        System.out.println(ex.getMessage());
+                        return null;
+                    }));
 //            for (int i = 2; i < tempFigure.size()-2; i++){
 //                int index = i;
 //                futureResultList.add(CompletableFuture.supplyAsync(() -> {
@@ -277,21 +272,30 @@ class ScannerVerticle extends AbstractVerticle {
 //                    return controller.computeRadius(tempFigure.get(tempFigure.size()-3));
 //                }).completeOnTimeout(new double[3],1, TimeUnit.SECONDS));
 //            }
-            futureResultList.add(CompletableFuture.supplyAsync(() -> {
-                System.out.println("START: "+(tempFigure.size()-2));
-                return controller.computeRadius(tempFigure.get(tempFigure.size()-2));
-            }).completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
-                ex.getCause().printStackTrace();
-                System.out.println(ex.getMessage());
-                return null;
-            }));
+            futureResultList.add(CompletableFuture.supplyAsync(() ->
+                    controller.computeRadius(tempFigure.get(tempFigure.size()-2)))
+                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
+                        ex.getCause().printStackTrace();
+                        System.out.println(ex.getMessage());
+                        return null;
+                    }));
         }
         if (tempFigure.size() >= 5) {
             System.out.println("Figure Size >= 5, enter to doAll future");
-//            futureResultList.add(CompletableFuture.supplyAsync(() ->
-//                    controller.figureVolume(tempFigure, (double) 1680 / tempFigure.size())));
-//            futureResultList.add(CompletableFuture.supplyAsync(() ->
-//                    controller.usefulVolume(tempFigure)));
+            futureResultList.add(CompletableFuture.supplyAsync(() ->
+                    controller.figureVolume(tempFigure, (double) 1680 / tempFigure.size()))
+                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
+                        ex.getCause().printStackTrace();
+                        System.out.println(ex.getMessage());
+                        return null;
+                    }));
+            futureResultList.add(CompletableFuture.supplyAsync(() ->
+                    controller.usefulVolume(tempFigure))
+                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
+                        ex.getCause().printStackTrace();
+                        System.out.println(ex.getMessage());
+                        return null;
+                    }));
             CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[0]);
 
             CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureResultArray);
@@ -299,28 +303,10 @@ class ScannerVerticle extends AbstractVerticle {
             CompletableFuture<List<double[]>> finalResults = combinedFuture
                     .thenApply(val ->
                             futureResultList.stream().map(CompletableFuture::join).collect(Collectors.toList()));
-//                    .thenApply(val ->
-//                    {
-//                        System.out.println("LIST");
-//                        List<double[]> list = new ArrayList<>();
-//                        for (int i = 0; i < futureResultList.size(); i++) {
-//                            CompletableFuture<double[]> completableFuture = futureResultList.get(i);
-//                            double[] doubles = new double[0];
-//                            try {
-//                                System.out.println("WAITING: "+i);
-//                                doubles = completableFuture.get();
-//                            } catch (InterruptedException | ExecutionException e) {
-//                                e.printStackTrace();
-//                            }
-//                            System.out.println("GET: "+i);
-//                            list.add(doubles);
-//                        }
-//                        return list;
-//                    });
+
             finalResults.whenComplete((res, throwable) -> {
                 if(throwable != null) throwable.printStackTrace();
                 System.out.println("Futures done!");
-                System.out.println("Executor is shutdown? : " + executor.isShutdown());
                 double averageX = 0, averageY = 0, averageR = 0;
 //                for (int i = 0; i < 14; i++) {
 //                    rads[i] = res.get(i)[0];
@@ -386,16 +372,16 @@ class ScannerVerticle extends AbstractVerticle {
                 });
 
                 double inputRad = (double) Math.round(res.get(0)[0] * 2.2 * 10) / 10,
-                        outputRad = (double) Math.round(res.get(res.size() - 1)[0] * 2.2 * 10) / 10;
+                        outputRad = (double) Math.round(res.get(res.size() - 3)[0] * 2.2 * 10) / 10,
 //                double inputRad = rads[0] * 2.3, outputRad = rads[13] * 2.3;
-//                        volume = (double) Math.round(res.get(res.size() - 2)[0] * 0.38 / 1000) / 1000,
-//                        usefulVolume = (double) Math.round(res.get(res.size() - 1)[0] * 0.48 / 1000) / 1000,
-//                        curvature = res.get(res.size()-1)[1];
+                        volume = (double) Math.round(res.get(res.size() - 2)[0] * 0.38 / 1000) / 1000,
+                        usefulVolume = (double) Math.round(res.get(res.size() - 1)[0] * 0.48 / 1000) / 1000,
+                        curvature = res.get(res.size()-1)[1];
                 System.out.println("Input Diameter: " + inputRad);
                 System.out.println("Output Diameter: " + outputRad);
-//                System.out.println("Figure Volume: " + volume);
-//                System.out.println("Usefull Volume: " + usefulVolume);
-//                System.out.println("Curvature: " + curvature);
+                System.out.println("Figure Volume: " + volume);
+                System.out.println("Usefull Volume: " + usefulVolume);
+                System.out.println("Curvature: " + curvature);
 //                woodParamsToDatabase(inputRad, outputRad, volume, usefulVolume, curvature);
             });
         }
