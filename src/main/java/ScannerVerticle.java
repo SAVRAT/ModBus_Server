@@ -15,9 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 class ScannerVerticle extends AbstractVerticle {
@@ -40,7 +38,7 @@ class ScannerVerticle extends AbstractVerticle {
     private ModbusTcpMaster master_2 = new ModbusTcpMaster(config_2);
     private CompletableFuture<ReadHoldingRegistersResponse> future_1;
     private CompletableFuture<WriteMultipleRegistersResponse> future_2;
-//    private ExecutorService executor = Executors.newFixedThreadPool(16);
+    private ExecutorService executor = Executors.newFixedThreadPool(16);
 
     ScannerVerticle(String[] host, Controller controller, DataBaseConnect dataBaseConnect) {
         this.host = host;
@@ -122,7 +120,9 @@ class ScannerVerticle extends AbstractVerticle {
                                     client.close();
                                 }
                                 if (counter == 0)
-                                    handle();
+                                   try { handle();} catch (Throwable t){
+                                       t.printStackTrace();
+                                   }
                             });
                 }
 //        System.out.println("Increment: " + counter);
@@ -167,6 +167,7 @@ class ScannerVerticle extends AbstractVerticle {
     }
 
     private void handle() {
+
         ArrayList<Integer> tempAll = new ArrayList<>();
         Collections.reverse(tempData.get(1));
         tempAll.addAll(tempData.get(0));
@@ -182,7 +183,6 @@ class ScannerVerticle extends AbstractVerticle {
             } else
                 System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
         });
-        controller.outData.add(tempVal);
         if (controller.woodLog && processWood) {
             controller.figure.add(tempVal);
             check = true;
@@ -217,97 +217,155 @@ class ScannerVerticle extends AbstractVerticle {
                 "VALUES (?, ?, ?, ?, ?, ?, UNIX_TIMESTAMP());", dataArray);
     }
 
-    private void compute (ArrayList<double[][]> figure){
+    private synchronized void compute (ArrayList<double[][]> figure) {
         System.out.println("Start computing...");
         final ArrayList<double[][]> tempFigure = new ArrayList<>(figure);
         ArrayList<CompletableFuture<double[]>> futureResultList = new ArrayList<>();
         double[] rads = new double[14];
         double[][] circleCentres = new double[14][2];
-
+        System.out.println("LSIT SIZE: "+tempFigure.size());
         if (tempFigure.size() >= 16){
-            futureResultList.add(CompletableFuture.supplyAsync(() -> controller.computeRadius(tempFigure.get(1))));
+            System.out.println("Figure Size >= 16");
+            futureResultList.add(CompletableFuture.supplyAsync(() -> {
+                System.out.println("START: 1");
+                return controller.computeRadius(tempFigure.get(1));
+            }, executor).completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
+                ex.getCause().printStackTrace();
+                System.out.println(ex.getMessage());
+                return null;
+            }));
             for (int i = 2; i < 14; i++){
                 int index = i;
-                futureResultList.add(CompletableFuture.supplyAsync(() ->
-                        controller.computeRadius(tempFigure.get(index))));
+                futureResultList.add(CompletableFuture.supplyAsync(() -> {
+                    System.out.println("START: "+index);
+                    return controller.computeRadius(tempFigure.get(index));
+                }).completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
+                    ex.getCause().printStackTrace();
+                    System.out.println(ex.getMessage());
+                    return null;
+                }));
             }
-            futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.computeRadius(tempFigure.get(tempFigure.size()-2))));
+            futureResultList.add(CompletableFuture.supplyAsync(() -> {
+                System.out.println("START: "+(tempFigure.size()-2));
+                return controller.computeRadius(tempFigure.get(tempFigure.size()-2));
+            }, executor).completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
+                ex.getCause().printStackTrace();
+                System.out.println(ex.getMessage());
+                return null;
+            }));
         }else if (tempFigure.size() >= 5){
-            futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.computeRadius(tempFigure.get(1))));
-            for (int i = 2; i < tempFigure.size()-2; i++){
-                int index = i;
-                futureResultList.add(CompletableFuture.supplyAsync(() ->
-                        controller.computeRadius(tempFigure.get(index))));
-            }
-            for (int i = 0; i < 16 - tempFigure.size(); i++){
-                futureResultList.add(CompletableFuture.supplyAsync(() ->
-                        controller.computeRadius(tempFigure.get(tempFigure.size()-3))));
-            }
-            futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.computeRadius(tempFigure.get(tempFigure.size()-2))));
+            System.out.println("Figure Size >= 5");
+            futureResultList.add(CompletableFuture.supplyAsync(() -> {
+                System.out.println("START: 1");
+                return controller.computeRadius(tempFigure.get(1));
+            }, executor).completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
+                ex.getCause().printStackTrace();
+                System.out.println(ex.getMessage());
+                return null;
+            }));
+//            for (int i = 2; i < tempFigure.size()-2; i++){
+//                int index = i;
+//                futureResultList.add(CompletableFuture.supplyAsync(() -> {
+//                    System.out.println("START: "+index);
+//                    return controller.computeRadius(tempFigure.get(index));
+//                }).completeOnTimeout(new double[3],1, TimeUnit.SECONDS));
+//            }
+//            for (int i = 0; i < 16 - tempFigure.size(); i++){
+//                int index  = i+tempFigure.size()-2;
+//                futureResultList.add(CompletableFuture.supplyAsync(() -> {
+//                    System.out.println("START: "+index+" --------"+(tempFigure.size()-3));
+//                    return controller.computeRadius(tempFigure.get(tempFigure.size()-3));
+//                }).completeOnTimeout(new double[3],1, TimeUnit.SECONDS));
+//            }
+            futureResultList.add(CompletableFuture.supplyAsync(() -> {
+                System.out.println("START: "+(tempFigure.size()-2));
+                return controller.computeRadius(tempFigure.get(tempFigure.size()-2));
+            }).completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
+                ex.getCause().printStackTrace();
+                System.out.println(ex.getMessage());
+                return null;
+            }));
         }
         if (tempFigure.size() >= 5) {
-            futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.figureVolume(tempFigure, (double) 1680 / tempFigure.size())));
-            futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.usefulVolume(tempFigure)));
-            CompletableFuture[] futureResultArray = futureResultList.toArray(
-                    new CompletableFuture[futureResultList.size()]);
+            System.out.println("Figure Size >= 5, enter to doAll future");
+//            futureResultList.add(CompletableFuture.supplyAsync(() ->
+//                    controller.figureVolume(tempFigure, (double) 1680 / tempFigure.size())));
+//            futureResultList.add(CompletableFuture.supplyAsync(() ->
+//                    controller.usefulVolume(tempFigure)));
+            CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[0]);
 
             CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureResultArray);
 
             CompletableFuture<List<double[]>> finalResults = combinedFuture
                     .thenApply(val ->
                             futureResultList.stream().map(CompletableFuture::join).collect(Collectors.toList()));
-            finalResults.thenAccept(res -> {
+//                    .thenApply(val ->
+//                    {
+//                        System.out.println("LIST");
+//                        List<double[]> list = new ArrayList<>();
+//                        for (int i = 0; i < futureResultList.size(); i++) {
+//                            CompletableFuture<double[]> completableFuture = futureResultList.get(i);
+//                            double[] doubles = new double[0];
+//                            try {
+//                                System.out.println("WAITING: "+i);
+//                                doubles = completableFuture.get();
+//                            } catch (InterruptedException | ExecutionException e) {
+//                                e.printStackTrace();
+//                            }
+//                            System.out.println("GET: "+i);
+//                            list.add(doubles);
+//                        }
+//                        return list;
+//                    });
+            finalResults.whenComplete((res, throwable) -> {
+                if(throwable != null) throwable.printStackTrace();
                 System.out.println("Futures done!");
+                System.out.println("Executor is shutdown? : " + executor.isShutdown());
                 double averageX = 0, averageY = 0, averageR = 0;
-                for (int i = 0; i < 14; i++) {
-                    rads[i] = res.get(i)[0];
-                    circleCentres[i][0] = res.get(i)[1];
-                    circleCentres[i][1] = res.get(i)[2];
-                }
-                for (int n = 0; n < 2; n++) {
-                    for (int i = 0; i < 14; i++) {
-                        averageX += circleCentres[i][0];
-                        averageY += circleCentres[i][1];
-                        averageR += rads[i];
-                    }
-                    averageX = averageX / 14;
-                    averageY = averageY / 14;
-                    averageR = averageR / 14;
-                    for (int i = 0; i < 14; i++) {
-                        if (circleCentres[i][0] / averageX > 1.1 || circleCentres[i][0] / averageX < 0.9) {
-                            circleCentres[i][0] = averageX;
-                        }
-                        if (circleCentres[i][1] / averageY > 1.1 || circleCentres[i][1] / averageY < 0.9) {
-                            circleCentres[i][1] = averageY;
-                        }
-                        if (rads[i] / averageR > 1.15 || rads[i] / averageR < 0.85) {
-                            rads[i] = averageR;
-                        }
-                    }
-                    averageX = 0;
-                    averageY = 0;
-                }
-                for (int i = 0; i < 14; i++) {
-                    averageX += circleCentres[i][0];
-                    averageY += circleCentres[i][1];
-                }
-                averageX = averageX / 14;
-                averageY = averageY / 14;
-                for (int i = 0; i < 14; i++) {
-                    if (circleCentres[i][0] / averageX > 1.03 || circleCentres[i][0] / averageX < 0.97) {
-                        circleCentres[i][0] = averageX;
-                    }
-                    if (circleCentres[i][1] / averageY > 1.03 || circleCentres[i][1] / averageY < 0.97) {
-                        circleCentres[i][1] = averageY;
-                    }
-                }
+//                for (int i = 0; i < 14; i++) {
+//                    rads[i] = res.get(i)[0];
+//                    circleCentres[i][0] = res.get(i)[1];
+//                    circleCentres[i][1] = res.get(i)[2];
+//                }
+//                for (int n = 0; n < 2; n++) {
+//                    for (int i = 0; i < 14; i++) {
+//                        averageX += circleCentres[i][0];
+//                        averageY += circleCentres[i][1];
+//                        averageR += rads[i];
+//                    }
+//                    averageX = averageX / 14;
+//                    averageY = averageY / 14;
+//                    averageR = averageR / 14;
+//                    for (int i = 0; i < 14; i++) {
+//                        if (circleCentres[i][0] / averageX > 1.1 || circleCentres[i][0] / averageX < 0.9) {
+//                            circleCentres[i][0] = averageX;
+//                        }
+//                        if (circleCentres[i][1] / averageY > 1.1 || circleCentres[i][1] / averageY < 0.9) {
+//                            circleCentres[i][1] = averageY;
+//                        }
+//                        if (rads[i] / averageR > 1.15 || rads[i] / averageR < 0.85) {
+//                            rads[i] = averageR;
+//                        }
+//                    }
+//                    averageX = 0;
+//                    averageY = 0;
+//                }
+//                for (int i = 0; i < 14; i++) {
+//                    averageX += circleCentres[i][0];
+//                    averageY += circleCentres[i][1];
+//                }
+//                averageX = averageX / 14;
+//                averageY = averageY / 14;
+//                for (int i = 0; i < 14; i++) {
+//                    if (circleCentres[i][0] / averageX > 1.03 || circleCentres[i][0] / averageX < 0.97) {
+//                        circleCentres[i][0] = averageX;
+//                    }
+//                    if (circleCentres[i][1] / averageY > 1.03 || circleCentres[i][1] / averageY < 0.97) {
+//                        circleCentres[i][1] = averageY;
+//                    }
+//                }
                 System.out.println("==================================================");
-                for (int i = 0; i < 14; i++)
+                for (int i = 0; i < 2; i++)
                     System.out.println(rads[i] + "  " + circleCentres[i][0] + "  " + circleCentres[i][1]);
                 dataBaseConnect.mySQLClient.getConnection(con -> {
                     if (con.succeeded()) {
@@ -315,7 +373,7 @@ class ScannerVerticle extends AbstractVerticle {
                         connection.query("TRUNCATE woodData_3;", result -> {
                             connection.close();
                             if (result.succeeded())
-                                for (int i = 0; i < 14; i++) {
+                                for (int i = 0; i < 2; i++) {
                                     JsonArray toDatabase = new JsonArray().add(i + 1)
                                             .add((double) Math.round(circleCentres[i][0] * 10) / 10)
                                             .add((double) Math.round(circleCentres[i][1] * 10) / 10)
@@ -327,18 +385,18 @@ class ScannerVerticle extends AbstractVerticle {
                     }
                 });
 
-//                double inputRad = (double) Math.round(res.get(0)[0] * 2.2 * 10) / 10,
-//                        outputRad = (double) Math.round(res.get(res.size() - 3)[0] * 2.2 * 10) / 10,
-                double inputRad = rads[0] * 2.2, outputRad = rads[13] * 2.2,
-                        volume = (double) Math.round(res.get(res.size() - 2)[0] * 0.38 / 1000) / 1000,
-                        usefulVolume = (double) Math.round(res.get(res.size() - 1)[0] * 0.48 / 1000) / 1000,
-                        curvature = res.get(res.size()-1)[1];
+                double inputRad = (double) Math.round(res.get(0)[0] * 2.2 * 10) / 10,
+                        outputRad = (double) Math.round(res.get(res.size() - 1)[0] * 2.2 * 10) / 10;
+//                double inputRad = rads[0] * 2.3, outputRad = rads[13] * 2.3;
+//                        volume = (double) Math.round(res.get(res.size() - 2)[0] * 0.38 / 1000) / 1000,
+//                        usefulVolume = (double) Math.round(res.get(res.size() - 1)[0] * 0.48 / 1000) / 1000,
+//                        curvature = res.get(res.size()-1)[1];
                 System.out.println("Input Diameter: " + inputRad);
                 System.out.println("Output Diameter: " + outputRad);
-                System.out.println("Figure Volume: " + volume);
-                System.out.println("Usefull Volume: " + usefulVolume);
-                System.out.println("Curvature: " + curvature);
-                woodParamsToDatabase(inputRad, outputRad, volume, usefulVolume, curvature);
+//                System.out.println("Figure Volume: " + volume);
+//                System.out.println("Usefull Volume: " + usefulVolume);
+//                System.out.println("Curvature: " + curvature);
+//                woodParamsToDatabase(inputRad, outputRad, volume, usefulVolume, curvature);
             });
         }
     }
