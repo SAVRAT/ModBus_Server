@@ -11,10 +11,6 @@ class Controller {
     private final double EPS = 0.4;
     boolean woodLog = false;
 
-    ArrayList<double[][]> figure = new ArrayList<>();
-
-
-
     double[][] doSlice(ArrayList<Integer> data) {
         ArrayList<double[][]> out = new ArrayList<>();
         HashMap<String, double[][]> tempData = new HashMap<>();
