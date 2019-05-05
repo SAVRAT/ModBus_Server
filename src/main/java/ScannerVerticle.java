@@ -218,52 +218,53 @@ class ScannerVerticle extends AbstractVerticle {
     }
 
     private synchronized void compute (ArrayList<double[][]> figure) {
-        System.out.println("Start computing...");
         final ArrayList<double[][]> tempFigure = new ArrayList<>(figure);
         ArrayList<CompletableFuture<double[]>> futureResultList = new ArrayList<>();
         double[] rads = new double[14];
         double[][] circleCentres = new double[14][2];
         if (tempFigure.size() >= 16){
             System.out.println("Figure Size >= 16");
-            futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.computeRadius(tempFigure.get(1)), executor)
-                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
-                        ex.getCause().printStackTrace();
-                        System.out.println(ex.getMessage());
-                        return null;
-                    }));
-            for (int i = 2; i < 14; i++){
+//            futureResultList.add(CompletableFuture.supplyAsync(() ->
+//                    controller.computeRadius(tempFigure.get(1)), executor)
+//                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
+//                        ex.getCause().printStackTrace();
+//                        System.out.println(ex.getMessage());
+//                        return null;
+//                    }));
+            for (int i = 1; i < 14; i++){
                 int index = i;
                 futureResultList.add(CompletableFuture.supplyAsync(() ->
-                        controller.computeRadius(tempFigure.get(index)))
-                        .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
-                            ex.getCause().printStackTrace();
-                            System.out.println(ex.getMessage());
-                            return null;
-                        }));
+                        controller.computeRadius(tempFigure.get(index)), executor)
+                        .completeOnTimeout(new double[3],1, TimeUnit.SECONDS));
             }
             futureResultList.add(CompletableFuture.supplyAsync(() ->
                     controller.computeRadius(tempFigure.get(tempFigure.size()-2)), executor)
-                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
-                        ex.getCause().printStackTrace();
-                        System.out.println(ex.getMessage());
-                        return null;
-                    }));
+                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS));
         }else if (tempFigure.size() >= 5){
             System.out.println("Figure Size >= 5");
+//            for (int i = 1; i < tempFigure.size()-2; i++){
+//                int index = i;
+//                futureResultList.add(CompletableFuture.supplyAsync(() ->
+//                        controller.computeRadius(tempFigure.get(index)))
+//                        .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
+//                            ex.getCause().printStackTrace();
+//                            System.out.println(ex.getMessage());
+//                            return null;
+//                        }));
+//            }
+
             futureResultList.add(CompletableFuture.supplyAsync(() ->
                     controller.computeRadius(tempFigure.get(1)), executor)
-                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
-                        ex.getCause().printStackTrace();
-                        System.out.println(ex.getMessage());
-                        return null;
-                    }));
+                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS));
 //            for (int i = 2; i < tempFigure.size()-2; i++){
 //                int index = i;
-//                futureResultList.add(CompletableFuture.supplyAsync(() -> {
-//                    System.out.println("START: "+index);
-//                    return controller.computeRadius(tempFigure.get(index));
-//                }).completeOnTimeout(new double[3],1, TimeUnit.SECONDS));
+//                futureResultList.add(CompletableFuture.supplyAsync(() ->
+//                        controller.computeRadius(tempFigure.get(index)))
+//                        .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
+//                            ex.getCause().printStackTrace();
+//                            System.out.println(ex.getMessage());
+//                            return null;
+//                        }));
 //            }
 //            for (int i = 0; i < 16 - tempFigure.size(); i++){
 //                int index  = i+tempFigure.size()-2;
@@ -273,29 +274,17 @@ class ScannerVerticle extends AbstractVerticle {
 //                }).completeOnTimeout(new double[3],1, TimeUnit.SECONDS));
 //            }
             futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.computeRadius(tempFigure.get(tempFigure.size()-2)))
-                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
-                        ex.getCause().printStackTrace();
-                        System.out.println(ex.getMessage());
-                        return null;
-                    }));
+                    controller.computeRadius(tempFigure.get(tempFigure.size()-2)), executor)
+                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS));
         }
         if (tempFigure.size() >= 5) {
             System.out.println("Figure Size >= 5, enter to doAll future");
             futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.figureVolume(tempFigure, (double) 1680 / tempFigure.size()))
-                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
-                        ex.getCause().printStackTrace();
-                        System.out.println(ex.getMessage());
-                        return null;
-                    }));
+                    controller.figureVolume(tempFigure, (double) 1680 / tempFigure.size()), executor)
+                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS));
             futureResultList.add(CompletableFuture.supplyAsync(() ->
-                    controller.usefulVolume(tempFigure))
-                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS).exceptionally(ex -> {
-                        ex.getCause().printStackTrace();
-                        System.out.println(ex.getMessage());
-                        return null;
-                    }));
+                    controller.usefulVolume(tempFigure), executor)
+                    .completeOnTimeout(new double[3],1, TimeUnit.SECONDS));
             CompletableFuture[] futureResultArray = futureResultList.toArray(new CompletableFuture[0]);
 
             CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureResultArray);
@@ -307,6 +296,8 @@ class ScannerVerticle extends AbstractVerticle {
             finalResults.whenComplete((res, throwable) -> {
                 if(throwable != null) throwable.printStackTrace();
                 System.out.println("Futures done!");
+                if (res.size() < 16)
+                    System.out.println("Futures count: " + res.size());
                 double averageX = 0, averageY = 0, averageR = 0;
 //                for (int i = 0; i < 14; i++) {
 //                    rads[i] = res.get(i)[0];

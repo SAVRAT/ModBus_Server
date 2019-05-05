@@ -90,10 +90,7 @@ class Controller {
     }
 
     double[] computeRadius(double[][] sliceData) {
-        System.out.println("start"+ Arrays.deepToString(sliceData));
-        try {
-
-
+        System.out.println("Start compute: "+ Arrays.deepToString(sliceData));
             ArrayList<Double> intersectDots = new ArrayList<>();
             ArrayList<Double> intersectRad = new ArrayList<>();
 //        long start = System.currentTimeMillis();
@@ -225,10 +222,6 @@ class Controller {
 //        System.out.println("Time: " + (System.currentTimeMillis() - start) + " ms");
             System.out.println("Compute done:" + Arrays.toString(centreDot));
             return new double[]{Collections.max(intersectRad), centreDot[0], centreDot[1]};
-        } catch (Throwable t){
-            t.printStackTrace();
-            return new double[]{99999, 99999, 99999};
-        }
     }
 
     private double[][] matrixToSlice(ArrayList<double[][]> matrix){
