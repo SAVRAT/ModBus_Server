@@ -13,12 +13,10 @@ public class ConcurrentComputing {
 
     private ArrayList<double[][]> figure;
     private ArrayList<CompletableFuture<double[]>> futureResultList = new ArrayList<>();
-    private ExecutorService executor;
 
-    ConcurrentComputing(ArrayList<double[][]> figure, DataBaseConnect dataBaseConnect, ExecutorService executor) {
+    ConcurrentComputing(ArrayList<double[][]> figure, DataBaseConnect dataBaseConnect) {
         this.figure = new ArrayList<>(figure);
         this.dataBaseConnect = dataBaseConnect;
-        this.executor = executor;
         ScannerVerticle.figure.clear();
     }
 
@@ -31,12 +29,12 @@ public class ConcurrentComputing {
                 futureResultList.add(CompletableFuture.supplyAsync(() -> {
                     System.out.println("Start compute " + index);
                     return controller.computeRadius(figure.get(index));
-                }, executor).completeOnTimeout(new double[3], 1, TimeUnit.SECONDS));
+                }).completeOnTimeout(new double[3], 1, TimeUnit.SECONDS));
             }
             futureResultList.add(CompletableFuture.supplyAsync(() -> {
                 System.out.println("Start compute 14");
                 return controller.computeRadius(figure.get(figure.size() - 2));
-            }, executor).completeOnTimeout(new double[3], 1, TimeUnit.SECONDS));
+            }).completeOnTimeout(new double[3], 1, TimeUnit.SECONDS));
             continueCompute();
         }else if (figure.size() >= 5){
             System.out.println("Figure Size >= 5");
@@ -45,13 +43,13 @@ public class ConcurrentComputing {
                 futureResultList.add(CompletableFuture.supplyAsync(() -> {
                     System.out.println("Start compute " + index);
                     return controller.computeRadius(figure.get(index));
-                }, executor).completeOnTimeout(new double[3], 1, TimeUnit.SECONDS));
+                }).completeOnTimeout(new double[3], 1, TimeUnit.SECONDS));
             }
             for (int i = figure.size()-2; i < 15; i++){
                 futureResultList.add(CompletableFuture.supplyAsync(() -> {
                     System.out.println("Start compute to fill all");
                     return controller.computeRadius(figure.get(figure.size()-2));
-                }, executor).completeOnTimeout(new double[3], 1, TimeUnit.SECONDS));
+                }).completeOnTimeout(new double[3], 1, TimeUnit.SECONDS));
             }
 
             continueCompute();
@@ -63,10 +61,10 @@ public class ConcurrentComputing {
         double[] rads = new double[14];
         double[][] circleCentres = new double[14][2];
         futureResultList.add(CompletableFuture.supplyAsync(() ->
-                controller.figureVolume(figure, (double) 1680 / figure.size()), executor)
+                controller.figureVolume(figure, (double) 1680 / figure.size()))
                 .completeOnTimeout(new double[3], 1, TimeUnit.SECONDS));
         futureResultList.add(CompletableFuture.supplyAsync(() ->
-                controller.usefulVolume(figure), executor)
+                controller.usefulVolume(figure))
                 .completeOnTimeout(new double[3], 1, TimeUnit.SECONDS));
 
         CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureResultList.toArray(new CompletableFuture[0]));

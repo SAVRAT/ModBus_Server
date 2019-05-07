@@ -4,31 +4,27 @@ import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
 import com.digitalpetri.modbus.requests.WriteMultipleRegistersRequest;
 import com.digitalpetri.modbus.responses.ReadHoldingRegistersResponse;
 import io.netty.util.ReferenceCountUtil;
+import io.vertx.ext.sql.SQLConnection;
 
 import java.util.concurrent.CompletableFuture;
 
 @SuppressWarnings("Duplicates")
 class Test {
     public static void main(String[] args) {
-        int address = 2, quantity = 2;
-//        int[] word = {1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        byte[] byteArray= {36, 73, -110, 36};
+        DataBaseConnect dataBase = new DataBaseConnect("localhost", "root", "z1x2c3v4",
+                "wert");
 
-        ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5001)
-                .build();
-        ModbusTcpMaster master = new ModbusTcpMaster(config);
-
-        CompletableFuture<ReadHoldingRegistersResponse> future =
-                master.sendRequest(new WriteMultipleRegistersRequest(address, quantity, byteArray), 2);
-        future.whenCompleteAsync((response, ex) -> {
-            if (response != null) {
-                ReferenceCountUtil.release(response);
-            } else {
-                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
+        dataBase.mySQLClient.getConnection(con -> {
+            if (con.succeeded()) {
+                try (SQLConnection connection = con.result()) {
+                    for (int i = 0; i < 20; i++) {
+                        System.out.println(i);
+                        connection.query("insert into s2 values (7)", result -> {
+                            System.out.println(result.result().getRows());
+                        });
+                    }
+                }
             }
-            master.disconnect();
-        }, Modbus.sharedExecutor());
+        });
     }
-
-
 }

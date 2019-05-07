@@ -190,11 +190,9 @@ class ScannerVerticle extends AbstractVerticle {
         } else {
             if (check && processWood) {
                 System.out.println("+++++++Compute wood!+++++++");
-                executorService.execute(() -> {
-                    ConcurrentComputing concurrentComputing =
-                            new ConcurrentComputing(figure, dataBaseConnect, executorService);
-                    concurrentComputing.computeAsync();
-                });
+                ConcurrentComputing concurrentComputing =
+                        new ConcurrentComputing(figure, dataBaseConnect);
+                concurrentComputing.computeAsync();
 //                figure.clear();
                 check = false;
             }

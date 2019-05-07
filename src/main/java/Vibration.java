@@ -6,6 +6,7 @@ import io.vertx.ext.sql.SQLConnection;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.SortedSet;
 
 class Vibration extends AbstractVerticle {
 
@@ -23,14 +24,12 @@ class Vibration extends AbstractVerticle {
         this.modBusMaster = modBusMaster;
     }
 
-    @SuppressWarnings("Duplicates")
     public void start(){
         refreshData();
         vertx.setPeriodic(60000, event -> refreshData());
     }
 
     private long timerID;
-    @SuppressWarnings("Duplicates")
     private void handle(ArrayList<String[]> data) throws IndexOutOfBoundsException{
         first = false;
         if (!third) {
@@ -89,7 +88,6 @@ class Vibration extends AbstractVerticle {
         });
     }
 
-    @SuppressWarnings("Duplicates")
     private void check(ArrayList<String[]> data){
         boolean qwerty = false;
         if (data.size() == previous.size())
