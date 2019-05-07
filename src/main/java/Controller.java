@@ -2,6 +2,7 @@ import java.awt.*;
 import java.awt.geom.Line2D;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ThreadLocalRandom;
 
 class Controller {
 
@@ -86,8 +87,8 @@ class Controller {
     }
 
     double[] computeRadius(double[][] sliceData) {
-        System.out.println("Start compute: "+ Arrays.deepToString(sliceData));
-            ArrayList<Double> intersectDots = new ArrayList<>();
+        System.out.println("Start compute Radius, thread name: " + Thread.currentThread().getName());
+        ArrayList<Double> intersectDots = new ArrayList<>();
             ArrayList<Double> intersectRad = new ArrayList<>();
 //        long start = System.currentTimeMillis();
             double radius = 5, step_r = 0.4, step_v = 0.3, count;
@@ -216,7 +217,7 @@ class Controller {
             // {centreDot[0], centreDot[1]} координаты X и Y центра вписанной окружности
 
 //        System.out.println("Time: " + (System.currentTimeMillis() - start) + " ms");
-            System.out.println("Compute done:" + Arrays.toString(centreDot));
+            System.out.println("Compute done, thread: " + Thread.currentThread().getName() + " :: " + Arrays.toString(centreDot));
             return new double[]{Collections.max(intersectRad), centreDot[0], centreDot[1]};
     }
 
@@ -371,16 +372,18 @@ class Controller {
     }
 
     double[] figureVolume(ArrayList<double[][]> figure, double step){
+        System.out.println("Start compute Volume, thread name: " + Thread.currentThread().getName());
         double volume = 0.0;
 
         for (double[][] slice:figure){
             volume += polygonArea(slice) * step;
         }
-        System.out.println("Volume done: " + volume);
+        System.out.println("Volume done, thread: " + Thread.currentThread().getName() + " :: " + volume);
         return new double[]{(double) Math.round(volume)};
     }
 
     double[] usefulVolume(ArrayList<double[][]> figure){                                                                // вычисление полезного объёма и кривизны
+        System.out.println("Start compute UsefulVolume, thread name: " + Thread.currentThread().getName());
         ArrayList<double[][]> outMatrix = matrix(0.7, getPolygon(figure.get(0)));
         for (int i = 1; i < figure.size(); i++){
             outMatrix = matrixIntersection(outMatrix,
@@ -395,7 +398,7 @@ class Controller {
             if (maxDist < tempDist)
                 maxDist = tempDist;
         }
-        System.out.println("Useful volume done: " + maxDist);
+        System.out.println("Useful volume done, thread: " + Thread.currentThread().getName()+ " :: " + maxDist);
 
         return new double[] {(double) 1680*polygonArea(usefulSlice),
                 (double) Math.round((maxDist - sliceCircle[0]) / 1.680) / 1000};

@@ -14,9 +14,9 @@ import io.vertx.ext.web.client.WebClient;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 class ScannerVerticle extends AbstractVerticle {
     private Controller controller;
@@ -29,7 +29,7 @@ class ScannerVerticle extends AbstractVerticle {
     private int oldPosition = 0;
     private int[] partCounter = new int[2];
     private boolean check = false, processWood = false;
-    private ArrayList<double[][]> figure = new ArrayList<>();
+    static ArrayList<double[][]> figure = new ArrayList<>();
     private ArrayList<ArrayList<Integer>> tempData;
     private ModbusTcpMasterConfig config_1 = new ModbusTcpMasterConfig.Builder("192.168.49.234").setPort(5000)
             .build();
@@ -39,7 +39,7 @@ class ScannerVerticle extends AbstractVerticle {
     private ModbusTcpMaster master_2 = new ModbusTcpMaster(config_2);
     private CompletableFuture<ReadHoldingRegistersResponse> future_1;
     private CompletableFuture<WriteMultipleRegistersResponse> future_2;
-    ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     ScannerVerticle(String[] host, Controller controller, DataBaseConnect dataBaseConnect) {
         this.host = host;
@@ -190,10 +190,12 @@ class ScannerVerticle extends AbstractVerticle {
         } else {
             if (check && processWood) {
                 System.out.println("+++++++Compute wood!+++++++");
-                ConcurrentComputing concurrentComputing =
-                        new ConcurrentComputing(figure, dataBaseConnect, executorService);
-                concurrentComputing.computeAsync();
-                figure.clear();
+                executorService.execute(() -> {
+                    ConcurrentComputing concurrentComputing =
+                            new ConcurrentComputing(figure, dataBaseConnect, executorService);
+                    concurrentComputing.computeAsync();
+                });
+//                figure.clear();
                 check = false;
             }
         }
