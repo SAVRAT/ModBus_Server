@@ -55,7 +55,7 @@ class ModBus_Master {
                         dataBaseConnect.databaseReadOEE(device, currentState);
                     }
                 }
-                System.out.println("\u001B[41m" + "PLC ERROR" + "\u001B[0m" + " " + ex.getMessage());
+//                System.out.println("\u001B[41m" + "PLC ERROR" + "\u001B[0m" + " " + ex.getMessage());
                 moduleError(master);
             }
             master.disconnect();
@@ -92,7 +92,7 @@ class ModBus_Master {
                         dataBaseConnect.databaseReadOEE(device, currentState);
                     }
                 }
-                System.out.println("\u001B[41m" + "DI ERROR" + "\u001B[0m" + " " + ex.getMessage());
+//                System.out.println("\u001B[41m" + "DI ERROR" + "\u001B[0m" + " " + ex.getMessage());
                 moduleError(master);
             }
             master.disconnect();

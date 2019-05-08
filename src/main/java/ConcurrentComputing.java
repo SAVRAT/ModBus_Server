@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-public class ConcurrentComputing {
+class ConcurrentComputing {
 
     private DataBaseConnect dataBaseConnect;
     private Controller controller = new Controller();
@@ -71,7 +71,7 @@ public class ConcurrentComputing {
 
         CompletableFuture<List<double[]>> finalResults = combinedFuture
                 .thenApply(val ->
-                        futureResultList.stream().map(CompletableFuture::join).collect(Collectors.toList()));
+                        futureResultList.stream().map(future -> future.join()).collect(Collectors.toList()));
 
         finalResults.thenAcceptAsync(res -> {
             System.out.println("Futures done!");
