@@ -70,13 +70,11 @@ class Geom {
         return dist;
     }
 
-    double[][] dots(double xc, double yc, double r, double ang){
-        int size = (int) Math.round(360/ang);
-        double[][] dot = new double[size][2];
-        for (int i=0; i<size; i+=1){
-            double a = ang*i;
-            dot[i][0] = r*Math.sin(Math.toRadians(a))+xc;
-            dot[i][1] = r*Math.cos(Math.toRadians(a))+yc;
+    double[][] dots(double xc, double yc, double r){
+        double[][] dot = new double[360][2];
+        for (int i=0; i<360; i++){
+            dot[i][0] = r*Math.sin(Math.toRadians(i))+xc;
+            dot[i][1] = r*Math.cos(Math.toRadians(i))+yc;
 //            System.out.println("x: " + dot[n-2] + "; y: " + dot[n-1]);
         }
         return dot;

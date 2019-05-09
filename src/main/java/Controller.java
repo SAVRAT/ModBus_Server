@@ -90,7 +90,7 @@ class Controller {
         System.out.println("Start compute Radius, thread name: " + Thread.currentThread().getName());
         ArrayList<Double> intersectDots = new ArrayList<>();
             ArrayList<Double> intersectRad = new ArrayList<>();
-//        long start = System.currentTimeMillis();
+        long startTime = new Date().getTime() + 1500;
             double radius = 5, step_r = 0.4, step_v = 0.3, count;
             Formul[] formulData = new Formul[sliceData.length];
             geom.lineKoef(formulData, sliceData);
@@ -101,14 +101,13 @@ class Controller {
             double maxR = 0;
 
             boolean finish = false;
-            while (!finish) {
+            while (startTime - new Date().getTime() > 0 && !finish) {
                 intersectDots.clear();
                 count = 0;
-                double ang = 1;
-                double[][] dots = geom.dots(centreDot[0], centreDot[1], radius, ang);
+                double[][] dots = geom.dots(centreDot[0], centreDot[1], radius);
                 while (count < 1) {
                     radius += step_r;
-                    dots = geom.dots(centreDot[0], centreDot[1], radius, ang);
+                    dots = geom.dots(centreDot[0], centreDot[1], radius);
                     for (int k = 0; k < sliceData.length - 1; k++) {
                         ArrayList<Double> tempDots = new ArrayList<>();
                         double x, y;
@@ -153,7 +152,7 @@ class Controller {
                     double y = intersectDots.get(i + 1);
                     for (int j = 0; j < dots.length; j++) {
                         if (dots[j][0] == x && dots[j][1] == y) {
-                            angles[i / 2] = j * ang;
+                            angles[i / 2] = j; // J * ang, где ang = 1
                         }
                     }
                 }

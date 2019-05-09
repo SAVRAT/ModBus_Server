@@ -22,9 +22,9 @@ class ConcurrentComputing {
 
     void computeAsync(){
         System.out.println("Figure size: " + figure.size());
-        if (figure.size() >= 16){
+        if (figure.size() >= 16) {
             System.out.println("Figure Size >= 16");
-            for (int i = 1; i < 14; i++){
+            for (int i = 1; i < 14; i++) {
                 int index = i;
                 futureResultList.add(CompletableFuture.supplyAsync(() -> {
                     System.out.println("Start compute " + index);
@@ -63,15 +63,15 @@ class ConcurrentComputing {
         futureResultList.add(CompletableFuture.supplyAsync(() ->
                 controller.figureVolume(figure, (double) 1680 / figure.size()))
                 .completeOnTimeout(new double[3], 1, TimeUnit.SECONDS));
-        futureResultList.add(CompletableFuture.supplyAsync(() ->
-                controller.usefulVolume(figure))
-                .completeOnTimeout(new double[3], 1, TimeUnit.SECONDS));
+//        futureResultList.add(CompletableFuture.supplyAsync(() ->
+//                controller.usefulVolume(figure))
+//                .completeOnTimeout(new double[3], 1, TimeUnit.SECONDS));
 
         CompletableFuture<Void> combinedFuture = CompletableFuture.allOf(futureResultList.toArray(new CompletableFuture[0]));
 
         CompletableFuture<List<double[]>> finalResults = combinedFuture
                 .thenApply(val ->
-                        futureResultList.stream().map(future -> future.join()).collect(Collectors.toList()));
+                        futureResultList.stream().map(CompletableFuture::join).collect(Collectors.toList()));
 
         finalResults.thenAcceptAsync(res -> {
             System.out.println("Futures done!");
@@ -122,35 +122,35 @@ class ConcurrentComputing {
             System.out.println("==================================================");
                 for (int i = 0; i < 14; i++)
                     System.out.println(rads[i] + "  " + circleCentres[i][0] + "  " + circleCentres[i][1]);
-            dataBaseConnect.mySQLClient.getConnection(con -> {
-                if (con.succeeded()) {
-                    SQLConnection connection = con.result();
-                    connection.query("TRUNCATE woodData_3;", result -> {
-                        connection.close();
-                        if (result.succeeded())
-                            for (int i = 0; i < 14; i++) {
-                                JsonArray toDatabase = new JsonArray().add(i + 1)
-                                        .add((double) Math.round(circleCentres[i][0] * 10) / 10)
-                                        .add((double) Math.round(circleCentres[i][1] * 10) / 10)
-                                        .add((double) Math.round(rads[i] * 1.2 * 10) / 10);
-                                dataBaseConnect.databaseWrite("INSERT INTO woodData_3 VALUES (?, ?, ?, ?)",
-                                        toDatabase);
-                            }
-                    });
-                }
-            });
+//            dataBaseConnect.mySQLClient.getConnection(con -> {
+//                if (con.succeeded()) {
+//                    SQLConnection connection = con.result();
+//                    connection.query("TRUNCATE woodData_3;", result -> {
+//                        connection.close();
+//                        if (result.succeeded())
+//                            for (int i = 0; i < 14; i++) {
+//                                JsonArray toDatabase = new JsonArray().add(i + 1)
+//                                        .add((double) Math.round(circleCentres[i][0] * 10) / 10)
+//                                        .add((double) Math.round(circleCentres[i][1] * 10) / 10)
+//                                        .add((double) Math.round(rads[i] * 1.2 * 10) / 10);
+//                                dataBaseConnect.databaseWrite("INSERT INTO woodData_3 VALUES (?, ?, ?, ?)",
+//                                        toDatabase);
+//                            }
+//                    });
+//                }
+//            });
 
-            double inputRad = (double) Math.round(res.get(0)[0] * 2.2 * 10) / 10,
-                    outputRad = (double) Math.round(res.get(res.size() - 3)[0] * 2.2 * 10) / 10,
-//                double inputRad = rads[0] * 2.3, outputRad = rads[13] * 2.3;
-                    volume = (double) Math.round(res.get(res.size() - 2)[0] * 0.38 / 1000) / 1000,
-                    usefulVolume = (double) Math.round(res.get(res.size() - 1)[0] * 0.48 / 1000) / 1000,
-                    curvature = res.get(res.size() - 1)[1];
+//            double inputRad = (double) Math.round(res.get(0)[0] * 2.2 * 10) / 10,
+//                    outputRad = (double) Math.round(res.get(res.size() - 3)[0] * 2.2 * 10) / 10,
+                double inputRad = rads[0] * 2.3, outputRad = rads[13] * 2.3,
+                    volume = (double) Math.round(res.get(res.size() - 1)[0] * 0.38 / 1000) / 1000;
+//                    usefulVolume = (double) Math.round(res.get(res.size() - 1)[0] * 0.48 / 1000) / 1000,
+//                    curvature = res.get(res.size() - 1)[1];
             System.out.println("Input Diameter: " + inputRad);
             System.out.println("Output Diameter: " + outputRad);
             System.out.println("Figure Volume: " + volume);
-            System.out.println("Usefull Volume: " + usefulVolume);
-            System.out.println("Curvature: " + curvature);
+//            System.out.println("Usefull Volume: " + usefulVolume);
+//            System.out.println("Curvature: " + curvature);
 //                woodParamsToDatabase(inputRad, outputRad, volume, usefulVolume, curvature);
         });
     }
