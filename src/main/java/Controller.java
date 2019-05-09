@@ -90,7 +90,7 @@ class Controller {
         System.out.println("Start compute Radius, thread name: " + Thread.currentThread().getName());
         ArrayList<Double> intersectDots = new ArrayList<>();
             ArrayList<Double> intersectRad = new ArrayList<>();
-        long startTime = new Date().getTime() + 1500;
+        long startTime = new Date().getTime() + 2500;
             double radius = 5, step_r = 0.4, step_v = 0.3, count;
             Formul[] formulData = new Formul[sliceData.length];
             geom.lineKoef(formulData, sliceData);
