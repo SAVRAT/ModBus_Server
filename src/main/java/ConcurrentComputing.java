@@ -2,10 +2,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.ext.sql.SQLConnection;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
 
 class ConcurrentComputing {
 
@@ -16,12 +13,12 @@ class ConcurrentComputing {
     private ArrayList<CompletableFuture<double[]>> futureResultList = new ArrayList<>();
     private CompletableFuture<ArrayList<double[]>> mainFuture;
     private ExecutorService executor;// = Executors.newFixedThreadPool(1);
+    private ArrayList<double[]> res = new ArrayList<>();
     private Thread futureThread;
 
-    ConcurrentComputing(ArrayList<double[][]> figure, DataBaseConnect dataBaseConnect, ExecutorService outExecutor) {
+    ConcurrentComputing(ArrayList<double[][]> figure, DataBaseConnect dataBaseConnect) {
         this.figure = new ArrayList<>(figure);
         this.dataBaseConnect = dataBaseConnect;
-        this.executor = outExecutor;
         ScannerVerticle.figure.clear();
     }
 
@@ -61,32 +58,33 @@ class ConcurrentComputing {
 //        }
         if (figure.size() >= 16) {
             System.out.println("Figure size >= 16");
-            mainFuture = CompletableFuture.supplyAsync(() -> {
-                futureThread = Thread.currentThread();
-                ArrayList<double[]> outData = new ArrayList<>();
+//            mainFuture = CompletableFuture.supplyAsync(() -> {
+//                futureThread = Thread.currentThread();
+//                ArrayList<double[]> res = new ArrayList<>();
                 for (int i = 1; i < 14; i++) {
-                    outData.add(controller.computeRadius(figure.get(i)));
+                    res.add(controller.computeRadius(figure.get(i)));
                 }
-                outData.add(controller.computeRadius(figure.get(figure.size() - 2)));
-                outData.add(controller.figureVolume(figure, (double) 1680 / figure.size()));
-                return outData;
-            }, executor).completeOnTimeout(new ArrayList<>(), 1, TimeUnit.SECONDS);
+                res.add(controller.computeRadius(figure.get(figure.size() - 2)));
+                res.add(controller.figureVolume(figure, (double) 1680 / figure.size()));
+//                return res;
+//            }, executor).completeOnTimeout(new ArrayList<>(), 1, TimeUnit.SECONDS);
             continueCompute();
         }else if (figure.size() >= 5){
             System.out.println("Figure size >= 5");
-            mainFuture = CompletableFuture.supplyAsync(() -> {
-                futureThread = Thread.currentThread();
-                ArrayList<double[]> outData = new ArrayList<>();
-                for (int i = 1; i < figure.size() - 2; i++) {
-                    outData.add(controller.computeRadius(figure.get(i)));
+//            mainFuture = CompletableFuture.supplyAsync(() -> {
+//                futureThread = Thread.currentThread();
+//                ArrayList<double[]> res = new ArrayList<>();
+                for (int i = 1; i <= figure.size() - 2; i++) {
+                    res.add(controller.computeRadius(figure.get(i)));
                 }
-                int lastIndex = outData.size() - 1;
+                int lastIndex = res.size() - 1;
                 for (int i = figure.size() - 2; i < 15; i++){
-                    outData.add(outData.get(lastIndex));
+                    res.add(res.get(lastIndex));
                 }
-                outData.add(controller.figureVolume(figure, (double) 1680 / figure.size()));
-                return outData;
-            }, executor).completeOnTimeout(new ArrayList<>(), 1, TimeUnit.SECONDS);
+                res.add(controller.figureVolume(figure, (double) 1680 / figure.size()));
+                res.add(controller.usefulVolume(figure));
+//                return res;
+//            }, executor).completeOnTimeout(new ArrayList<>(), 1, TimeUnit.SECONDS);
             continueCompute();
         }
     }
@@ -96,8 +94,8 @@ class ConcurrentComputing {
         double[] rads = new double[14];
         double[][] circleCentres = new double[14][2];
 
-        mainFuture.whenComplete((res, ex) -> {
-            System.out.println("Future complite!");
+//        mainFuture.whenComplete((res, ex) -> {
+//            System.out.println("Future complite!");
 //            for (int i = 0; i < res.size(); i++) {
 //                System.out.println(i + " :: " + Arrays.toString(res.get(i)));
 //            }
@@ -186,17 +184,17 @@ class ConcurrentComputing {
 //            double inputRad = (double) Math.round(res.get(0)[0] * 2.2 * 10) / 10,
 //                    outputRad = (double) Math.round(res.get(res.size() - 3)[0] * 2.2 * 10) / 10,
                 double inputRad = rads[0] * 2.3, outputRad = rads[13] * 2.3,
-                    volume = (double) Math.round(res.get(res.size() - 1)[0] * 0.38 / 1000) / 1000;
-////                    usefulVolume = (double) Math.round(res.get(res.size() - 1)[0] * 0.48 / 1000) / 1000,
-////                    curvature = res.get(res.size() - 1)[1];
+                    volume = (double) Math.round(res.get(res.size() - 2)[0] * 0.38 / 1000) / 1000,
+                    usefulVolume = (double) Math.round(res.get(res.size() - 1)[0] * 0.48 / 1000) / 1000,
+                    curvature = res.get(res.size() - 1)[1];
             System.out.println("Input Diameter: " + inputRad);
             System.out.println("Output Diameter: " + outputRad);
             System.out.println("Figure Volume: " + volume);
-////            System.out.println("Usefull Volume: " + usefulVolume);
-////            System.out.println("Curvature: " + curvature);
+            System.out.println("Usefull Volume: " + usefulVolume);
+            System.out.println("Curvature: " + curvature);
 
-            futureThread.interrupt();
-        });
+//            futureThread.interrupt();
+//        });
     }
 
     private void woodParamsToDatabase(double inputRad, double outputRad,

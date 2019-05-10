@@ -90,30 +90,37 @@ class Controller {
         Geom geom = new Geom();
         ArrayList<Double> intersectDots = new ArrayList<>();
         ArrayList<Double> intersectRad = new ArrayList<>();
-        long startTime = new Date().getTime() + 2000;
-        double radius = 5, step_r = 0.4, step_v = 0.3, count;
+        int counter, testCounter = 0;
+        double radius = 5, step_r = 0.4, step_v = 0.3;
         Formul[] formulData = new Formul[sliceData.length];
         geom.lineKoef(formulData, sliceData);
-        double[] centreDot = geom.geomCentre(sliceData);
+//        double[] centreDot = geom.geomCentre(sliceData);
+        double[] centreDot = startDot(sliceData);
 
         Map<String, Integer> map = new HashMap<>();
         int maxC = 0;
         double maxR = 0;
 
         boolean finish = false;
-        while (startTime - new Date().getTime() > 0 && !finish) {
+        while (!finish){
+            System.out.println("First while! " + Thread.currentThread().getName());
             intersectDots.clear();
-            count = 0;
-            double[][] dots = new double[360][2]; // = geom.dots(centreDot[0], centreDot[1], radius);
-            while (count < 1) {
-                if (Thread.currentThread().isInterrupted())
-                    try {
-                        throw new InterruptedException();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+            counter = 0;
+            ArrayList<double[]> dotsArray = new ArrayList<>();
+//            double[][] dots = new double[360][2]; // = geom.dots(centreDot[0], centreDot[1], radius);
+            while (counter < 1) {
+                testCounter++;
+//                if (testCounter > 150) {
+//                    System.out.println("It is block! Radius: " + radius);
+//                }
                 radius += step_r;
-                dots = geom.dots(centreDot[0], centreDot[1], radius);
+//                dots = geom.dots(centreDot[0], centreDot[1], radius);
+                double[] tempDot = new double[2];
+                for (int i=0; i<360; i++){
+                    tempDot[0] = radius*Math.sin(Math.toRadians(i))+centreDot[0];
+                    tempDot[1] = radius*Math.cos(Math.toRadians(i))+centreDot[1];
+                    dotsArray.add(tempDot);
+                }
                 for (int k = 0; k < sliceData.length - 1; k++) {
                     ArrayList<Double> tempDots = new ArrayList<>();
                     double x, y;
@@ -121,15 +128,15 @@ class Controller {
                     Line2D testLine = new Line2D.Double(sliceData[k][0], sliceData[k][1],
                             sliceData[k + 1][0], sliceData[k + 1][1]);
 
-                    for (double[] dot : dots) {
-                        if (testLine.intersects(dot[0] - EPS / 2,
-                                dot[1] - EPS / 2, EPS, EPS)) {
+                    for (double[] dot : dotsArray) {
+                        if (testLine.intersects(dot[0] - EPS / 2, dot[1] - EPS / 2, EPS, EPS)) {
                             tempDots.add(dot[0]);
                             tempDots.add(dot[1]);
                             check = true;
-                            count++;
+                            counter++;
                         }
                     }
+
                     if (check) {
                         int size = tempDots.size();
                         for (int l = 0; l < size; l += 2) {
@@ -156,8 +163,8 @@ class Controller {
             for (int i = 0; i < intersectDots.size(); i += 2) {
                 double x = intersectDots.get(i);
                 double y = intersectDots.get(i + 1);
-                for (int j = 0; j < dots.length; j++) {
-                    if (dots[j][0] == x && dots[j][1] == y) {
+                for (int j = 0; j < dotsArray.size(); j++) {
+                    if (dotsArray.get(j)[0] == x && dotsArray.get(j)[1] == y) {
                         angles[i / 2] = j; // J * ang, где ang = 1
                     }
                 }
@@ -220,6 +227,8 @@ class Controller {
                         break;
                 }
             }
+//            if (startTime - new Date().getTime() > 0)
+//                System.out.println("Timeout!");
         }
         // {centreDot[0], centreDot[1]} координаты X и Y центра вписанной окружности
 
@@ -421,5 +430,29 @@ class Controller {
             }
         }
         return max;
+    }
+
+    private double[] startDot(double[][] slice) {
+
+        double sumX = 0, sumY = 0, signedArea = 0;
+        double[] startDot = new double[2];
+
+        for (int i = 0; i < slice.length - 1; i++){
+            signedArea += (slice[i][0]*slice[i+1][1] - slice[i+1][0]*slice[i][1]) / 2;
+        }
+
+        for (int i = 0; i < slice.length - 1; i++){
+            sumX += (slice[i][0] + slice[i+1][0])*(slice[i][0]*slice[i+1][1] - slice[i+1][0]*slice[i][1]);
+        }
+        startDot[0] = sumX/6/signedArea;
+
+        for (int i = 0; i < slice.length - 1; i++){
+            sumY += (slice[i][1] + slice[i+1][1])*(slice[i][0]*slice[i+1][1] - slice[i+1][0]*slice[i][1]);
+        }
+        startDot[1] = sumY/6/signedArea;
+
+        System.out.println("Start dot in the polygon? " + getPolygon(slice).contains(startDot[0], startDot[1]));
+
+        return startDot;
     }
 }

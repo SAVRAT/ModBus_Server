@@ -39,7 +39,7 @@ class ScannerVerticle extends AbstractVerticle {
     private ModbusTcpMaster master_2 = new ModbusTcpMaster(config_2);
     private CompletableFuture<ReadHoldingRegistersResponse> future_1;
     private CompletableFuture<WriteMultipleRegistersResponse> future_2;
-    private ExecutorService executorService = Executors.newFixedThreadPool(2);
+    private ExecutorService executorService = Executors.newFixedThreadPool(1);
 
     ScannerVerticle(String[] host, Controller controller, DataBaseConnect dataBaseConnect) {
         this.host = host;
@@ -190,9 +190,11 @@ class ScannerVerticle extends AbstractVerticle {
         } else {
             if (check && processWood) {
                 System.out.println("+++++++Compute wood!+++++++");
-                ConcurrentComputing concurrentComputing =
-                        new ConcurrentComputing(figure, dataBaseConnect, executorService);
-                concurrentComputing.computeAsync();
+                executorService.execute(() -> {
+                    ConcurrentComputing concurrentComputing =
+                            new ConcurrentComputing(figure, dataBaseConnect);
+                    concurrentComputing.computeAsync();
+                });
 //                figure.clear();
                 check = false;
             }
