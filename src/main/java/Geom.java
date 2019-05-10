@@ -1,6 +1,7 @@
 import java.util.Arrays;
 
 class Geom {
+    private double[][] dot = new double[360][2];
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     double[] geomCentre(double[][] dots){
@@ -71,11 +72,9 @@ class Geom {
     }
 
     double[][] dots(double xc, double yc, double r){
-        double[][] dot = new double[360][2];
         for (int i=0; i<360; i++){
             dot[i][0] = r*Math.sin(Math.toRadians(i))+xc;
             dot[i][1] = r*Math.cos(Math.toRadians(i))+yc;
-//            System.out.println("x: " + dot[n-2] + "; y: " + dot[n-1]);
         }
         return dot;
     }

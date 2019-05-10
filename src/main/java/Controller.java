@@ -6,7 +6,6 @@ import java.util.concurrent.ThreadLocalRandom;
 
 class Controller {
 
-    private Geom geom = new Geom();
     private final double[] sensorMatrix = {6.5, 12.5, 19, 25.5, 33.5, 44, 50, 48, 62, 50, 45.9, 32.5, 25, 18.5, 12, 6.5};
     final int scannerHight = 82, scannerWight = 116, maxLength = 60, maxHight = 65;
     private final double EPS = 0.4;
@@ -88,136 +87,145 @@ class Controller {
 
     double[] computeRadius(double[][] sliceData) {
         System.out.println("Start compute Radius, thread name: " + Thread.currentThread().getName());
+        Geom geom = new Geom();
         ArrayList<Double> intersectDots = new ArrayList<>();
-            ArrayList<Double> intersectRad = new ArrayList<>();
-        long startTime = new Date().getTime() + 2500;
-            double radius = 5, step_r = 0.4, step_v = 0.3, count;
-            Formul[] formulData = new Formul[sliceData.length];
-            geom.lineKoef(formulData, sliceData);
-            double[] centreDot = geom.geomCentre(sliceData);
+        ArrayList<Double> intersectRad = new ArrayList<>();
+        long startTime = new Date().getTime() + 2000;
+        double radius = 5, step_r = 0.4, step_v = 0.3, count;
+        Formul[] formulData = new Formul[sliceData.length];
+        geom.lineKoef(formulData, sliceData);
+        double[] centreDot = geom.geomCentre(sliceData);
 
-            Map<String, Integer> map = new HashMap<>();
-            int maxC = 0;
-            double maxR = 0;
+        Map<String, Integer> map = new HashMap<>();
+        int maxC = 0;
+        double maxR = 0;
 
-            boolean finish = false;
-            while (startTime - new Date().getTime() > 0 && !finish) {
-                intersectDots.clear();
-                count = 0;
-                double[][] dots = geom.dots(centreDot[0], centreDot[1], radius);
-                while (count < 1) {
-                    radius += step_r;
-                    dots = geom.dots(centreDot[0], centreDot[1], radius);
-                    for (int k = 0; k < sliceData.length - 1; k++) {
-                        ArrayList<Double> tempDots = new ArrayList<>();
-                        double x, y;
-                        boolean check = false;
-                        Line2D testLine = new Line2D.Double(sliceData[k][0], sliceData[k][1],
-                                sliceData[k + 1][0], sliceData[k + 1][1]);
+        boolean finish = false;
+        while (startTime - new Date().getTime() > 0 && !finish) {
+            intersectDots.clear();
+            count = 0;
+            double[][] dots = new double[360][2]; // = geom.dots(centreDot[0], centreDot[1], radius);
+            while (count < 1) {
+                if (Thread.currentThread().isInterrupted())
+                    try {
+                        throw new InterruptedException();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                radius += step_r;
+                dots = geom.dots(centreDot[0], centreDot[1], radius);
+                for (int k = 0; k < sliceData.length - 1; k++) {
+                    ArrayList<Double> tempDots = new ArrayList<>();
+                    double x, y;
+                    boolean check = false;
+                    Line2D testLine = new Line2D.Double(sliceData[k][0], sliceData[k][1],
+                            sliceData[k + 1][0], sliceData[k + 1][1]);
 
-                        for (double[] dot : dots) {
-                            if (testLine.intersects(dot[0] - EPS / 2,
-                                    dot[1] - EPS / 2, EPS, EPS)) {
-                                tempDots.add(dot[0]);
-                                tempDots.add(dot[1]);
-                                check = true;
-                                count++;
-                            }
-                        }
-                        if (check) {
-                            int size = tempDots.size();
-                            for (int l = 0; l < size; l += 2) {
-                                x = tempDots.get(l);
-                                y = tempDots.get(l + 1);
-                                intersectDots.add(x);
-                                intersectDots.add(y);
-                                intersectRad.add(radius);
-                                String rrr = String.valueOf(radius);
-                                int ccc = map.getOrDefault(rrr, 0) + 1;
-                                map.put(rrr, ccc);
-                                if (ccc > maxC) {
-                                    maxR = radius;
-                                    maxC = ccc;
-                                }
-                            }
+                    for (double[] dot : dots) {
+                        if (testLine.intersects(dot[0] - EPS / 2,
+                                dot[1] - EPS / 2, EPS, EPS)) {
+                            tempDots.add(dot[0]);
+                            tempDots.add(dot[1]);
+                            check = true;
+                            count++;
                         }
                     }
-                }
-                radius = 5;
-                Formul vector;
-                double x_v, y_v;
-                double[] angles = new double[intersectDots.size() / 2];
-                for (int i = 0; i < intersectDots.size(); i += 2) {
-                    double x = intersectDots.get(i);
-                    double y = intersectDots.get(i + 1);
-                    for (int j = 0; j < dots.length; j++) {
-                        if (dots[j][0] == x && dots[j][1] == y) {
-                            angles[i / 2] = j; // J * ang, где ang = 1
-                        }
-                    }
-                }
-                double max = 0;
-                int max1 = 0;
-                int max2 = 0;
-                for (int i = 0; i < angles.length; i++) {
-                    for (int j = 0; j < angles.length; j++) {
-                        if (i != j) {
-                            double ai = angles[i];
-                            double aj = angles[j];
-                            if (ai > 180) ai = ai - 360;
-                            if (aj > 180) aj = aj - 360;
-
-                            double diff = Math.abs(ai - aj);
-                            if (diff > 180) diff = 360 - diff;
-                            if (diff > max) {
-                                max = diff;
-                                max1 = i;
-                                max2 = j;
+                    if (check) {
+                        int size = tempDots.size();
+                        for (int l = 0; l < size; l += 2) {
+                            x = tempDots.get(l);
+                            y = tempDots.get(l + 1);
+                            intersectDots.add(x);
+                            intersectDots.add(y);
+                            intersectRad.add(radius);
+                            String rrr = String.valueOf(radius);
+                            int ccc = map.getOrDefault(rrr, 0) + 1;
+                            map.put(rrr, ccc);
+                            if (ccc > maxC) {
+                                maxR = radius;
+                                maxC = ccc;
                             }
                         }
-                    }
-                }
-                if (maxC > 40 && maxR == intersectRad.get(intersectRad.size() - 1)) finish = true;
-
-                x_v = (intersectDots.get(max1 * 2) + intersectDots.get(max2 * 2)) / 2;
-                y_v = (intersectDots.get(max1 * 2 + 1) + intersectDots.get(max2 * 2 + 1)) / 2;
-                vector = geom.lineKoef(x_v, y_v, centreDot[0], centreDot[1]);
-                if (!finish) {
-                    switch (vector.getType()) {
-                        case "->": {
-                            if (Math.abs(vector.getKoef()) > 10) {
-                                centreDot[0] += step_v / 10;
-                                centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
-                            } else {
-                                centreDot[0] += step_v;
-                                centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
-                            }
-                        }
-                        break;
-                        case "<-": {
-                            if (Math.abs(vector.getKoef()) > 10) {
-                                centreDot[0] -= step_v / 10;
-                                centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
-                            } else {
-                                centreDot[0] -= step_v;
-                                centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
-                            }
-                        }
-                        break;
-                        case "vert":
-                            centreDot[1] += step_v;
-                            break;
-                        case "horiz":
-                            centreDot[0] += step_v;
-                            break;
                     }
                 }
             }
-            // {centreDot[0], centreDot[1]} координаты X и Y центра вписанной окружности
+            radius = 5;
+            Formul vector;
+            double x_v, y_v;
+            double[] angles = new double[intersectDots.size() / 2];
+            for (int i = 0; i < intersectDots.size(); i += 2) {
+                double x = intersectDots.get(i);
+                double y = intersectDots.get(i + 1);
+                for (int j = 0; j < dots.length; j++) {
+                    if (dots[j][0] == x && dots[j][1] == y) {
+                        angles[i / 2] = j; // J * ang, где ang = 1
+                    }
+                }
+            }
+            double max = 0;
+            int max1 = 0;
+            int max2 = 0;
+            for (int i = 0; i < angles.length; i++) {
+                for (int j = 0; j < angles.length; j++) {
+                    if (i != j) {
+                        double ai = angles[i];
+                        double aj = angles[j];
+                        if (ai > 180) ai = ai - 360;
+                        if (aj > 180) aj = aj - 360;
+
+                        double diff = Math.abs(ai - aj);
+                        if (diff > 180) diff = 360 - diff;
+                        if (diff > max) {
+                            max = diff;
+                            max1 = i;
+                            max2 = j;
+                        }
+                    }
+                }
+            }
+            if (maxC > 40 && maxR == intersectRad.get(intersectRad.size() - 1)) finish = true;
+
+            x_v = (intersectDots.get(max1 * 2) + intersectDots.get(max2 * 2)) / 2;
+            y_v = (intersectDots.get(max1 * 2 + 1) + intersectDots.get(max2 * 2 + 1)) / 2;
+            vector = geom.lineKoef(x_v, y_v, centreDot[0], centreDot[1]);
+            if (!finish) {
+                switch (vector.getType()) {
+                    case "->": {
+                        double tempValue = centreDot[1];
+                        if (Math.abs(tempValue - (vector.getKoef() * (centreDot[0] - x_v) + y_v)) <= step_v){
+                            centreDot[0] += step_v;
+                            centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
+                        } else {
+                            centreDot[1] += step_v;
+                            centreDot[0] = (centreDot[1] - y_v) / vector.getKoef() + x_v;
+                        }
+                    }
+                    break;
+                    case "<-": {
+                        double tempValue = centreDot[1];
+                        if (Math.abs(tempValue - (vector.getKoef() * (centreDot[0] - x_v) + y_v)) <= step_v){
+                            centreDot[0] -= step_v;
+                            centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
+                        } else {
+                            centreDot[1] -= step_v;
+                            centreDot[0] = (centreDot[1] - y_v) / vector.getKoef() + x_v;
+                        }
+                    }
+                    break;
+                    case "vert":
+                        centreDot[1] += step_v;
+                        break;
+                    case "horiz":
+                        centreDot[0] += step_v;
+                        break;
+                }
+            }
+        }
+        // {centreDot[0], centreDot[1]} координаты X и Y центра вписанной окружности
 
 //        System.out.println("Time: " + (System.currentTimeMillis() - start) + " ms");
-            System.out.println("Compute done, thread: " + Thread.currentThread().getName() + " :: " + Arrays.toString(centreDot));
-            return new double[]{Collections.max(intersectRad), centreDot[0], centreDot[1]};
+        System.out.println("Compute done, thread: " + Thread.currentThread().getName() + " :: " + Arrays.toString(centreDot));
+        return new double[]{Collections.max(intersectRad), centreDot[0], centreDot[1]};
     }
 
     private double[][] matrixToSlice(ArrayList<double[][]> matrix){
