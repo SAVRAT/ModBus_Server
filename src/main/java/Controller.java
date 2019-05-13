@@ -30,7 +30,7 @@ class Controller {
 //            System.out.print(".");
         } else {
             woodLog = true;
-            System.out.println("Wood: " + woodLog);
+//            System.out.println("Wood: " + woodLog);
             // Цикл фильтриции точек
             if (data.size() == 16) {
                 // Занесение в HashMap с соответсвующиме стороне индексами

@@ -188,6 +188,7 @@ class ScannerVerticle extends AbstractVerticle implements SystemLog{
 //                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
         });
         if (controller.woodLog && processWood) {
+            System.out.println("Read wood...");
             figure.add(tempVal);
             check = true;
         } else {
@@ -207,7 +208,7 @@ class ScannerVerticle extends AbstractVerticle implements SystemLog{
         if (currentPosition > oldPosition){
             oldPosition = currentPosition;
             processWood = true;
-            System.out.println("Conveyor run");
+//            System.out.println("Conveyor run");
         } else {
             processWood = false;
         }
