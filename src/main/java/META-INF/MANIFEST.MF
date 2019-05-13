@@ -1,4 +1,0 @@
-Manifest-Version: 1.0
-Main-Class: ServerMain
-Class-Path: /home/ilyashubin/IdeaProjects/ModBus_Server/src/main/java
-
