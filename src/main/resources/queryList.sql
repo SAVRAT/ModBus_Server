@@ -128,4 +128,12 @@ CREATE TABLE woodData_3 (
     radius REAL,
     PRIMARY KEY(id)
 );
+
 DROP TABLE woodData_3;
+
+CREATE TABLE SystemLog (
+    logMessage TEXT,
+    timeStamp INT
+);
+
+INSERT INTO SystemLog (logMessage, timeStamp) VALUES ('qrtfjnals', UNIX_TIMESTAMP());

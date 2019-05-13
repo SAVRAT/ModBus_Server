@@ -8,7 +8,7 @@ class Controller {
 
     private final double[] sensorMatrix = {6.5, 12.5, 19, 25.5, 33.5, 44, 50, 48, 62, 50, 45.9, 32.5, 25, 18.5, 12, 6.5};
     final int scannerHight = 82, scannerWight = 116, maxLength = 60, maxHight = 65;
-    private final double EPS = 0.4;
+    private final double EPS = 1;
     boolean woodLog = false;
 
     double[][] doSlice(ArrayList<Integer> data) {
@@ -86,16 +86,16 @@ class Controller {
     }
 
     double[] computeRadius(double[][] sliceData) {
-        System.out.println("Start compute Radius, thread name: " + Thread.currentThread().getName());
+//        System.out.println("Start compute Radius, thread name: " + Thread.currentThread().getName());
         Geom geom = new Geom();
         ArrayList<Double> intersectDots = new ArrayList<>();
         ArrayList<Double> intersectRad = new ArrayList<>();
-        int counter, testCounter = 0;
+        int counter, testCounter;
         double radius = 5, step_r = 0.4, step_v = 0.3;
         Formul[] formulData = new Formul[sliceData.length];
         geom.lineKoef(formulData, sliceData);
-//        double[] centreDot = geom.geomCentre(sliceData);
-        double[] centreDot = startDot(sliceData);
+        double[] centreDot = geom.geomCentre(sliceData);
+//        double[] centreDot = startDot(sliceData);
 
         Map<String, Integer> map = new HashMap<>();
         int maxC = 0;
@@ -103,22 +103,27 @@ class Controller {
 
         boolean finish = false;
         while (!finish){
-            System.out.println("First while! " + Thread.currentThread().getName());
             intersectDots.clear();
             counter = 0;
             ArrayList<double[]> dotsArray = new ArrayList<>();
-//            double[][] dots = new double[360][2]; // = geom.dots(centreDot[0], centreDot[1], radius);
+//            ArrayList<double[]> debug = new ArrayList<>();
+            testCounter = 0;
             while (counter < 1) {
                 testCounter++;
-//                if (testCounter > 150) {
-//                    System.out.println("It is block! Radius: " + radius);
-//                }
                 radius += step_r;
-//                dots = geom.dots(centreDot[0], centreDot[1], radius);
-                double[] tempDot = new double[2];
+//                double[] debugArray = {radius, centreDot[0], centreDot[1]};
+//                debug.add(debugArray);
+                if (testCounter > 50) {
+                    System.out.println("Slice: " + Arrays.deepToString(sliceData));
+//                    for (double[] val:debug)
+//                        System.out.println(Arrays.toString(val));
+                    return new double[3];
+                }
                 for (int i=0; i<360; i++){
-                    tempDot[0] = radius*Math.sin(Math.toRadians(i))+centreDot[0];
-                    tempDot[1] = radius*Math.cos(Math.toRadians(i))+centreDot[1];
+                    double[] tempDot = {
+                            radius*Math.sin(Math.toRadians(i))+centreDot[0],
+                            radius*Math.cos(Math.toRadians(i))+centreDot[1]
+                    };
                     dotsArray.add(tempDot);
                 }
                 for (int k = 0; k < sliceData.length - 1; k++) {
@@ -198,25 +203,43 @@ class Controller {
             if (!finish) {
                 switch (vector.getType()) {
                     case "->": {
-                        double tempValue = centreDot[1];
-                        if (Math.abs(tempValue - (vector.getKoef() * (centreDot[0] - x_v) + y_v)) <= step_v){
-                            centreDot[0] += step_v;
+
+                        if (Math.abs(vector.getKoef()) > 10) {
+                            centreDot[0] += step_v / 10;
                             centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
                         } else {
-                            centreDot[1] += step_v;
-                            centreDot[0] = (centreDot[1] - y_v) / vector.getKoef() + x_v;
+                            centreDot[0] += step_v;
+                            centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
                         }
+
+//                        double tempValue = centreDot[1];
+//                        if (Math.abs(tempValue - (vector.getKoef() * (centreDot[0] - x_v) + y_v)) <= step_v){
+//                            centreDot[0] += step_v;
+//                            centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
+//                        } else {
+//                            centreDot[1] += step_v;
+//                            centreDot[0] = (centreDot[1] - y_v) / vector.getKoef() + x_v;
+//                        }
                     }
                     break;
                     case "<-": {
-                        double tempValue = centreDot[1];
-                        if (Math.abs(tempValue - (vector.getKoef() * (centreDot[0] - x_v) + y_v)) <= step_v){
-                            centreDot[0] -= step_v;
+
+                        if (Math.abs(vector.getKoef()) > 10) {
+                            centreDot[0] -= step_v / 10;
                             centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
                         } else {
-                            centreDot[1] -= step_v;
-                            centreDot[0] = (centreDot[1] - y_v) / vector.getKoef() + x_v;
+                            centreDot[0] -= step_v;
+                            centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
                         }
+
+//                        double tempValue = centreDot[1];
+//                        if (Math.abs(tempValue - (vector.getKoef() * (centreDot[0] - x_v) + y_v)) <= step_v){
+//                            centreDot[0] -= step_v;
+//                            centreDot[1] = vector.getKoef() * (centreDot[0] - x_v) + y_v;
+//                        } else {
+//                            centreDot[1] -= step_v;
+//                            centreDot[0] = (centreDot[1] - y_v) / vector.getKoef() + x_v;
+//                        }
                     }
                     break;
                     case "vert":
@@ -227,13 +250,9 @@ class Controller {
                         break;
                 }
             }
-//            if (startTime - new Date().getTime() > 0)
-//                System.out.println("Timeout!");
         }
         // {centreDot[0], centreDot[1]} координаты X и Y центра вписанной окружности
 
-//        System.out.println("Time: " + (System.currentTimeMillis() - start) + " ms");
-        System.out.println("Compute done, thread: " + Thread.currentThread().getName() + " :: " + Arrays.toString(centreDot));
         return new double[]{Collections.max(intersectRad), centreDot[0], centreDot[1]};
     }
 
@@ -387,19 +406,30 @@ class Controller {
         return Math.abs(area / 2.0);
     }
 
-    double[] figureVolume(ArrayList<double[][]> figure, double step){
-        System.out.println("Start compute Volume, thread name: " + Thread.currentThread().getName());
-        double volume = 0.0;
+    double figureVolume(double[] rads){
+        double volume = 0.0, step = 1680 / 14;
 
-        for (double[][] slice:figure){
-            volume += polygonArea(slice) * step;
+        for (double val:rads){
+            volume += 3.14 * Math.pow(val, 2) * step;
         }
-        System.out.println("Volume done, thread: " + Thread.currentThread().getName() + " :: " + volume);
-        return new double[]{(double) Math.round(volume)};
+
+        return (double) Math.round(volume);
     }
 
-    double[] usefulVolume(ArrayList<double[][]> figure){                                                                // вычисление полезного объёма и кривизны
-        System.out.println("Start compute UsefulVolume, thread name: " + Thread.currentThread().getName());
+    double[] usefulVolumeAndCurvature(double[] rads, double[][] centres){
+
+//        System.out.println("Start compute UsefulVolume, thread name: " + Thread.currentThread().getName());
+
+        ArrayList<double[][]> figure = new ArrayList<>();
+        for (int n = 0; n < 14; n++) {
+            double[][] tempSlice = new double[20][2];
+            for (int i = 0; i < 20; i++) {
+                tempSlice[i][0] = rads[n] * Math.sin(Math.toRadians(i*18)) + centres[n][0];
+                tempSlice[i][1] = rads[n] * Math.cos(Math.toRadians(i*18)) + centres[n][1];
+            }
+            figure.add(tempSlice);
+        }
+
         ArrayList<double[][]> outMatrix = matrix(0.7, getPolygon(figure.get(0)));
         for (int i = 1; i < figure.size(); i++){
             outMatrix = matrixIntersection(outMatrix,
@@ -409,12 +439,12 @@ class Controller {
         double[][] usefulSlice = matrixToSlice(outMatrix);
         double[] sliceCircle = computeRadius(usefulSlice);
         double maxDist = 0, tempDist;
-        for (double[][] val:figure){
+        for (double[][] val: figure){
             tempDist = maxDist(getPolygon(val), sliceCircle[1], sliceCircle[2]);
             if (maxDist < tempDist)
                 maxDist = tempDist;
         }
-        System.out.println("Useful volume done, thread: " + Thread.currentThread().getName()+ " :: " + maxDist);
+//        System.out.println("Useful volume done, thread: " + Thread.currentThread().getName()+ " :: " + maxDist);
 
         return new double[] {(double) 1680*polygonArea(usefulSlice),
                 (double) Math.round((maxDist - sliceCircle[0]) / 1.680) / 1000};
@@ -432,27 +462,4 @@ class Controller {
         return max;
     }
 
-    private double[] startDot(double[][] slice) {
-
-        double sumX = 0, sumY = 0, signedArea = 0;
-        double[] startDot = new double[2];
-
-        for (int i = 0; i < slice.length - 1; i++){
-            signedArea += (slice[i][0]*slice[i+1][1] - slice[i+1][0]*slice[i][1]) / 2;
-        }
-
-        for (int i = 0; i < slice.length - 1; i++){
-            sumX += (slice[i][0] + slice[i+1][0])*(slice[i][0]*slice[i+1][1] - slice[i+1][0]*slice[i][1]);
-        }
-        startDot[0] = sumX/6/signedArea;
-
-        for (int i = 0; i < slice.length - 1; i++){
-            sumY += (slice[i][1] + slice[i+1][1])*(slice[i][0]*slice[i+1][1] - slice[i+1][0]*slice[i][1]);
-        }
-        startDot[1] = sumY/6/signedArea;
-
-        System.out.println("Start dot in the polygon? " + getPolygon(slice).contains(startDot[0], startDot[1]));
-
-        return startDot;
-    }
 }

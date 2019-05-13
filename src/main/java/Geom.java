@@ -1,7 +1,6 @@
 import java.util.Arrays;
 
 class Geom {
-    private double[][] dot = new double[360][2];
 
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     double[] geomCentre(double[][] dots){
@@ -12,24 +11,6 @@ class Geom {
         mass[1] = (Arrays.stream(compute(dots, 1)).min().getAsDouble() +
                 Arrays.stream(compute(dots, 1)).max().getAsDouble())/2;
         return mass;
-    }
-
-    double distanceTriang(double x1, double y1, double x2, double y2, double x3, double y3){
-        double dist, osn, a, b, c;
-        osn = distance(x1,y1,x2,y2);
-        a = distance(x1,y1,x3,y3);
-        b = distance(x2,y2,x3,y3);
-        c = (Math.pow(osn, 2) + Math.pow(b, 2) - Math.pow(a, 2))/(2*osn);
-        dist = Math.sqrt(Math.pow(a, 2) + Math.pow(c, 2));
-        return dist;
-    }
-
-    double[][] dots(double xc, double yc, double r){
-        for (int i=0; i<360; i++){
-            dot[i][0] = r*Math.sin(Math.toRadians(i))+xc;
-            dot[i][1] = r*Math.cos(Math.toRadians(i))+yc;
-        }
-        return dot;
     }
 
     private double[] compute(double[][] input, int k){

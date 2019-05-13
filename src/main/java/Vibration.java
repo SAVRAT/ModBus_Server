@@ -5,10 +5,8 @@ import io.vertx.ext.sql.ResultSet;
 import io.vertx.ext.sql.SQLConnection;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.SortedSet;
 
-class Vibration extends AbstractVerticle {
+class Vibration extends AbstractVerticle implements SystemLog{
 
     private DataBaseConnect dataBaseConnect;
     private ModBus_Master modBusMaster;
@@ -121,10 +119,14 @@ class Vibration extends AbstractVerticle {
                             handle(outData);
                         if (second)
                             check(outData);
-                    } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
+                    } else
+                        writeLogString("Query ERROR while refresh AI " + res.cause());
+//                        System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
                     connection.close();
                 });
-            } else System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
+            } else
+                writeLogString("DataBase ERROR while refresh AI " + con.cause());
+//                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
         });
     }
 }

@@ -7,7 +7,7 @@ import io.vertx.ext.sql.SQLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
-class OEE extends AbstractVerticle {
+class OEE extends AbstractVerticle implements SystemLog{
 
     private DataBaseConnect dataBaseConnect;
     private ModBus_Master modBusMaster;
@@ -16,7 +16,6 @@ class OEE extends AbstractVerticle {
     private boolean third = false;
     private ArrayList<String[]> previous = new ArrayList<>();
     private ArrayList<String[]> outData = new ArrayList<>();
-//    private CopyOnWriteArrayList<String> oeeTables = new CopyOnWriteArrayList<>();
 
     OEE(DataBaseConnect dataBaseConnect, ModBus_Master modBusMaster){
         this.dataBaseConnect = dataBaseConnect;
@@ -26,7 +25,6 @@ class OEE extends AbstractVerticle {
     public void start(){
         refreshData();
         vertx.setPeriodic(60000, event -> refreshData());
-//        vertx.setPeriodic(60000, event -> oeeCompute());
     }
 
     private long timerID;
@@ -35,7 +33,6 @@ class OEE extends AbstractVerticle {
         first = false;
         if (!third) {
             previous = data;
-//            previous.forEach(val -> oeeTables.add(val[4]));
             third = true;
         }
         timerID = vertx.setPeriodic(2000, result -> {
@@ -105,8 +102,6 @@ class OEE extends AbstractVerticle {
         if (qwerty){
             vertx.cancelTimer(timerID);
             previous = data;
-//            oeeTables.clear();
-//            previous.forEach(val -> oeeTables.add(val[4]));
             handle(data);
             System.out.println(previous);
         }
@@ -126,11 +121,14 @@ class OEE extends AbstractVerticle {
                             handle(outData);
                         if (second)
                             check(outData);
-                    } else System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
+                    } else
+                        writeLogString("Query ERROR while refresh OEE" + res.cause());
+//                        System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());
                     connection.close();
                 });
             } else
-                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
+                writeLogString("DataBase ERROR while refresh OEE" + con.cause());
+//                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
         });
     }
 }

@@ -9,7 +9,7 @@ import io.vertx.ext.sql.SQLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
-class DataBaseConnect {
+class DataBaseConnect implements SystemLog{
     SQLClient mySQLClient;
 
     DataBaseConnect(String host, String username, String password, String dataBase){
@@ -25,11 +25,13 @@ class DataBaseConnect {
                 SQLConnection connection = res.result();
                 connection.queryWithParams(query, jsonArray, out -> {
                     if (out.failed())
-                        System.out.println("\u001B[33m" + "Write Query ERROR" + "\u001B[0m" + " " + res.cause());
+                        writeLogString("Write Query ERROR (" + query + ") " + res.cause());
+//                        System.out.println("\u001B[33m" + "Write Query ERROR" + "\u001B[0m" + " " + res.cause());
                     connection.close();
                 });
             }else {
-                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + res.cause());
+                writeLogString("DataBase ERROR (" + query + ") " + res.cause());
+//                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + res.cause());
             }
         });
     }
@@ -40,11 +42,13 @@ class DataBaseConnect {
                 SQLConnection connection = res.result();
                 connection.updateWithParams(query, jsonArray, out -> {
                     if (out.failed())
-                        System.out.println("\u001B[33m" + "Update Query ERROR" + "\u001B[0m" + " " + res.cause());
+                        writeLogString("Update Query ERROR (" + query + ") " + res.cause());
+//                        System.out.println("\u001B[33m" + "Update Query ERROR" + "\u001B[0m" + " " + res.cause());
                     connection.close();
                 });
             }else {
-                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + res.cause());
+                writeLogString("DataBase ERROR (" + query + ") " + res.cause());
+//                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + res.cause());
             }
         });
     }
@@ -59,11 +63,13 @@ class DataBaseConnect {
                         List<JsonObject> output = out.result().getRows();
                         statusCheck(output, newState, device);
                     } else
-                        System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + out.cause());
+                        writeLogString("Query ERROR (OEE Read) " + out.cause());
+//                        System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + out.cause());
                     connection.close();
                 });
             } else
-                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
+                writeLogString("DataBase ERROR (OEE Read) " + con.cause());
+//                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
         });
     }
 
@@ -79,27 +85,13 @@ class DataBaseConnect {
                         shiftStatusCheck(output, newValue, tableName, shift);
 //                        System.out.println("Old: " + output + " New: " + newValue);
                     } else
-                        System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + out.cause());
+                        writeLogString("Query ERROR (READ shift) " + out.cause());
+//                        System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + out.cause());
                     connection.close();
                 });
             } else
-                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
-        });
-    }
-
-    void databaseQuery(String tableName){
-        mySQLClient.getConnection(con -> {
-            if (con.succeeded()) {
-                SQLConnection connection = con.result();
-                connection.query("truncate table " + tableName + ";", out -> {
-                    if (out.failed()) {
-                        System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + out.cause());
-                    }
-                    connection.close();
-                });
-            } else {
-                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
-            }
+                writeLogString("DataBase ERROR (READ shift) " + con.cause());
+//                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
         });
     }
 
@@ -141,14 +133,14 @@ class DataBaseConnect {
             if (res.succeeded()) {
                 SQLConnection connection = res.result();
                 connection.update(query, out -> {
-                    if (out.failed()){
-                        System.out.println("\u001B[33m" + "Update Query ERROR" + "\u001B[0m" + " " + res.cause());
-                    }
+                    if (out.failed())
+                        writeLogString("Update Query ERROR (" + query + ") " + out.cause());
+//                        System.out.println("\u001B[33m" + "Update Query ERROR" + "\u001B[0m" + " " + res.cause());
                     connection.close();
                 });
-            }else {
-                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + res.cause());
-            }
+            }else
+                writeLogString("DataBase ERROR (" + query + ") " + res.cause());
+//                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + res.cause());
         });
     }
 

@@ -9,7 +9,7 @@ import io.vertx.core.json.JsonArray;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
-class ModBus_Master {
+class ModBus_Master implements SystemLog {
     private DataBaseConnect dataBaseConnect;
     int[] buffer;
     int[] aiCount;
@@ -55,6 +55,7 @@ class ModBus_Master {
                         dataBaseConnect.databaseReadOEE(device, currentState);
                     }
                 }
+                writeLogString("PLC ERROR " + ex.getMessage());
 //                System.out.println("\u001B[41m" + "PLC ERROR" + "\u001B[0m" + " " + ex.getMessage());
                 moduleError(master);
             }
@@ -92,6 +93,7 @@ class ModBus_Master {
                         dataBaseConnect.databaseReadOEE(device, currentState);
                     }
                 }
+                writeLogString("DI ERROR " + ex.getMessage());
 //                System.out.println("\u001B[41m" + "DI ERROR" + "\u001B[0m" + " " + ex.getMessage());
                 moduleError(master);
             }
@@ -118,6 +120,7 @@ class ModBus_Master {
                 moduleOk(master);
             } else {
                 moduleError(master);
+                writeLogString("AI ERROR " + ex.getMessage());
 //                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
             }
             decBuffer(bufId);
@@ -144,4 +147,5 @@ class ModBus_Master {
         buffer[bufId]--;
         aiCount[bufId]--;
     }
+
 }

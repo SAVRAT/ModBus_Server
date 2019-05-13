@@ -18,7 +18,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-class ScannerVerticle extends AbstractVerticle {
+class ScannerVerticle extends AbstractVerticle implements SystemLog{
     private Controller controller;
     private DataBaseConnect dataBaseConnect;
     private Parsing parse = new Parsing();
@@ -39,7 +39,7 @@ class ScannerVerticle extends AbstractVerticle {
     private ModbusTcpMaster master_2 = new ModbusTcpMaster(config_2);
     private CompletableFuture<ReadHoldingRegistersResponse> future_1;
     private CompletableFuture<WriteMultipleRegistersResponse> future_2;
-    private ExecutorService executorService = Executors.newFixedThreadPool(1);
+    private ExecutorService executorService = Executors.newFixedThreadPool(2);
 
     ScannerVerticle(String[] host, Controller controller, DataBaseConnect dataBaseConnect) {
         this.host = host;
@@ -96,7 +96,8 @@ class ScannerVerticle extends AbstractVerticle {
                                 if (ar.succeeded()) {
                                     Buffer body = ar.result().body();
                                     if (body.getString(2, body.length()-2).equals("400 Bad Request")) {
-                                        System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " 400 Bad Request");
+                                        writeLogString("ERROR, 400 Bad Request");
+//                                        System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " 400 Bad Request");
                                     } else {
                                         int k = 1;
                                         if (part == 2)
@@ -113,7 +114,8 @@ class ScannerVerticle extends AbstractVerticle {
                                         }
                                     }
                                 } else
-                                    System.out.println("\u001B[33m" + "AL ERROR" + "\u001B[0m" + " " + ar.cause().getMessage());
+                                    writeLogString("AL ERROR " + ar.cause() + " :: " + ar.cause().getMessage());
+//                                    System.out.println("\u001B[33m" + "AL ERROR" + "\u001B[0m" + " " + ar.cause().getMessage());
                                 counter--;
                                 partCounter[num]--;
                                 if (partCounter[num] == 0) {
@@ -182,20 +184,20 @@ class ScannerVerticle extends AbstractVerticle {
                         res.getRegisters().getUnsignedByte(11)});
                 conveyorCheck(output);
             } else
-                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
+                writeLogString("ERROR conveyor controller connect " + ex.getMessage());
+//                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
         });
         if (controller.woodLog && processWood) {
             figure.add(tempVal);
             check = true;
         } else {
             if (check && processWood) {
-                System.out.println("+++++++Compute wood!+++++++");
+//                writeLogString("Computing woodData");
                 executorService.execute(() -> {
                     ConcurrentComputing concurrentComputing =
                             new ConcurrentComputing(figure, dataBaseConnect);
                     concurrentComputing.computeAsync();
                 });
-//                figure.clear();
                 check = false;
             }
         }
@@ -235,14 +237,18 @@ class ScannerVerticle extends AbstractVerticle {
                                 new WriteMultipleRegistersRequest(2, 2, byteArray), 2);
                         future_2.whenComplete((res_1, ex_1) -> {
                             if (res_1 == null)
-                                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex_1.getMessage());
+                                writeLogString("ERROR while write indication panel " +
+                                        ex_1.getMessage());
+//                                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex_1.getMessage());
                         });
                     } else
-                        System.out.println("\u001B[33m" + "Write Query ERROR" + "\u001B[0m" + " " + res.cause());
+                        writeLogString("ERROR select from vibroindication " + res.cause());
+//                        System.out.println("\u001B[33m" + "Write Query ERROR" + "\u001B[0m" + " " + res.cause());
                     connection.close();
                 });
             }else
-                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
+                writeLogString("DataBase ERROR " + con.cause());
+//                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
         });
     }
 
