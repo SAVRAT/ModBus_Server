@@ -3,6 +3,7 @@ import io.netty.buffer.ByteBuf;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+// класс с методами для парсинга данных
 class Parsing {
 
     ArrayList<Integer> dInt(ByteBuf registers, int length){

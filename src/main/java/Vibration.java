@@ -24,19 +24,21 @@ class Vibration extends AbstractVerticle implements SystemLog{
 
     public void start(){
         refreshData();
+        // раз в минуту обновляем данные из таблици pointControl
         vertx.setPeriodic(60000, event -> refreshData());
     }
 
     private long timerID;
+    // получение и обработка данных по вибрации и запись в базу
     private void handle(ArrayList<String[]> data) throws IndexOutOfBoundsException{
         first = false;
         if (!third) {
             previous = data;
             third = true;
         }
+        // читаем каждые 5 секунд
         timerID = vertx.setPeriodic(5000, result -> {
 
-//            System.out.println("Vibro write...");
             ArrayList<String> ipAddr = new ArrayList<>();
             for (String[] datum : data) {
                 boolean check = false;
@@ -49,17 +51,15 @@ class Vibration extends AbstractVerticle implements SystemLog{
             modBusMaster.buffer = new int[ipAddr.size()];
             modBusMaster.aiCount = new int[ipAddr.size()];
             forWrite.clear();
+            // формируем ip адреса, с которых читать
             for (String ip : ipAddr) {
                 ArrayList<String[]> temp = new ArrayList<>();
                 for (String[] item : data) if (ip.equals(item[0])) temp.add(item);
                 forWrite.add(temp);
             }
 
-//            for (ArrayList<String[]> val:forWrite) {
-//                System.out.println("================");
-//                for (String[] row1:val) System.out.println(Arrays.toString(row1));
-//            }
             ThreadGroup ovenAI = new ThreadGroup("OVEN AI READ");
+            // читаем с ОВЕН AI
             for (int i=0; i<ipAddr.size(); i++){
                 int lamI = i;
                 new Thread(ovenAI, () -> {
@@ -85,7 +85,7 @@ class Vibration extends AbstractVerticle implements SystemLog{
             second = true;
         });
     }
-
+    // проверка на новые данные из БД
     private void check(ArrayList<String[]> data){
         boolean qwerty = false;
         if (data.size() == previous.size())
@@ -104,7 +104,7 @@ class Vibration extends AbstractVerticle implements SystemLog{
             System.out.println(previous);
         }
     }
-
+    // обновляем данные из таблицы pointcontrol
     private void refreshData(){
         System.out.println("Refresh AI...");
         dataBaseConnect.mySQLClient.getConnection(con -> {

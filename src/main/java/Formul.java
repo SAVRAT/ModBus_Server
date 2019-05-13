@@ -1,3 +1,4 @@
+// класс дял хранения коэффициента и наклона прямых
 class Formul {
     private double koef;
     private String type;

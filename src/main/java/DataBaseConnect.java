@@ -52,7 +52,7 @@ class DataBaseConnect implements SystemLog{
             }
         });
     }
-
+    // чтение текущего статуса оборудования из БД
     void databaseReadOEE(String[] device, int newState) {
         mySQLClient.getConnection(con -> {
             if (con.succeeded()) {
@@ -61,6 +61,7 @@ class DataBaseConnect implements SystemLog{
                         + " ORDER BY id DESC LIMIT 1;", out -> {
                     if (out.succeeded()) {
                         List<JsonObject> output = out.result().getRows();
+                        // проверка статуса (юолы ли изменение)
                         statusCheck(output, newState, device);
                     } else
                         writeLogString("Query ERROR (OEE Read) " + out.cause());
@@ -72,7 +73,7 @@ class DataBaseConnect implements SystemLog{
 //                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
         });
     }
-
+    // чтение текущей смены из БД
     void databaseReadShift(String[] device, float newValue, int shift){
         mySQLClient.getConnection(con -> {
             if (con.succeeded()){
@@ -82,6 +83,7 @@ class DataBaseConnect implements SystemLog{
                         + " ORDER BY id DESC LIMIT 1;", out -> {
                     if (out.succeeded()){
                         JsonObject output = out.result().toJson();
+                        // проверка изменения смены
                         shiftStatusCheck(output, newValue, tableName, shift);
 //                        System.out.println("Old: " + output + " New: " + newValue);
                     } else
@@ -94,7 +96,7 @@ class DataBaseConnect implements SystemLog{
 //                System.out.println("\u001B[33m" + "DataBase ERROR" + "\u001B[0m" + " " + con.cause());
         });
     }
-
+    // парсинг данных для ОВЕН AI
     ArrayList<String[]> parseData(ResultSet resultSet){
         ArrayList<String[]> data = new ArrayList<>();
         int size = resultSet.getRows().size();
@@ -109,7 +111,7 @@ class DataBaseConnect implements SystemLog{
         }
         return data;
     }
-
+    // парсинг данных для ОЕЕ (ПЛК и ОВЕН DI)
     ArrayList<String[]> parseDataOee(List<JsonObject> resultSet){
         ArrayList<String[]> data = new ArrayList<>();
         for (JsonObject entries : resultSet) {
@@ -144,9 +146,12 @@ class DataBaseConnect implements SystemLog{
         });
     }
 
+    // метод проверки по изменению смены
     private void shiftStatusCheck(JsonObject data, float newValue, String tableName, int shift){
         float oldValue = Float.parseFloat(data.getJsonArray("rows").getJsonObject(0).getString("data"));
         String currentTime = String.valueOf((System.currentTimeMillis())/1000);
+        // если новая смена == старой, то просто обновляем метку времени
+        // если смена изменилась вставляем новую строку
         if (oldValue != newValue){
             JsonArray toWrite = new JsonArray().add(String.valueOf(newValue)).add(shift).add(currentTime);
             databaseWrite("INSERT INTO " + tableName + " (data, shift, timeStamp) VALUE (?, ?, ?)", toWrite);
@@ -156,16 +161,21 @@ class DataBaseConnect implements SystemLog{
         }
     }
 
+    // метод для обновления таблици ОЕЕ
     private void statusCheck(List<JsonObject> data, int currentState, String[] device){
         int oldState = data.get(0).getInteger("status");
         String currentTime = String.valueOf((System.currentTimeMillis())/1000);
+        // в любом случае обновляем метку времени
         databaseUpdate("UPDATE " + device[4] +
                 " SET endperiod = " + currentTime + " ORDER BY id DESC LIMIT 1;");
+        // если новый статус отличается от старого, то вставляем новую строку
         if (oldState != currentState){
             JsonArray toWrite = new JsonArray().add(currentTime).add(currentTime).add(currentState).add(device[5]);
             databaseWrite("INSERT INTO " + device[4] +
                     " (startperiod, endperiod, status, parentid) VALUE (?, ?, ?, ?);", toWrite);
         }
+        // если статус меняется с 3 на 1, то проверяем время со статусом 3, если меньше, чем разрешённое время простоя,
+        // то меняем с 3 на 1
         if (oldState == 3 && currentState == 1){
            databaseUpdate("UPDATE " + device[4] + " SET status = 1 WHERE status = 3" +
                    " AND startperiod > " + (Integer.valueOf(currentTime) - Integer.valueOf(device[6]) * 60) + ";");

@@ -49,7 +49,9 @@ class ScannerVerticle extends AbstractVerticle implements SystemLog{
 
     @Override
     public void start() {
+        // раз в 10 секунд запись виброиндикации (лампочки на щите в цеху раскрижёвки)
         vertx.setPeriodic(10000, event -> vibroIndication());
+        // каждые 180 милисекунд чтение данных со сканера
         vertx.setPeriodic(180, event -> {
 //            System.out.println("TICK");
             if (counter == 0) {
@@ -66,6 +68,7 @@ class ScannerVerticle extends AbstractVerticle implements SystemLog{
         });
     }
 
+    // чтение данных со сканера (по два запроса на каждую AL1302)
     private void requestAndResponse(WebClient client, String address, ArrayList<Integer> outMass,
                                     Integer[] temp, int num) {
         counter++;
@@ -89,16 +92,20 @@ class ScannerVerticle extends AbstractVerticle implements SystemLog{
                             .put("adr", "/getdatamulti")
                             .put("data", jsonObject[i]);
                     final int part = i + 1;
+                    // делаем запрос
                     client.post(80, address, "/")
                             .putHeader("content-type", "application/json")
                             .putHeader("cache-control", "no-cache")
                             .sendJsonObject(json, ar -> {
+                                // пришёл ответ
                                 if (ar.succeeded()) {
                                     Buffer body = ar.result().body();
+                                    // проверка на статус 400
                                     if (body.getString(2, body.length()-2).equals("400 Bad Request")) {
                                         writeLogString("ERROR, 400 Bad Request");
 //                                        System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " 400 Bad Request");
                                     } else {
+                                        // если всё Ок
                                         int k = 1;
                                         if (part == 2)
                                             k = 5;
@@ -168,32 +175,37 @@ class ScannerVerticle extends AbstractVerticle implements SystemLog{
 //                    }
 //                });
     }
-
+    // метод запускается, когда считаны все данные со сканера
     private void handle() {
 
         ArrayList<Integer> tempAll = new ArrayList<>();
+        // формирование значений с датчиков
         Collections.reverse(tempData.get(1));
         tempAll.addAll(tempData.get(0));
         tempAll.addAll(tempData.get(1));
         double[][] tempVal = controller.doSlice(tempAll);
+        // получение ответа от контроллера конвейера
         future_1.whenComplete((res, ex) -> {
             if (res!=null){
                 int output = parse.uByteToInt(new short[]{res.getRegisters().getUnsignedByte(8),
                         res.getRegisters().getUnsignedByte(9),
                         res.getRegisters().getUnsignedByte(10),
                         res.getRegisters().getUnsignedByte(11)});
+                // проверяем движется ли он
                 conveyorCheck(output);
             } else
                 writeLogString("ERROR conveyor controller connect " + ex.getMessage());
 //                System.out.println("\u001B[41m" + "ERROR" + "\u001B[0m" + " " + ex.getMessage());
         });
+        // если конвейер едёт и есть бревно в сканере - считываем
         if (controller.woodLog && processWood) {
             System.out.println("Read wood...");
             figure.add(tempVal);
             check = true;
         } else {
+            // если был заход в предыдущий цикл (check = true)
             if (check && processWood) {
-//                writeLogString("Computing woodData");
+                // запускаем в отдельном пуле потоков считаться параметры бревна
                 executorService.execute(() -> {
                     ConcurrentComputing concurrentComputing =
                             new ConcurrentComputing(figure, dataBaseConnect);
@@ -204,6 +216,7 @@ class ScannerVerticle extends AbstractVerticle implements SystemLog{
         }
     }
 
+    // проверка движения конвейера
     private void conveyorCheck(int currentPosition){
         if (currentPosition > oldPosition){
             oldPosition = currentPosition;
@@ -214,6 +227,7 @@ class ScannerVerticle extends AbstractVerticle implements SystemLog{
         }
     }
 
+    // чтение с базы состояние лампочек
     private void vibroIndication(){
         dataBaseConnect.mySQLClient.getConnection(con -> {
             if (con.succeeded()){
@@ -234,6 +248,7 @@ class ScannerVerticle extends AbstractVerticle implements SystemLog{
                                     byteArray[3] += Math.pow(2, i - 24);
                             }
                         }
+                        // отправляем запрос на запись регистров в ПЛК
                         future_2 = master_2.sendRequest(
                                 new WriteMultipleRegistersRequest(2, 2, byteArray), 2);
                         future_2.whenComplete((res_1, ex_1) -> {

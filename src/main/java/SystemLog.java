@@ -1,6 +1,6 @@
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.sql.SQLConnection;
-
+// интерфейс с дефолтной реализацией метода для ведения лога
 public interface SystemLog {
     DataBaseConnect dataBase = new DataBaseConnect("192.168.49.53", "java", "z1x2c3v4",
             "fanDOK");

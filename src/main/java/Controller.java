@@ -3,19 +3,24 @@ import java.awt.geom.Line2D;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
-
+// класс с методами для вычислений параметров бревна
 class Controller {
 
+    // координаты датчиков на сканере (Y, Y, Y, Y, Y, Y, Y, X, X, Y, Y, Y, Y, Y, Y, Y)
     private final double[] sensorMatrix = {6.5, 12.5, 19, 25.5, 33.5, 44, 50, 48, 62, 50, 45.9, 32.5, 25, 18.5, 12, 6.5};
+    // размеры сканера
     final int scannerHight = 82, scannerWight = 116, maxLength = 60, maxHight = 65;
+    // точность вписывания окружности (должна быть в 3 раза больше шага, значит не меньше 0.8)
     private final double EPS = 1;
     boolean woodLog = false;
 
+    // метод создание координат точек из даннных со сканера
     double[][] doSlice(ArrayList<Integer> data) {
         ArrayList<double[][]> out = new ArrayList<>();
         HashMap<String, double[][]> tempData = new HashMap<>();
         int count = 0;
         //Цикл проверки наличия объекта в сканере
+        // путём подсчёта null значений и значений за пределами допустимых
         for (int i = 0; i < data.size(); i++) {
             if (6 < i && i < 9) {
                 if (data.get(i) == null || data.get(i) > maxHight)
@@ -24,16 +29,15 @@ class Controller {
                 if (data.get(i) == null || data.get(i) > maxLength)
                 count++;
         }
+        // если таких значений больше 11, бревна в сканере нет
         if (count > 11) {
-//            System.out.println("Count of null: " + count);
             woodLog = false;
-//            System.out.print(".");
         } else {
             woodLog = true;
 //            System.out.println("Wood: " + woodLog);
             // Цикл фильтриции точек
             if (data.size() == 16) {
-                // Занесение в HashMap с соответсвующиме стороне индексами
+                // Занесение в HashMap с соответсвующиме стороне индексами (Left, Top, Right)
                 for (int i = 0; i < 16; i++) {
                     double[][] temp = new double[1][2];
                     if (i < 7) {
@@ -70,31 +74,27 @@ class Controller {
                         out.add(tempData.get("R" + i));
                 }
             }
-//            for (double[][] val:out)
-//                System.out.print(Arrays.deepToString(val) + " : ");
             // Запись в выходной массив
             double[][] mass = new double[out.size()][2];
             for (int i = 0; i < out.size(); i++) {
                 mass[i] = out.get(i)[0];
             }
-//            System.out.println("Mass: " + Arrays.deepToString(mass));
-//            System.out.println("Wood Check: " + woodLog);
             return mass;
         }
-//        System.out.println("Wood Check: " + woodLog);
         return null;
     }
 
+    // Метод вписывания окружности в срез бревна
     double[] computeRadius(double[][] sliceData) {
-//        System.out.println("Start compute Radius, thread name: " + Thread.currentThread().getName());
-        Geom geom = new Geom();
-        ArrayList<Double> intersectDots = new ArrayList<>();
-        ArrayList<Double> intersectRad = new ArrayList<>();
-        int counter, testCounter;
-        double radius = 5, step_r = 0.4, step_v = 0.3;
-        Formul[] formulData = new Formul[sliceData.length];
-        geom.lineKoef(formulData, sliceData);
-        double[] centreDot = geom.geomCentre(sliceData);
+        Geom geom = new Geom();                                 // экзземпляр класса дял работы с геометрией
+        ArrayList<Double> intersectDots = new ArrayList<>();    // лист координат точек пересечения
+        ArrayList<Double> intersectRad = new ArrayList<>();     // лист радиусов пересечения
+        int counter, testCounter;                               // первый счётчик - количество точек пересечения на итерации сдвига центра окружности
+                                                                // второй счётчик для проверки на бесконечный цикл
+        double radius = 5, step_r = 0.4, step_v = 0.3;          // начальный радиус, шаг сдвига радиуса, шаг сдвига по вектору
+        Formul[] formulData = new Formul[sliceData.length];     // массив с коэффициентами и наклоном прямых
+        geom.lineKoef(formulData, sliceData);                   // вычисляем коэффициенты
+        double[] centreDot = geom.geomCentre(sliceData);        // первая точка (центральная) среза
 //        double[] centreDot = startDot(sliceData);
 
         Map<String, Integer> map = new HashMap<>();
@@ -102,14 +102,16 @@ class Controller {
         double maxR = 0;
 
         boolean finish = false;
+        // finish установится, когда количество одинаковых радиусов будет больше 40
         while (!finish){
-            intersectDots.clear();
+            intersectDots.clear(); // очищаем точки пересечения
             counter = 0;
             ArrayList<double[]> dotsArray = new ArrayList<>();
 //            ArrayList<double[]> debug = new ArrayList<>();
             testCounter = 0;
+            // counter - количество точек пересечения
             while (counter < 1) {
-                testCounter++;
+                testCounter++;      // проверка зависания while
                 radius += step_r;
 //                double[] debugArray = {radius, centreDot[0], centreDot[1]};
 //                debug.add(debugArray);
@@ -119,6 +121,7 @@ class Controller {
 //                        System.out.println(Arrays.toString(val));
                     return new double[3];
                 }
+                // вычисление точек на окружности с шагом 1 градус
                 for (int i=0; i<360; i++){
                     double[] tempDot = {
                             radius*Math.sin(Math.toRadians(i))+centreDot[0],
@@ -126,22 +129,25 @@ class Controller {
                     };
                     dotsArray.add(tempDot);
                 }
+                // проходимся по массиву среза с координатами точек
                 for (int k = 0; k < sliceData.length - 1; k++) {
                     ArrayList<Double> tempDots = new ArrayList<>();
                     double x, y;
                     boolean check = false;
+                    // создаём объект прямой на периметре среза
                     Line2D testLine = new Line2D.Double(sliceData[k][0], sliceData[k][1],
                             sliceData[k + 1][0], sliceData[k + 1][1]);
-
+                    // проверяем каждую точку на предмет пересечения с прямой
                     for (double[] dot : dotsArray) {
                         if (testLine.intersects(dot[0] - EPS / 2, dot[1] - EPS / 2, EPS, EPS)) {
+                            // если пересеклась, сохраняем точку и инкрементим счётчик
                             tempDots.add(dot[0]);
                             tempDots.add(dot[1]);
                             check = true;
                             counter++;
                         }
                     }
-
+                    // если было пересечение, сохраняем координаты и радиус в глобальный лист
                     if (check) {
                         int size = tempDots.size();
                         for (int l = 0; l < size; l += 2) {
@@ -161,10 +167,12 @@ class Controller {
                     }
                 }
             }
+            // сбрасываем радиус
             radius = 5;
             Formul vector;
             double x_v, y_v;
             double[] angles = new double[intersectDots.size() / 2];
+            // вычисляем угол, для вектора сдвига радиуса
             for (int i = 0; i < intersectDots.size(); i += 2) {
                 double x = intersectDots.get(i);
                 double y = intersectDots.get(i + 1);
@@ -177,6 +185,7 @@ class Controller {
             double max = 0;
             int max1 = 0;
             int max2 = 0;
+            // проверяем расположение точек, для высчитывание суммарного вектора
             for (int i = 0; i < angles.length; i++) {
                 for (int j = 0; j < angles.length; j++) {
                     if (i != j) {
@@ -195,12 +204,16 @@ class Controller {
                     }
                 }
             }
+            // если количество одинаковых радиусов > 40 и это максимального размера радиус то заканчиваем вписывать
             if (maxC > 40 && maxR == intersectRad.get(intersectRad.size() - 1)) finish = true;
 
+            // вторая точка вектора, по которому сдвигается окружность
             x_v = (intersectDots.get(max1 * 2) + intersectDots.get(max2 * 2)) / 2;
             y_v = (intersectDots.get(max1 * 2 + 1) + intersectDots.get(max2 * 2 + 1)) / 2;
+            // построение вектора
             vector = geom.lineKoef(x_v, y_v, centreDot[0], centreDot[1]);
             if (!finish) {
+                // вычисление координат точки на вектору, в зависимости от наклона вектора
                 switch (vector.getType()) {
                     case "->": {
 
@@ -255,7 +268,7 @@ class Controller {
 
         return new double[]{Collections.max(intersectRad), centreDot[0], centreDot[1]};
     }
-
+    // метод преобразование матрицы точек в срез
     private double[][] matrixToSlice(ArrayList<double[][]> matrix){
         double step_y = 1, step_x = 1;
         ArrayList<double[][]> line = new ArrayList<>();
@@ -343,7 +356,7 @@ class Controller {
         }
         return out;
     }
-
+    // метод нахождение пересечения матриц
     private ArrayList<double[][]> matrixIntersection(ArrayList<double[][]> first, ArrayList<double[][]> second){
         ArrayList<double[][]> out = new ArrayList<>();
         if (first.size() == second.size()) {
@@ -364,7 +377,7 @@ class Controller {
         }
         return out;
     }
-
+    // метод получения матрицы точек из полигона, с шагом
     private ArrayList<double[][]> matrix(double step,Polygon fig){
         ArrayList<double[][]> dotsMatrix = new ArrayList<>();
         int count = (int) Math.round(scannerWight/step);
@@ -383,7 +396,7 @@ class Controller {
         }
         return dotsMatrix;
     }
-
+    // получение полигона из среза
     private Polygon getPolygon(double[][] fig){
         int[] x = new int[fig.length];
         int[] y = new int[fig.length];
@@ -394,7 +407,7 @@ class Controller {
 
         return new Polygon(x, y, x.length);
     }
-
+    // нахождение площади полигона
     private double polygonArea(double[][] slice){
         double area = 0.0;
         int j = slice.length - 1;
@@ -405,7 +418,7 @@ class Controller {
         }
         return Math.abs(area / 2.0);
     }
-
+    // нахождение объёма бревна
     double figureVolume(double[] rads){
         double volume = 0.0, step = 1680 / 14;
 
@@ -415,10 +428,8 @@ class Controller {
 
         return (double) Math.round(volume);
     }
-
+    // нахождение полезного объёма и кривизны
     double[] usefulVolumeAndCurvature(double[] rads, double[][] centres){
-
-//        System.out.println("Start compute UsefulVolume, thread name: " + Thread.currentThread().getName());
 
         ArrayList<double[][]> figure = new ArrayList<>();
         for (int n = 0; n < 14; n++) {
@@ -436,6 +447,7 @@ class Controller {
                     matrix(0.7, getPolygon(figure.get(i))));
         }
 
+        // нахождение кривизны
         double[][] usefulSlice = matrixToSlice(outMatrix);
         double[] sliceCircle = computeRadius(usefulSlice);
         double maxDist = 0, tempDist;
@@ -444,12 +456,11 @@ class Controller {
             if (maxDist < tempDist)
                 maxDist = tempDist;
         }
-//        System.out.println("Useful volume done, thread: " + Thread.currentThread().getName()+ " :: " + maxDist);
 
         return new double[] {(double) 1680*polygonArea(usefulSlice),
                 (double) Math.round((maxDist - sliceCircle[0]) / 1.680) / 1000};
     }
-
+    // нахожддение максимального расстояния от точки вписанной в пересечение окружности до точек на грани срезов
     private double maxDist(Polygon polygon, double x_centre, double y_centre){
         Geom geom = new Geom();
         double max = 0;

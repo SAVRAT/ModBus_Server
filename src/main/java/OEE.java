@@ -24,19 +24,20 @@ class OEE extends AbstractVerticle implements SystemLog{
 
     public void start(){
         refreshData();
+        // раз в минуту обновляем данные из таблицы "оборудование"
         vertx.setPeriodic(60000, event -> refreshData());
     }
 
     private long timerID;
-
+    // запись ОЕЕ в базу
     private void handle(ArrayList<String[]> data){
         first = false;
         if (!third) {
             previous = data;
             third = true;
         }
+        // запись ОЕЕ раз в 2 секунды
         timerID = vertx.setPeriodic(2000, result -> {
-//            System.out.println("OEE write...");
             ArrayList<String[]> modBusDevice = new ArrayList<>();
             for (String[] datum : data) {
                 boolean check = false;
@@ -49,11 +50,6 @@ class OEE extends AbstractVerticle implements SystemLog{
                     modBusDevice.add(arr);
                 }
             }
-
-//            for (String[] row:data) System.out.println("data: " + Arrays.toString(row));
-//            for (String[] row:modBusDevice)
-//                System.out.println("Row: " + Arrays.toString(row));
-
 
             ThreadGroup OEE = new ThreadGroup("OEE READ");
             for (String[] device:modBusDevice){
@@ -87,7 +83,8 @@ class OEE extends AbstractVerticle implements SystemLog{
             second = true;
         });
     }
-
+    // проверка отличия данных от тех, что в базе
+    // если отличается, то останавливаем таймер, обновляем данные и запускаем handle()
     private void check(ArrayList<String[]> data){
         boolean qwerty = false;
         if (data.size() == previous.size())
@@ -106,7 +103,7 @@ class OEE extends AbstractVerticle implements SystemLog{
             System.out.println(previous);
         }
     }
-
+    // обновление данных из базы
     private void refreshData(){
         System.out.println("Refresh OEE...");
         dataBaseConnect.mySQLClient.getConnection(con -> {
@@ -118,9 +115,9 @@ class OEE extends AbstractVerticle implements SystemLog{
                         outData.clear();
                         outData.addAll(dataBaseConnect.parseDataOee(result));
                         if (first)
-                            handle(outData);
+                            handle(outData);    // при первом вызове
                         if (second)
-                            check(outData);
+                            check(outData);     // при втором и последющих
                     } else
                         writeLogString("Query ERROR while refresh OEE" + res.cause());
 //                        System.out.println("\u001B[33m" + "Query ERROR" + "\u001B[0m" + " " + res.cause());

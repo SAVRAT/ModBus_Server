@@ -2,6 +2,7 @@ import java.util.Arrays;
 
 class Geom {
 
+    // метод для нахождения центра среза
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     double[] geomCentre(double[][] dots){
         double[] mass = new double[2];
@@ -13,6 +14,7 @@ class Geom {
         return mass;
     }
 
+    // служебный метод
     private double[] compute(double[][] input, int k){
         double[] mass = new double[input.length];
         for (int i=0; i<input.length; i++){
@@ -21,6 +23,7 @@ class Geom {
         return mass;
     }
 
+    // вычисление коэффициентов и наклонов прямых
     void lineKoef(Formul[] mass, double[][] dots){
         for (int i=0; i<dots.length-1; i++){
             double k = 0;
@@ -46,6 +49,7 @@ class Geom {
         }
     }
 
+    // вычисление коэффициентов и наклонов прямых
     Formul lineKoef(double x1, double y1, double x2, double y2){
         double k = 0;
         String type = "";
@@ -66,6 +70,7 @@ class Geom {
         return new Formul(k, type);
     }
 
+    // вычисление дистанции между двумя точками
     double distance(double x1, double y1, double x2, double y2){
         return Math.abs(Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2)));
     }
